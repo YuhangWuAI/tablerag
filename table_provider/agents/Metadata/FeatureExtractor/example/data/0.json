@@ -1,0 +1,105 @@
+﻿{
+    "schemaID": 0,
+    "oldUids": [
+        "08bc3fb4994a46a597f36bd2590b88e5",
+        "74f27fee6ee6496385d8291c79aa2e6d",
+        "b4eac328699641959ce2cbb27efa95e6",
+        "6fdafaffbcc64b66b6e4429d1e23cc74",
+        "01946d0574c74fe49c96b992db9cd4d0",
+        "06045aade0134b76a22ee8330b50e1e6",
+        "0e0af77849964573bdaa2593f99ef253",
+        "6a99c4122ef04361a6177431bb78bcf2",
+        "e42edd5f797843beb8ffe449fbdf0b58",
+        "00242a20f89b45cdb6510e87c2aa5322",
+        "5d36196c26d74309a549e9ca8106c12a",
+        "d1ad3bb95dfa4d41a13bc822be753bd0",
+        "cf786923c0504a979cb90099da9d95b2",
+        "1cd9c8d716dd4581a579f92673c22ae7"
+    ],
+    "lang": "es",
+    "nTables": 5,
+    "uniqueTables": [
+        {
+            "dupNum": 4,
+            "nCharts": 1,
+            "chartDupNum": [
+                4
+            ],
+            "chartTypes": [
+                "barChart"
+            ]
+        },
+        {
+            "dupNum": 3,
+            "nCharts": 1,
+            "chartDupNum": [
+                3
+            ],
+            "chartTypes": [
+                "barChart"
+            ]
+        },
+        {
+            "dupNum": 3,
+            "nCharts": 1,
+            "chartDupNum": [
+                3
+            ],
+            "chartTypes": [
+                "barChart"
+            ]
+        },
+        {
+            "dupNum": 3,
+            "nCharts": 1,
+            "chartDupNum": [
+                3
+            ],
+            "chartTypes": [
+                "barChart"
+            ]
+        },
+        {
+            "dupNum": 1,
+            "nCharts": 1,
+            "chartDupNum": [
+                1
+            ],
+            "chartTypes": [
+                "barChart"
+            ]
+        }
+    ],
+    "sameSourceTable": [
+        [],
+        [],
+        [],
+        [],
+        []
+    ],
+    "nCharts": 5,
+    "schemaChart": [
+        [
+            {
+                "item1": 0,
+                "item2": 0
+            },
+            {
+                "item1": 1,
+                "item2": 0
+            },
+            {
+                "item1": 2,
+                "item2": 0
+            },
+            {
+                "item1": 3,
+                "item2": 0
+            },
+            {
+                "item1": 4,
+                "item2": 0
+            }
+        ]
+    ]
+}

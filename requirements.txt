@@ -1,0 +1,34 @@
+aiohttp
+apex
+datasets
+jsonlines
+matplotlib
+nltk
+numpy
+openai
+pandas
+recognizers_text_suite
+scikit_learn
+scipy
+seaborn
+tabulate
+tenacity
+tiktoken
+torch
+torch_scatter
+tqdm
+transformers
+wikipedia
+
+# experiments logging
+wandb
+
+# azure-ml submit
+azure-ml-component[notebooks]==0.9.15.post2
+azure-ai-ml==1.2.0
+azureml-core==1.48.0
+azureml-dataset-runtime==1.48.0
+hydra-core==1.2.0
+flaml[blendsearch,ray]==1.0.7
+pytest==7.2.0
+azure-identity==1.7.0

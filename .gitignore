@@ -1,0 +1,12 @@
+config.json
+call_llm/rows_embeddings
+*.pyc
+__pycache__/
+call_llm/__pycache__/
+dataloader/__pycache__/
+.DS_Store
+.vscode/
+.VSCodeCounter/
+pipeline/data/
+/.DS_Store
+table_provider/agents/embedder/*

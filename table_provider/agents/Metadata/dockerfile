@@ -1,0 +1,16 @@
+# This dockerfile installs scipy package to the PyTorch docker.
+FROM pytorch/pytorch:1.8.0-cuda11.1-cudnn8-devel
+RUN apt-get update \
+&& apt-get -y install git \
+&& pip install --upgrade pip==20.1.1 # pip <= 20.1.1 for AML
+
+# APEX
+RUN git clone https://github.com/NVIDIA/apex \
+&& cd apex \
+&& pip install -U -v --disable-pip-version-check --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./
+
+# Python lib
+RUN pip --no-cache-dir install scipy \
+&& pip install tensorboard sortedcontainers allennlp pika torch-scatter pandas \
+&& apt-get clean \
+&& rm -rf /var/lib/apt/lists/*

@@ -243,7 +243,7 @@ class CallLLM:
                 response = openai.Completion.create(
                     model=self.GPT_MODEL,
                     prompt=f"{prompt} \n\n:",
-                    temperature=0.3,
+                    temperature=0.5,
                     max_tokens=96,
                     top_p=1.0,
                     frequency_penalty=0.0,
@@ -254,7 +254,7 @@ class CallLLM:
                 response = openai.ChatCompletion.create(
                     model=self.GPT_MODEL,
                     messages=[{"role": "user", "content": prompt}],
-                    temperature=0.3,
+                    temperature=0.5,
                     max_tokens=96,
                     top_p=1.0,
                     frequency_penalty=0.0,

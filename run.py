@@ -150,9 +150,9 @@ def update_config(file_path, args):
         config = {
             "model": {
                 "EMBEDDING_MODEL": "text-embedding-ada-002",
-                "GPT_MODEL": "text-davinci-003",
+                "GPT_MODEL": "gpt-3.5-turbo-1106",
             },
-            "api_key": "",
+            "api_key": "sk-BIWqoUKgrFI6a5ar53E73fA468194104A6644f6d48Af32Da",
             "batch_size": 16,
             "total_tokens": 4000,
             "max_truncate_tokens": 1400,
@@ -199,13 +199,25 @@ if __name__ == "__main__":
 
     if args.debug:
         table_provider = TableProvider(
-            task_name="tabfact",
-            split="validation",
-            table_sampling_type="clustering_sample",
+            task_name=args.task_name,
+            split=args.split,
+            table_sampling_type=args.table_sampling_type,
+            table_augmentation_type=args.table_augmentation_type,
+            n_cluster=args.n_cluster,
+            top_k=args.top_k,
+            embedding_type=args.embedding_type,
+            whether_column_grounding=args.whether_column_grounding
         )
-        filtered_table = table_provider.table_sampler.run(
-            query="What is the average age of the people who have a job?"
-        )
+
+        # 从数据集中获取 parsed_example 示例
+        table_loader = table_provider.table_loader
+        k_shot_examples = table_loader.get_k_shot_example(1)  # 获取一个示例
+
+        # 假设 parse_table 返回包含 'table' 键的字典
+        parsed_example = table_loader.parse_table(k_shot_examples[0])
+
+        query = "What is the average age of the people who have a job?"
+        filtered_table = table_provider.table_sampler.run(query, parsed_example)
         for _example in filtered_table:
             # Replace some cells with None
             random_row_index = np.random.randint(0, len(_example), size=2)
@@ -220,10 +232,8 @@ if __name__ == "__main__":
             )
             print("Cleansed Tables:\n {}".format(_example_cleansing))
 
-        table_loader = table_provider.table_loader(
-            task_name="tabfact", split="validation"
-        )
         print(table_loader.get_k_shot_example(3))
+
 
     if args.test:
         TestAgents.test_str_normalize('2008-04-13 00:00:00', '2008-4-13 0:0:0')

@@ -39,9 +39,9 @@ class TableLoader:
             f"table_provider/data_loader/scripts/dataset_collection/{self.task_name}.py",
             verification_mode="no_checks",
         )
-        if use_small_sample_list and len(self.dataset) >= 1000:
+        if use_small_sample_list and len(self.dataset) >= 100:
             shuffled_dataset = self.dataset.shuffle(seed=42)
-            return shuffled_dataset.select(range(1000))
+            return shuffled_dataset.select(range(100))
         else:
             return self.dataset
 
@@ -60,9 +60,9 @@ class TableLoader:
             split=split,
             verification_mode="no_checks",
         )
-        if use_small_sample_list and len(self.dataset) >= 1000:
+        if use_small_sample_list and len(self.dataset) >= 100:
             shuffled_dataset = self.dataset.shuffle(seed=42)
-            return shuffled_dataset.select(range(1000))
+            return shuffled_dataset.select(range(100))
         else:
             return self.dataset
 

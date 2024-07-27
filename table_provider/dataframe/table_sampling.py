@@ -1,3 +1,4 @@
+import logging
 import os
 import random
 import pandas as pd
@@ -78,7 +79,7 @@ class TableSampling:
         assert len(parsed_example["table"]["header"]) > 0, parsed_example
         self.user_query = query
         self.loop_index += 1  # Increment the loop index for embedding generation/saving
-        # Run the row filter
+        # Run the row filter    
         return self.func_set()[self.table_sampling_type](parsed_example)
 
     def evenly_sampling(self, _example: dict) -> pd.DataFrame:
@@ -148,6 +149,7 @@ class TableSampling:
         _example: dict,
     ) -> pd.DataFrame:
         """
+        Centroid Method
         Cluster rows into n clusters, and sample top k rows from each cluster.
         args:
             _example: dict, parsed table
@@ -211,6 +213,7 @@ class TableSampling:
 
     def embedding_sampling(self, _example: dict) -> pd.DataFrame:
         """
+        Semantic method / Column and Row
         Generate embeddings of each rows and the user query, and sample rows based on the user query matching.
         args:
             _example: dict, parsed table
@@ -369,6 +372,7 @@ class TableSampling:
 
     def auto_table_sampling(self, _example: dict) -> pd.DataFrame:
         """
+        LLM-Decomposer Method
         Leverage GPT-3 for zero-shot row filtering program generation.
         Reference: Generate, Transform, Answer: Question Specific Tool Synthesis for Tabular Data
         Args:
@@ -376,20 +380,36 @@ class TableSampling:
         Return:
             df: pd.DataFrame, filtered table
         """
-        df = pd.DataFrame(
-            index=_example["table"]["rows"], columns=_example["table"]["header"]
-        )
-        context = self.user_query + "\n\n" + df.to_string()
+        print("Starting auto_table_sampling")
+
+        # Create DataFrame from parsed table example
+        df = pd.DataFrame(data=_example["table"]["rows"], columns=_example["table"]["header"])
+
+        # Extract column names from DataFrame
+        column_names = list(df.columns)
+
+        # Generate context for code generation
+        context = f"Columns: {column_names}\n\n{self.user_query}\n\n{df.to_string()}"
+        print("Generated context for code generation:")
+        print(context)
+
+        # Call LLM for code generation
         code_snippet = self.call_llm.call_llm_code_generation(context)
+        code_snippet = code_snippet.replace('>>> ', '')
+        print(f"Finally Generated code snippet: {code_snippet}")
+
         try:
-            # if the code snippet is valid, then execute it
-            eval(code_snippet)
-            df = exec(code_snippet)
-            # print("Sampled Tables:\n {}".format(df))
-            return df
+            # Evaluate the generated code snippet safely
+            locals_dict = {"df": df}
+            exec(code_snippet, {}, locals_dict)
+            filtered_df = locals_dict.get("filtered_table", df)
+            print("Filtered table:\n", filtered_df)
+            return filtered_df
         except Exception as e:
-            print("Error: {}".format(e))
+            print(f"Error: {e}")
             return df
+
+
 
     def func_set(self) -> dict:
         return {

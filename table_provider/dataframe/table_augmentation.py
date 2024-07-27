@@ -132,17 +132,6 @@ class TableAugmentation:
                 sort_keys=True,
             )
 
-    def get_header_categories(self, parsed_example: dict) -> str:
-        df = pd.DataFrame(
-            parsed_example["table"]["rows"], columns=parsed_example["table"]["header"]
-        )
-        metadata_api = MetadataApi(
-            'table_provider/agents/Metadata/model/model/metadata_tapas_202202_d0e0.pt'
-        )
-        emb = metadata_api.embedding(df)
-        predict = metadata_api.predict(df, emb)
-        return str(predict["Msr_type_res"])
-
     def get_intermediate_NL_reasoning_steps(self, parsed_example: dict) -> str:
         instruction = "\n".join(
             [
@@ -272,7 +261,8 @@ class TableAugmentation:
             self.get_term_explanations(parsed_example),
             self.get_docs_references(parsed_example),
         )
-
+    
+    # Ablation experiments
     def func_set(self) -> dict:
         return {
             TableAugmentationType.extra_structural_info_table_size.value: self.get_table_size,

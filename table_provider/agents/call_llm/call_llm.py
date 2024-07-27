@@ -1,5 +1,7 @@
 import ast  # for converting embeddings saved as strings back to arrays
+from collections import Counter
 import json
+import logging
 import os
 import time
 import openai  # for calling the OpenAI API
@@ -16,6 +18,7 @@ class Config:
         self.EMBEDDING_MODEL = config["model"]["EMBEDDING_MODEL"]
         self.GPT_MODEL = config["model"]["GPT_MODEL"]
         self.OPENAI_API_KEY = config["api_key"]
+        self.API_BASE = config["api_base"]
         self.BATCH_SIZE = config["batch_size"]  # 2048 embedding inputs per request
         self.TOTAL_TOKENS = config["total_tokens"]
         self.MAX_TRUNCATE_TOKENS = config[
@@ -40,6 +43,7 @@ class CallLLM:
         self.EMBEDDING_MODEL = config.EMBEDDING_MODEL
         self.GPT_MODEL = config.GPT_MODEL
         self.OPENAI_API_KEY = config.OPENAI_API_KEY
+        self.API_BASE = config.API_BASE
         self.BATCH_SIZE = config.BATCH_SIZE
         self.MAX_TRUNCATE_TOKENS = config.MAX_TRUNCATE_TOKENS
         self.MAX_ROWS = config.MAX_ROWS
@@ -48,6 +52,7 @@ class CallLLM:
         self.AUGMENTATION_TOKEN_LIMIT = config.AUGMENTATION_TOKEN_LIMIT
         self.TOTAL_TOKENS = config.TOTAL_TOKENS
         os.environ["OPENAI_API_KEY"] = self.OPENAI_API_KEY
+        os.environ["API_BASE"] = self.API_BASE
 
     def call_llm_embedding(self, text: str) -> List[float]:
         """Return an embedding for a string."""
@@ -142,78 +147,124 @@ class CallLLM:
             {context} \n\n: "
         return self.generate_text(prompt)
 
+
     @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
     def call_llm_code_generation(self, context: str) -> str:
         """Synthesize code snippet from the table context."""
-        prompt = f"\
-            Example: Synthesize code snippet from the table context to select the proper rows. \n \
-            User 1: \nI need an expert to help me answer the question by making the table smaller. Question: Who are all of the players on the Westchester High School club team? \n \
-            table = 'Player': ['Jarrett Jack', 'Jermaine Jackson', ...\
-            'No.': ['1', '8', ..., 'Nationality': ['United States', 'United States', ...\
-            'Position': ['Guard', 'Guard', ... \
-            'Years in Toronto': ['2009-10', '2002-03', ... \
-            'School/Club Team': ['Georgia Tech', 'Detroit', ... \
-            User 2: \
-            For 'Who are all of the players on the Westchester High School club\
-            team?' the most impactful change will be to filter the rows. Since I \
-            don't know all the rows I'll use rough string matching, float casting,\
-            lowering and be as broad as possible.\
-            >>> new_table = table[table.apply(lambda row_dict: 'Westchester' in\
-            row_dict['School/Club Team'].lower(), axis=1)] \n \
-            Synthesize code snippet from the table context to select the proper rows\n Only return the code \n {context} \n\n: "
-        return self.generate_text(prompt)
+        prompt = f"""
+        Example: Synthesize code snippet from the table context to select the proper rows and columns for verifying a statement.
+        The generated code must use the exact column names provided, including spaces, capitalization, and punctuation.
+        The generated code should treat all data as strings, even if they look like numbers.
+
+        User 1:
+        I need an expert to help me verify the statement by filtering the table to make it smaller. Statement: The scheduled date for the farm with 17 turbines be 2012.
+        Columns: ['wind farm', 'scheduled', 'capacity (mw)', 'turbines', 'type', 'location']
+        df = pd.DataFrame({{
+            'wind farm': ['codling', 'carrowleagh', 'dublin array', 'glenmore', 'glenough', 'gortahile', 'grouse lodge', 'moneypoint', 'mount callan', 'oriel', 'skerd rocks', 'shragh', 'garracummer', 'knockacummer', 'monaincha', 'gibbet hill', 'glenough extension'],
+            'scheduled': ['unknown', '2012', '2015', '2009 summer', '2010 winter', '2010 autumn', '2011 summer', 'unknown', 'unknown', '2013', 'unknown', 'planning submitted oct 2011', '2012', '2013', '2013', '2013', '2013'],
+            'capacity (mw)': [1100, 36.8, 364, 30, 32.5, 20, 20, 22.5, 90, 330, 100, 135, 42.5, 87.5, 36, 15, 2.5],
+            'turbines': [220, 16, 145, 10, 13, 8, 8, 9, 30, 55, 20, 45, 17, 35, 15, 6, 1],
+            'type': ['unknown', 'enercon e - 70 2.3', 'unknown', 'vestas v90', 'nordex n80 / n90', 'nordex n90', 'nordex n90', 'unknown', '3 mw', 'unknown', '5 mw', 'enercon e82 3.0 mw', 'nordex n90 2.5 mw', 'nordex n90 2.5 mw', 'nordex n117 2.4 mw', 'nordex n90 2.5 mw', 'nordex n90 2.5 mw'],
+            'location': ['county wicklow', 'county cork', 'county dublin', 'county clare', 'county tipperary', 'county laois', 'county tipperary', 'county clare', 'county clare', 'county louth', 'county galway', 'county clare', 'county tipperary', 'county cork', 'county tipperary', 'county wexford', 'county tipperary']
+        }})
+        User 2:
+        To verify the statement 'The scheduled date for the farm with 17 turbines be 2012', we need to filter the rows and columns to focus on relevant information. 
+        Since we are interested in the 'wind farm', 'scheduled', 'capacity (mw)', and 'turbines' columns, the most impactful change will be to filter the rows and columns as follows:
+        >>> filtered_table = df[['wind farm', 'scheduled', 'capacity (mw)', 'turbines']].query("turbines == '17'")
+
+        User 1:
+        I need an expert to help me verify the statement by filtering the table to make it smaller. Statement: All 12 club play a total of 22 game for the wru division one east.
+        Columns: ['club', 'played', 'drawn', 'lost', 'points for', 'points against', 'tries for', 'tries against', 'try bonus', 'losing bonus', 'points']
+        df = pd.DataFrame({{
+            'club': ['pontypool rfc', 'caerphilly rfc', 'blackwood rfc', 'bargoed rfc', 'uwic rfc', 'llanharan rfc', 'newbridge rfc', 'rumney rfc', 'newport saracens rfc', 'beddau rfc', 'fleur de lys rfc', 'llantrisant rfc'],
+            'played': [22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22],
+            'drawn': [2, 2, 2, 0, 2, 1, 2, 2, 0, 0, 1, 0],
+            'lost': [2, 4, 6, 8, 7, 12, 11, 12, 14, 15, 16, 18],
+            'points for': [648, 482, 512, 538, 554, 436, 355, 435, 344, 310, 300, 402],
+            'points against': [274, 316, 378, 449, 408, 442, 400, 446, 499, 483, 617, 592],
+            'tries for': [81, 56, 60, 72, 71, 44, 36, 56, 45, 32, 34, 55],
+            'tries against': [32, 37, 42, 52, 50, 51, 47, 52, 64, 61, 77, 77],
+            'try bonus': [12, 7, 8, 10, 6, 1, 2, 5, 2, 2, 2, 4],
+            'losing bonus': [1, 3, 3, 4, 2, 7, 3, 3, 3, 4, 4, 6],
+            'points': [89, 78, 71, 70, 64, 46, 45, 44, 37, 34, 28, 26]
+        }})
+        User 2:
+        To verify the statement 'All 12 club play a total of 22 game for the wru division one east', we need to filter the rows and columns to focus on relevant information. 
+        Since we are interested in the 'club', 'played', 'drawn', and 'lost' columns, the most impactful change will be to filter the rows and columns as follows:
+        >>> filtered_table = df[['club', 'played', 'drawn', 'lost']].query("played == '22'")
+
+        User 1:
+        I need an expert to help me verify the statement by filtering the table to make it smaller. Statement: Touchdown Atlantic, in the category of sporting, be established in 2010.
+        Columns: ['event name', 'established', 'category', 'sub category', 'main venue']
+        df = pd.DataFrame({{
+            'event name': ['dieppe kite international', 'the frye festival', 'hubcap comedy festival', 'touchdown atlantic', 'atlantic nationals automotive extravaganza', 'world wine & food expo', 'shediac lobster festival', 'mosaïq multicultural festival'],
+            'established': [2001, 2000, 2000, 2010, 2000, 1990, 1950, 2004],
+            'category': ['sporting', 'arts', 'arts', 'sporting', 'transportation', 'arts', 'arts', 'festival'],
+            'sub category': ['kite flying', 'literary', 'comedy', 'football', 'automotive', 'food & drink', 'food & drink', 'multicultural'],
+            'main venue': ['dover park', 'university of moncton', 'various', 'moncton stadium', 'moncton coliseum', 'moncton coliseum', 'shediac festival grounds', 'moncton city hall plaza']
+        }})
+        User 2:
+        To verify the statement 'Touchdown Atlantic, in the category of sporting, be established in 2010', we need to filter the rows and columns to focus on relevant information. 
+        Since we are interested in the 'event name', 'category', and 'established' columns, the most impactful change will be to filter the rows and columns as follows:
+        >>> filtered_table = df[['event name', 'established', 'category']].query("`event name` == 'touchdown atlantic' and category == 'sporting' and established == '2010'")
+
+        Now, generate a code snippet from the table context to select the proper rows and columns to verify the given statement.
+        Use the existing column names from the provided DataFrame.
+        The column names in the generated code must match the provided column names exactly, including spaces, capitalization, and punctuation.
+        Only return the code.
+        {context}
+        \n\n:
+        """
+        generated_codes = [self.generate_text(prompt) for _ in range(5)]
+        print("Generated codes:", generated_codes)
+        
+        # Find the most common code
+        code_counter = Counter(generated_codes)
+        most_common_code, count = code_counter.most_common(1)[0]
+        
+        if count > 1:
+            return most_common_code
+        else:
+            return generated_codes[0]
+
+
+
+
 
     @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
     def generate_text(self, prompt: str) -> str:
         """Generate text based on the prompt and instruction."""
         openai.api_key = self.OPENAI_API_KEY
-        response = openai.Completion.create(
-            model=self.GPT_MODEL,
-            prompt=f"{prompt} \n\n:",
-            temperature=0,
-            max_tokens=96,
-            top_p=1.0,
-            frequency_penalty=0.0,
-            presence_penalty=0.0,
-        )
-        return response["choices"][0]["text"].strip()
+        openai.api_base = self.API_BASE  # Set your proxy base URL
 
-    @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
-    def generate_text(self, prompts: List[str], model_type: str) -> List[str]:
-        """Generate text based on the prompt and instruction."""
-        openai.api_key = self.OPENAI_API_KEY
-
-        if model_type in ["text-davinci-003", "gpt-3.5-turbo-instruct"]:
-            # batched examples, with xx completions per request
-            response = openai.Completion.create(
-                model=self.GPT_MODEL,
-                prompt=prompts,
-                temperature=0,
-                max_tokens=96,
-                top_p=1.0,
-                frequency_penalty=0.0,
-                presence_penalty=0.0,
-            )
-            # match completions to prompts by index
-            responses = [""] * len(prompts)
-            for choice in response.choices:
-                responses[choice.index] = choice.text.strip()
-            return responses
-        elif model_type in ["gpt-3.5-turbo", "gpt-4"]:
-            responses = [""] * len(prompts)
-            for i in range(len(prompts)):
-                prompts[i] = {"role": "user", "content": prompts[i]}
-                response = openai.ChatCompletion.create(
-                    model="gpt-4",
-                    messages=[prompts[i]],
+        try:
+            print("Calling OpenAI API for text generation")
+            if self.GPT_MODEL in ["text-davinci-003", "text-davinci-002"]:
+                response = openai.Completion.create(
+                    model=self.GPT_MODEL,
+                    prompt=f"{prompt} \n\n:",
                     temperature=0,
                     max_tokens=96,
                     top_p=1.0,
                     frequency_penalty=0.0,
                     presence_penalty=0.0,
                 )
-                responses[i] = response["choices"][0]["message"]["content"].strip()
-                time.sleep(15)
-            return responses
-        else:
-            return f"Model type '{model_type}' not supported."
+                result = response["choices"][0]["text"].strip()
+            elif self.GPT_MODEL in ["gpt-3.5-turbo", "gpt-4"]:
+                response = openai.ChatCompletion.create(
+                    model=self.GPT_MODEL,
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=0,
+                    max_tokens=96,
+                    top_p=1.0,
+                    frequency_penalty=0.0,
+                    presence_penalty=0.0,
+                )
+                result = response["choices"][0]["message"]["content"].strip()
+            else:
+                raise ValueError(f"Model type '{self.GPT_MODEL}' not supported.")
+            print("Generated code snippet successfully!")
+            return result
+        except Exception as e:
+            print("Error in generate_text:", e)
+            raise

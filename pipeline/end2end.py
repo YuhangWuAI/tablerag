@@ -118,6 +118,7 @@ def end2end(
     experiment_name: str = None,
     whether_cot: bool = False,
     whether_self_consistency: bool = False,
+    use_sampled_table_for_augmentation = True,
     whether_column_grounding: bool = False,
 ):
     logging.debug("Starting end2end process")
@@ -251,7 +252,6 @@ def end2end(
             logging.debug("Processing samples from index %d to %d", start_index, end_index)
             print(f"Processing samples from index {start_index} to {end_index}")  # 添加打印语句
             for i in range(batch_size):
-                logging.debug("Processing sample %d in batch %d", i, batch_num)
                 print("====================================================================================================================")
                 print(f"Processing sample {i} in batch {batch_num}")  # 添加打印语句
                 parsed_sample = (
@@ -264,25 +264,35 @@ def end2end(
 
                 query = parsed_sample["query"]
                 grd.append(parsed_sample["label"])
-                logging.debug("Query: %s", query)
                 print(f"Query: {query}")  # 添加打印语句
 
                 try:
                     filter_table = table_provider.table_sampler.run(query, parsed_sample)
-                    logging.debug("Filtered table generated for sample %d", i)
                     print(f"Filtered table generated for sample {i}")  # 添加打印语句
                 except Exception as e:
-                    logging.error("Error in table sampling for sample %d: %s", i, e)
                     print(f"Error in table sampling for sample {i}: {e}")  # 添加打印语句
                     continue
 
+                augmentation_input = parsed_sample
+                if use_sampled_table_for_augmentation:
+                    print("Using sampled table for augmentation")
+                    augmentation_input = {
+                        "query": parsed_sample["query"],
+                        "table": {
+                            "header": filter_table.columns.tolist(),
+                            "rows": filter_table.to_dict('records'),
+                            "caption": parsed_sample["table"].get("caption", "")
+                        }
+                    }
+
                 augmentation_info = (
-                    table_provider.table_augmentation.run(parsed_sample)
+                    table_provider.table_augmentation.run(augmentation_input)
                     if table_augmentation_type != "None"
                     else ""
                 )
                 logging.debug("Augmentation info for sample %d: %s", i, augmentation_info)
-                print(f"Augmentation info for sample {i}: {augmentation_info}")  # 添加打印语句
+                print(f"Augmentation info for sample {i}: {augmentation_info}")
+
                 prompt = "\n".join(
                     [
                         example_k_shots,

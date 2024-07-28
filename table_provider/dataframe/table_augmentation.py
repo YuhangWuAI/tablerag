@@ -59,11 +59,10 @@ class TableAugmentation:
             self.call_llm.num_tokens(augmentation_info)
             < self.call_llm.AUGMENTATION_TOKEN_LIMIT
         ):
-            return "augmentation info for the table:\n" + augmentation_info
+            return augmentation_info
         else:
             return (
-                "augmentation info for the table:\n"
-                + self.call_llm.truncated_string(
+                    self.call_llm.truncated_string(
                     augmentation_info,
                     self.call_llm.AUGMENTATION_TOKEN_LIMIT,
                     print_warning=False,
@@ -183,66 +182,66 @@ class TableAugmentation:
         elif isinstance(output, str):
             return output
 
-    def get_term_explanations(self, parsed_example: dict) -> str:
-        # TODO: define the kinds of cells that need to be explained
-        """
-        Cell Position: Specify the range or position of the cells you want to search. For example, you may want to search for explanations only in the cells of a specific column, row, or a particular section of the table.
-        Cell Content: Define the specific content or data type within the cells you want to search. For instance, you may want to search for explanations in cells containing numerical values, dates, specific keywords, or a combination of certain words.
-        Cell Formatting: Consider the formatting or styling applied to the cells. This could include searching for explanations in cells with bold or italic text, specific background colors, or cells that are merged or highlighted in a certain way.
-        Cell Context: Take into account the context surrounding the cells. You can search for explanations in cells that are adjacent to certain labels, headings, or identifiers, or within a specific context provided by other cells in the same row or column.
-        Cell Properties: Consider any specific properties associated with the cells. This might include searching for explanations in cells that have formulas, links, or other data validation rules applied to them.
-        """
-        instruction = "\n".join(
-            [
-                "You will be given a parsed table in python dictionary format, extract the cells that need to be explained",
-                "The extraction rule should be based on the following criteria:",
-                "Cell Position: Specify the range or position of the cells you want to search. For example, you may want to search for explanations only in the cells of a specific column, row, or a particular section of the table.",
-                "Cell Content: Define the specific content or data type within the cells you want to search. For instance, you may want to search for explanations in cells containing numerical values, dates, specific keywords, or a combination of certain words.",
-                "Cell Formatting: Consider the formatting or styling applied to the cells. This could include searching for explanations in cells with bold or italic text, specific background colors, or cells that are merged or highlighted in a certain way.",
-                "Cell Context: Take into account the context surrounding the cells. You can search for explanations in cells that are adjacent to certain labels, headings, or identifiers, or within a specific context provided by other cells in the same row or column.",
-                "Cell Properties: Consider any specific properties associated with the cells. This might include searching for explanations in cells that have formulas, links, or other data validation rules applied to them.",
-                "Only return the cells name in a python List[str] format",
-                f"{json.dumps(parsed_example)}",
-            ]
-        )
-        valid_term_detection = self.call_llm.generate_text(instruction)
 
-        # use google search api to search for the term
-        os.environ["GOOGLE_CSE_ID"] = "14fe1bceb46b14ddb"
-        os.environ["GOOGLE_API_KEY"] = "AIzaSyDDotpFdRSltQwMp0LWH1umjkdw5hxtrIw"
-        searcher = GoogleSearchAPIWrapper()
-        tool = Tool(
-            name="Google Search",
-            description="Search Google for explanations of the table",
-            func=searcher.run,
-        )
-        if isinstance(valid_term_detection, list):
-            term_pool = []
-            for term in valid_term_detection:
-                term_pool.append(f"{term}: {tool.run(term)}")
-            return "\n".join(term_pool)
-        elif isinstance(valid_term_detection, str):
-            return f"{valid_term_detection}: {tool.run(valid_term_detection)})"
+
+
+    def get_term_explanations(self, parsed_example: dict) -> str:
+        print("Starting get_term_explanations method")
+        
+        # Extract the table, query (statement), and caption from the parsed example
+        table = {
+            "header": parsed_example.get("table", {}).get("header", []),
+            "rows": parsed_example.get("table", {}).get("rows", [])
+        }
+        statement = parsed_example.get("query", "")
+        caption = parsed_example.get("table", {}).get("caption", "")
+        
+        # Print the extracted information
+        print("Original Table:", json.dumps(table, indent=2))
+        print("Statement:", statement)
+        print("Caption:", caption)
+        
+        # Call terms explanation method
+        generated_text = self.call_llm.generate_terms_explanation(table, statement, caption)
+        print("Generated explanations:", generated_text)
+        
+        # Directly return the generated text as augmentation info
+        return generated_text
 
     def get_docs_references(self, parsed_example: dict) -> str:
-        """
-        Wikipedia is a multilingual free online encyclopedia written and maintained by a community of volunteers, known as Wikipedians, through open collaboration and using a wiki-based editing system called MediaWiki. Wikipedia is the largest and most-read reference work in history.
-        This function is used to retrieve wiki pages from wikipedia,org
-        """
+        print("Starting get_docs_references method")
+        
         retriever = WikipediaRetriever(lang="en", load_max_docs=2)
-        if parsed_example["title"] != "":
+        
+        # Use title for document retrieval if available
+        if parsed_example["title"]:
+            print("Using title for document retrieval:", parsed_example["title"])
             docs = retriever.get_relevant_documents(parsed_example["title"])
-        elif parsed_example["context"] != "":
-            docs = retriever.get_relevant_documents(parsed_example["context"])
+        # If title is not available, use caption
+        elif parsed_example["table"].get("caption"):
+            print("Using caption for document retrieval:", parsed_example["table"]["caption"])
+            docs = retriever.get_relevant_documents(parsed_example["table"]["caption"])
+        # If caption is also not available, use table headers
         else:
-            print(
-                f"No title or context found, use header instead: {parsed_example['table']['header']}"
-            )
-            docs = retriever.get_relevant_documents(
-                " ".join(parsed_example["table"]["header"])
-            )
-        time.sleep(15)
-        return json.dumps(docs[0].metadata, indent=4)
+            print("No title or caption found, using header instead:", parsed_example['table']['header'])
+            docs = retriever.get_relevant_documents(" ".join(parsed_example["table"]["header"]))
+        
+        time.sleep(15)  # Ensure this wait is required, might not be needed
+
+        # Extract table, statement, and caption from parsed_example
+        table = {
+            "header": parsed_example.get("table", {}).get("header", []),
+            "rows": parsed_example.get("table", {}).get("rows", [])
+        }
+        statement = parsed_example.get("query", "")
+        caption = parsed_example.get("table", {}).get("caption", "")
+
+        # Call the method to generate table summary
+        generated_summary = self.call_llm.generate_table_summary(docs, table, statement, caption)
+        print("Generated summary:", generated_summary)
+        
+        return generated_summary
+
 
     def assemble_neural_symbolic_augmentation(
         self, parsed_example: dict

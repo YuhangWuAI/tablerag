@@ -63,7 +63,7 @@ class TableSampling:
             )
         # set the default sampling type
         if table_sampling_type == "default":
-            table_sampling_type = "clustering_sample"
+            table_sampling_type = "embedding_sample"
         self.table_sampling_type = table_sampling_type
 
         # Initialize the embedder
@@ -403,6 +403,12 @@ class TableSampling:
             locals_dict = {"df": df}
             exec(code_snippet, {}, locals_dict)
             filtered_df = locals_dict.get("filtered_table", df)
+            
+            # Check if the filtered table is empty
+            if filtered_df.empty:
+                print("Empty table after filtering, return origin")
+                return df
+
             print("Filtered table:\n", filtered_df)
             return filtered_df
         except Exception as e:

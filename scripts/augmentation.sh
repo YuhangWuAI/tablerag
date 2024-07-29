@@ -1,4 +1,5 @@
 # End-to-end Jsonl Generation
+# docs_references and term_explanations
 task_name=("tabfact")
 augmentation_types=("docs_references")
 

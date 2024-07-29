@@ -366,8 +366,6 @@ class CallLLM:
 
 
 
-
-
     @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
     def generate_text(self, prompt: str) -> str:
         """Generate text based on the prompt and instruction."""

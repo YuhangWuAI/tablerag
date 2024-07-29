@@ -4,9 +4,6 @@ from ..agents import CallLLM, Embedder
 from utils import select_top_k_samples
 from ..contract.enum_type import TableSamplingType
 
-
-
-
 class TableSampling:
     def __init__(self) -> None:
         pass
@@ -85,7 +82,7 @@ class TableSampling:
         # Logging the table before filtering
         original_table = pd.DataFrame(rows, columns=_example["table"]["header"])
         print("Original Table:\n", original_table)
-        
+
         # Generate embeddings of each rows and the user query
         rows_embeddings, user_query_embeddings = self.embedder.call_embeddings(
             user_query=self.user_query,

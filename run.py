@@ -10,8 +10,6 @@ from table_provider import (
     TaskName,
 )
 from pipeline.end2end import end2end
-from test.agents.test_agents import TestAgents
-
 
 def add_arguments():
     # Create an ArgumentParser object
@@ -197,13 +195,6 @@ if __name__ == "__main__":
     args = add_arguments()
     update_config("config.json", args)
 
-
-    if args.test:
-        TestAgents.test_str_normalize('2008-04-13 00:00:00', '2008-4-13 0:0:0')
-        TestAgents.test_field_type_generation(lower_case=True)
-        TestAgents.test_generate_numeric_range(lower_case=True)
-        TestAgents.test_generate_time_series_interval(lower_case=True)
-        TestAgents.test_metadata_api()
 
     end2end(
         task_name=args.task_name,

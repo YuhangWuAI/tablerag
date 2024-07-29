@@ -42,7 +42,7 @@ class TableSampling:
             )
         # set the default sampling type
         if table_sampling_type == "default":
-            table_sampling_type = "embedding_sample"
+            table_sampling_type = "auto_row_filter"
         self.table_sampling_type = table_sampling_type
 
         # Initialize the embedder
@@ -177,7 +177,6 @@ class TableSampling:
         except Exception as e:
             print(f"Error: {e}")
             return df
-
 
 
     def func_set(self) -> dict:

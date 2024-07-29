@@ -124,29 +124,26 @@ def end2end(
     whether_column_grounding: bool = False,
 ):
     logging.debug("Starting end2end process")
-    print("Starting end2end process")  # 添加打印语句
+    print("Starting end2end process")  
     # log the daytime for the experiment
     today = datetime.date.today()
     formatted_today = today.strftime('%y%m%d')
 
-    if experiment_name == "token_allocation":
-        file_save_path = f"pipeline/data/Exp-{formatted_today}/{experiment_name}/{task_name}_{table_sampling_type}_{table_augmentation_type}_{max_truncate_tokens}_{augmentation_tokens}.jsonl"
-    elif experiment_name == "table_embedding_type":
-        file_save_path = f"pipeline/data/Exp-{formatted_today}/{experiment_name}/{task_name}_{table_sampling_type}_{table_augmentation_type}_{embedding_type}.jsonl"
-    else:
-        file_save_path = f"pipeline/data/Exp-{formatted_today}/{experiment_name}/{task_name}_{table_sampling_type}_{table_augmentation_type}_{k_shot}.jsonl"
+    file_save_path = f"pipeline/data/Exp-{formatted_today}/{experiment_name}/{task_name}_{table_sampling_type}_{table_augmentation_type}_{k_shot}.jsonl"
 
     logging.debug("File save path: %s", file_save_path)
-    print(f"File save path: {file_save_path}")  # 添加打印语句
+    print(f"File save path: {file_save_path}")  
 
     # whether the task is already done
     if os.path.exists(file_save_path):
         logging.info("Task already done, skipping: %s", file_save_path)
-        print(f"Task already done, skipping: {file_save_path}")  # 添加打印语句
+        print(f"Task already done, skipping: {file_save_path}")  
         return
 
-    logging.debug("Initializing TableProvider")
-    print("Initializing TableProvider")  # 添加打印语句
+
+
+    # Initializing tableprovider and get instruction
+    print("Initializing TableProvider")   
     table_provider = TableProvider(
         task_name,
         split,
@@ -157,10 +154,10 @@ def end2end(
         embedding_type,
         whether_column_grounding,
     )
-    # task-specific instruction
+    # Initialising instruction for LLM answering questions
     instruction = get_instruction(task_name)
     logging.debug("Instruction: %s", instruction)
-    print(f"Instruction: {instruction}")  # 添加打印语句
+    print(f"Instruction: {instruction}") 
 
     max_truncate_tokens = table_provider.call_llm.MAX_TRUNCATE_TOKENS
     augmentation_tokens = table_provider.call_llm.AUGMENTATION_TOKEN_LIMIT
@@ -168,11 +165,11 @@ def end2end(
     # example k shots for in-context learning
     if load_local_dataset:
         logging.debug("Loading local dataset")
-        print("Loading local dataset")  # 添加打印语句
+        print("Loading local dataset")   
         if whether_cot:
             with open(f"source/k_cot/{task_name}.jsonl", "r") as f:
                 logging.debug("Loading k_cots for %s...", task_name)
-                print(f"Loading k_cots for {task_name}...")  # 添加打印语句
+                print(f"Loading k_cots for {task_name}...")   
                 example_k_shots = "\n".join(
                     [
                         instruction + "\n" + json.loads(line)["k_shot"]
@@ -182,7 +179,7 @@ def end2end(
         else:
             with open(f"source/k_shot/{task_name}.jsonl", "r") as f:
                 logging.debug("Loading k_shots for %s...", task_name)
-                print(f"Loading k_shots for {task_name}...")  # 添加打印语句
+                print(f"Loading k_shots for {task_name}...")   
                 example_k_shots = (
                     "\n".join(
                         [
@@ -200,11 +197,11 @@ def end2end(
                 )
         with open(f"source/dataset/{task_name}.jsonl", "r") as f:
             logging.debug("Loading dataset for %s...", task_name)
-            print(f"Loading dataset for {task_name}...")  # 添加打印语句
+            print(f"Loading dataset for {task_name}...")   
             dataset = [json.loads(line) for line in f.readlines()]
     else:
         logging.debug("Loading examples from TableProvider")
-        print("Loading examples from TableProvider")  # 添加打印语句
+        print("Loading examples from TableProvider")   
         example_k_shots = (
             instruction
             + "\n"
@@ -212,37 +209,46 @@ def end2end(
             if k_shot != 0
             else None
         )
-    # response & groundtruth
+
+
+    # Initialising variance and progressing
+
+    # lables and predictions
     grd, pred = [], []
+
     # for LLM calling
     batch_size = table_provider.call_llm.BATCH_SIZE
     logging.debug("Batch size: %d", batch_size)
-    print(f"Batch size: {batch_size}")  # 添加打印语句
+    print(f"Batch size: {batch_size}")   
     # run the end2end with batch input
     num_samples = (
         len(dataset) if load_local_dataset else len(table_provider.table_loader.dataset)
     )
     logging.debug("Number of samples: %d", num_samples)
-    print(f"Number of samples: {num_samples}")  # 添加打印语句
+    print(f"Number of samples: {num_samples}")   
 
     num_batches = num_samples // batch_size
     remaining_samples = num_samples % batch_size
     batches, augmentation_batches = [], []
     logging.debug("Number of batches: %d, Remaining samples: %d", num_batches, remaining_samples)
-    print(f"Number of batches: {num_batches}, Remaining samples: {remaining_samples}")  # 添加打印语句
+    print(f"Number of batches: {num_batches}, Remaining samples: {remaining_samples}")   
 
+    # Progress bar
     logging.debug("Initializing progress bar")
-    print("Initializing progress bar")  # 添加打印语句
+    print("Initializing progress bar")   
     with tqdm(
         total=num_batches + (1 if remaining_samples > 0 else 0),
         desc=f"Processing {experiment_name}_{task_name}",
         ncols=150,
     ) as pbar:
         logging.debug("Progress bar initialized")
-        print("Progress bar initialized")  # 添加打印语句
+        print("Progress bar initialized")   
+        
+
+        # Processing batches (storing all the information)
         for batch_num in range(num_batches):
             logging.debug("Processing batch number: %d", batch_num)
-            print(f"Processing batch number: {batch_num}")  # 添加打印语句
+            print(f"Processing batch number: {batch_num}")   
             batch_prompt, augmentation_prompt = [], []
             start_index = batch_num * batch_size
             end_index = start_index + batch_size
@@ -252,10 +258,10 @@ def end2end(
                 else table_provider.table_loader.dataset[start_index:end_index]
             )
             logging.debug("Processing samples from index %d to %d", start_index, end_index)
-            print(f"Processing samples from index {start_index} to {end_index}")  # 添加打印语句
+            print(f"Processing samples from index {start_index} to {end_index}")   
             for i in range(batch_size):
                 print("====================================================================================================================")
-                print(f"Processing sample {i} in batch {batch_num}")  # 添加打印语句
+                print(f"Processing sample {i} in batch {batch_num}")   
                 parsed_sample = (
                     batch[i]
                     if load_local_dataset
@@ -266,13 +272,13 @@ def end2end(
 
                 query = parsed_sample["query"]
                 grd.append(parsed_sample["label"])
-                print(f"Query: {query}")  # 添加打印语句
+                print(f"Query: {query}")   
 
                 try:
                     filter_table = table_provider.table_sampler.run(query, parsed_sample)
-                    print(f"Filtered table generated for sample {i}:\n{filter_table}") # 添加打印语句
+                    print(f"Filtered table generated for sample {i}:\n{filter_table}")  
                 except Exception as e:
-                    print(f"Error in table sampling for sample {i}: {e}")  # 添加打印语句
+                    print(f"Error in table sampling for sample {i}: {e}")   
                     continue
 
                 augmentation_input = parsed_sample
@@ -295,6 +301,7 @@ def end2end(
                 logging.debug("Augmentation info for sample %d: %s", i, augmentation_info)
                 print(f"Augmentation info for sample {i}: {augmentation_info}")
 
+                # This prompt joint all the information for answering questions
                 prompt = "\n".join(
                     [
                         example_k_shots,
@@ -309,6 +316,7 @@ def end2end(
                         "answer: \n",
                     ]
                 )
+
                 if (
                     table_provider.call_llm.num_tokens(prompt)
                     < table_provider.call_llm.TOTAL_TOKENS
@@ -321,18 +329,18 @@ def end2end(
                         print_warning=False,
                     )
                     logging.debug("Truncated prompt for sample %d", i)
-                    print(f"Truncated prompt for sample {i}")  # 添加打印语句
+                    print(f"Truncated prompt for sample {i}")   
                     batch_prompt.append(truncated_prompt)
                 augmentation_prompt.append(augmentation_info)
             pbar.update(1)
             logging.debug("Finished processing batch number: %d", batch_num)
-            print(f"Finished processing batch number: {batch_num}")  # 添加打印语句
+            print(f"Finished processing batch number: {batch_num}")   
             batches.append(batch_prompt)
             augmentation_batches.append(augmentation_prompt)
 
         if remaining_samples > 0:
             logging.debug("Processing remaining samples")
-            print("Processing remaining samples")  # 添加打印语句
+            print("Processing remaining samples")   
             batch_prompt = []
             start_index = num_batches * batch_size
             end_index = start_index + remaining_samples
@@ -342,10 +350,10 @@ def end2end(
                 else table_provider.table_loader.dataset[start_index:end_index]
             )
             logging.debug("Processing samples from index %d to %d", start_index, end_index)
-            print(f"Processing samples from index {start_index} to {end_index}")  # 添加打印语句
+            print(f"Processing samples from index {start_index} to {end_index}")   
             for i in range(remaining_samples):
                 logging.debug("Processing remaining sample %d", i)
-                print(f"Processing remaining sample {i}")  # 添加打印语句
+                print(f"Processing remaining sample {i}")   
                 parsed_sample = (
                     batch[i]
                     if load_local_dataset
@@ -356,17 +364,17 @@ def end2end(
                 query = parsed_sample["query"]
                 grd.append(parsed_sample["label"])
                 logging.debug("Query: %s", query)
-                print(f"Query: {query}")  # 添加打印语句
+                print(f"Query: {query}")   
 
                 try:
                     filter_table = table_provider.table_sampler.run(
                         query, parsed_sample
                     )
                     logging.debug("Filtered table generated for remaining sample %d", i)
-                    print(f"Filtered table generated for remaining sample {i}")  # 添加打印语句
+                    print(f"Filtered table generated for remaining sample {i}")   
                 except Exception as e:
                     logging.error("Error in table sampling for remaining sample %d: %s", i, e)
-                    print(f"Error in table sampling for remaining sample {i}: {e}")  # 添加打印语句
+                    print(f"Error in table sampling for remaining sample {i}: {e}")   
                     print("Skipping batch:", i)
                     continue
                 augmentation_info = (
@@ -375,7 +383,7 @@ def end2end(
                     else ""
                 )
                 logging.debug("Augmentation info for remaining sample %d: %s", i, augmentation_info)
-                print(f"Augmentation info for remaining sample {i}: {augmentation_info}")  # 添加打印语句
+                print(f"Augmentation info for remaining sample {i}: {augmentation_info}")   
                 prompt = "\n".join(
                     [
                         example_k_shots,
@@ -400,19 +408,20 @@ def end2end(
                         prompt, print_warning=False
                     )
                     logging.debug("Truncated prompt for remaining sample %d", i)
-                    print(f"Truncated prompt for remaining sample {i}")  # 添加打印语句
+                    print(f"Truncated prompt for remaining sample {i}")   
                     batch_prompt.append(truncated_prompt)
                 augmentation_prompt.append(augmentation_info)
             pbar.update(1)
             logging.debug("Finished processing remaining samples")
-            print("Finished processing remaining samples")  # 添加打印语句
+            print("Finished processing remaining samples")   
             batches.append(batch_prompt)
             augmentation_batches.append(augmentation_prompt)
+
 
     # save as jsonl
     if save_jsonl:
         logging.debug("Saving results as jsonl")
-        print("Saving results as jsonl")  # 添加打印语句
+        print("Saving results as jsonl")   
         save_jsonl_file(
             batches,
             grd,
@@ -424,7 +433,7 @@ def end2end(
     # directly call LLM
     elif azure_blob:
         logging.debug("Calling LLM directly")
-        print("Calling LLM directly")  # 添加打印语句
+        print("Calling LLM directly")   
         # call the LLMs
         for batch in tqdm(
             batches, desc=f"Calling LLM for {experiment_name}", ncols=150
@@ -447,10 +456,11 @@ def end2end(
             for item in pred:
                 f.write("%s\n" % item)
 
-        # evaluation
+
+        # Evaluation
         numbers = Evaluator().run(pred, grd, task_name)
         logging.info(f"Evaluation results of {experiment_name}_{task_name}:", numbers)
-        print(f"Evaluation results of {experiment_name}_{task_name}: {numbers}")  # 添加打印语句
+        print(f"Evaluation results of {experiment_name}_{task_name}: {numbers}")   
         evaluation_save_path = f"pipeline/data/Exp-{formatted_today}/{experiment_name}/output_evaluation.json"
 
         # mkdir

@@ -225,7 +225,7 @@ class TableAugmentation:
                 docs = retriever.get_relevant_documents(" ".join(parsed_example["table"]["header"]))
             
             # Ensure this wait is required, might not be needed
-            time.sleep(15)
+            time.sleep(5)
             
             # Extract relevant metadata from the retrieved documents
             metadata_list = []

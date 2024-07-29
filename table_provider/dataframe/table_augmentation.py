@@ -1,3 +1,4 @@
+import requests
 from ..agents.Metadata.metadata import MetadataApi
 from ..agents.call_llm import CallLLM
 from ..contract.enum_type import TableAugmentationType
@@ -207,40 +208,77 @@ class TableAugmentation:
         
         # Directly return the generated text as augmentation info
         return generated_text
-
+        
     def get_docs_references(self, parsed_example: dict) -> str:
         print("Starting get_docs_references method")
-        
+
         retriever = WikipediaRetriever(lang="en", load_max_docs=2)
         
-        # Use title for document retrieval if available
-        if parsed_example["title"]:
-            print("Using title for document retrieval:", parsed_example["title"])
-            docs = retriever.get_relevant_documents(parsed_example["title"])
-        # If title is not available, use caption
-        elif parsed_example["table"].get("caption"):
-            print("Using caption for document retrieval:", parsed_example["table"]["caption"])
-            docs = retriever.get_relevant_documents(parsed_example["table"]["caption"])
-        # If caption is also not available, use table headers
-        else:
-            print("No title or caption found, using header instead:", parsed_example['table']['header'])
-            docs = retriever.get_relevant_documents(" ".join(parsed_example["table"]["header"]))
-        
-        time.sleep(15)  # Ensure this wait is required, might not be needed
+        try:
+            # Use caption for document retrieval if available
+            if parsed_example["table"].get("caption"):
+                print("Using caption for document retrieval:", parsed_example["table"]["caption"])
+                docs = retriever.get_relevant_documents(parsed_example["table"]["caption"])
+            # If caption is also not available, use table headers
+            else:
+                print("No caption found, using header instead:", parsed_example['table']['header'])
+                docs = retriever.get_relevant_documents(" ".join(parsed_example["table"]["header"]))
+            
+            # Ensure this wait is required, might not be needed
+            time.sleep(15)
+            
+            # Check and print the structure of the retrieved documents
+            for i, doc in enumerate(docs):
+                print(f"Structure of document {i}: {vars(doc)}")
+            
+            # Limit the content length of the retrieved documents and extract key points
+            def extract_key_points(content):
+                # Simplified example of key point extraction
+                key_points = []
+                lines = content.split('\n')
+                for line in lines:
+                    if "wind farm" in line or "capacity" in line or "turbines" in line:
+                        key_points.append(line)
+                    if len(key_points) >= 3:  # Limit to 3 key points per document
+                        break
+                return " ".join(key_points)
+            
+            limited_docs = []
+            for doc in docs:
+                key_content = extract_key_points(doc.page_content)
+                limited_doc = {
+                    'title': doc.metadata.get('title', 'N/A'),
+                    'summary': doc.metadata.get('summary', 'N/A'),
+                    'source': doc.metadata.get('source', 'N/A'),
+                    'content': key_content  # Use extracted key points instead of full content
+                }
+                limited_docs.append(limited_doc)
+            
+            # Print the limited docs content for debugging
+            print("Limited docs content: ", limited_docs)
 
-        # Extract table, statement, and caption from parsed_example
-        table = {
-            "header": parsed_example.get("table", {}).get("header", []),
-            "rows": parsed_example.get("table", {}).get("rows", [])
-        }
-        statement = parsed_example.get("query", "")
-        caption = parsed_example.get("table", {}).get("caption", "")
+            # Extract table, statement, and caption from parsed_example
+            table = {
+                "header": parsed_example.get("table", {}).get("header", []),
+                "rows": parsed_example.get("table", {}).get("rows", [])
+            }
+            statement = parsed_example.get("query", "")
+            caption = parsed_example.get("table", {}).get("caption", "")
 
-        # Call the method to generate table summary
-        generated_summary = self.call_llm.generate_table_summary(docs, table, statement, caption)
-        print("Generated summary:", generated_summary)
-        
-        return generated_summary
+            # Call the method to generate table summary
+            print("Calling generate_table_summary with limited docs")
+            generated_summary = self.call_llm.generate_table_summary(limited_docs, table, statement, caption)
+            print("Generated summary:", generated_summary)
+            
+            return generated_summary
+        except requests.exceptions.RequestException as e:
+            print(f"An error occurred while retrieving documents: {e}")
+            return "Document retrieval failed"
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+            return "An unexpected error occurred"
+
+
 
 
     def assemble_neural_symbolic_augmentation(

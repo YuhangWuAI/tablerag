@@ -306,6 +306,7 @@ class CallLLM:
 
     @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
     def generate_table_summary(self, docs: list, table: dict, statement: str, caption: str) -> str:
+        
         prompt = f"""
         Example: You will be given a table, a statement, the table's caption, and related Wikipedia documents. Your task is to generate a concise summary for the table that directly addresses the statement, using the Wikipedia documents to enhance understanding.
 

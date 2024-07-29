@@ -284,7 +284,7 @@ def end2end(
                             "caption": parsed_sample["table"].get("caption", "")
                         }
                     }
-
+                print("Augmentation input", augmentation_input)
                 augmentation_info = (
                     table_provider.table_augmentation.run(augmentation_input)
                     if table_augmentation_type != "None"

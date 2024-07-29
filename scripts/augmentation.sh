@@ -1,6 +1,6 @@
 # End-to-end Jsonl Generation
 task_name=("tabfact")
-augmentation_types=("term_explanations")
+augmentation_types=("docs_references")
 
 # Empirical study on augmentation types
 for augmentation_type in "${augmentation_types[@]}"; do

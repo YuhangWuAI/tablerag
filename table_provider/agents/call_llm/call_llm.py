@@ -307,7 +307,7 @@ class CallLLM:
     @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
     def generate_table_summary(self, metadata_list: list, table: dict, statement: str, caption: str) -> str:
         prompt = f"""
-        Example: You will be given a table, a statement, the table's caption, and metadata from related Wikipedia documents. Your task is to generate a concise summary for the table that directly addresses the statement, using the Wikipedia metadata to enhance understanding.
+        Example: You will be given a table, a statement, the table's caption, and metadata from related Wikipedia documents. Your task is to generate a concise summary for the table that directly addresses the statement, using the Wikipedia metadata to enhance understanding. Ensure the summary starts with the phrase 'This table is used to determine the truth of the statement: [statement]' and includes only content related to the statement.
 
         User 1:
         I need an expert to help me create a concise summary of the table. Here is the statement: The scheduled date for the farm with 17 turbines be 2012.
@@ -337,12 +337,14 @@ class CallLLM:
 
         User 2:
         Summary:
-        "The farm with 17 turbines, Garracummer, is scheduled for 2012 according to the table. Wind power in the Republic of Ireland is significant, with over 300 wind farms generating electricity. As of 2021, the Republic of Ireland has 4,309 MW of installed wind power capacity, contributing to a high wind power penetration in the country."
+        "This table is used to determine the truth of the statement: The scheduled date for the farm with 17 turbines be 2012. The farm with 17 turbines, Garracummer, is scheduled for 2012 according to the table. Wind power in the Republic of Ireland is significant, with over 300 wind farms generating electricity. As of 2021, the Republic of Ireland has 4,309 MW of installed wind power capacity, contributing to a high wind power penetration in the country."
 
-        Now, generate a summary for the given table, addressing the statement and using the Wikipedia metadata for enhanced understanding.
+        Now, generate a summary for the given table, addressing the statement and using the Wikipedia metadata for enhanced understanding. Ensure the summary starts with the phrase 'This table is used to determine the truth of the statement: [statement]' and includes only content related to the statement.
 
         Statement:
         {statement}
+
+        This table is used to determine the truth of the statement: {statement}
 
         Table caption:
         {caption}

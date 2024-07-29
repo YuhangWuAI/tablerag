@@ -227,35 +227,18 @@ class TableAugmentation:
             # Ensure this wait is required, might not be needed
             time.sleep(15)
             
-            # Check and print the structure of the retrieved documents
-            for i, doc in enumerate(docs):
-                print(f"Structure of document {i}: {vars(doc)}")
-            
-            # Limit the content length of the retrieved documents and extract key points
-            def extract_key_points(content):
-                # Simplified example of key point extraction
-                key_points = []
-                lines = content.split('\n')
-                for line in lines:
-                    if "wind farm" in line or "capacity" in line or "turbines" in line:
-                        key_points.append(line)
-                    if len(key_points) >= 3:  # Limit to 3 key points per document
-                        break
-                return " ".join(key_points)
-            
-            limited_docs = []
+            # Extract relevant metadata from the retrieved documents
+            metadata_list = []
             for doc in docs:
-                key_content = extract_key_points(doc.page_content)
-                limited_doc = {
+                metadata = {
                     'title': doc.metadata.get('title', 'N/A'),
                     'summary': doc.metadata.get('summary', 'N/A'),
-                    'source': doc.metadata.get('source', 'N/A'),
-                    'content': key_content  # Use extracted key points instead of full content
+                    'source': doc.metadata.get('source', 'N/A')
                 }
-                limited_docs.append(limited_doc)
-            
-            # Print the limited docs content for debugging
-            print("Limited docs content: ", limited_docs)
+                metadata_list.append(metadata)
+
+            # Print the metadata for debugging
+            print("Retrieved metadata: ", metadata_list)
 
             # Extract table, statement, and caption from parsed_example
             table = {
@@ -265,9 +248,9 @@ class TableAugmentation:
             statement = parsed_example.get("query", "")
             caption = parsed_example.get("table", {}).get("caption", "")
 
-            # Call the method to generate table summary
-            print("Calling generate_table_summary with limited docs")
-            generated_summary = self.call_llm.generate_table_summary(limited_docs, table, statement, caption)
+            # Call the method to generate table summary using metadata
+            print("Calling generate_table_summary with metadata")
+            generated_summary = self.call_llm.generate_table_summary(metadata_list, table, statement, caption)
             print("Generated summary:", generated_summary)
             
             return generated_summary

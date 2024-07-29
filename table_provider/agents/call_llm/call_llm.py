@@ -305,10 +305,9 @@ class CallLLM:
 
 
     @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
-    def generate_table_summary(self, docs: list, table: dict, statement: str, caption: str) -> str:
-        
+    def generate_table_summary(self, metadata_list: list, table: dict, statement: str, caption: str) -> str:
         prompt = f"""
-        Example: You will be given a table, a statement, the table's caption, and related Wikipedia documents. Your task is to generate a concise summary for the table that directly addresses the statement, using the Wikipedia documents to enhance understanding.
+        Example: You will be given a table, a statement, the table's caption, and metadata from related Wikipedia documents. Your task is to generate a concise summary for the table that directly addresses the statement, using the Wikipedia metadata to enhance understanding.
 
         User 1:
         I need an expert to help me create a concise summary of the table. Here is the statement: The scheduled date for the farm with 17 turbines be 2012.
@@ -322,44 +321,25 @@ class CallLLM:
             "type": ["unknown", "enercon e - 70 2.3", "unknown", "vestas v90", "nordex n80 / n90", "nordex n90", "nordex n90", "unknown", "3 mw", "unknown", "5 mw", "enercon e82 3.0 mw", "nordex n90 2.5 mw", "nordex n90 2.5 mw", "nordex n117 2.4 mw", "nordex n90 2.5 mw", "nordex n90 2.5 mw"],
             "location": ["county wicklow", "county cork", "county dublin", "county clare", "county tipperary", "county laois", "county tipperary", "county clare", "county clare", "county louth", "county galway", "county clare", "county tipperary", "county cork", "county tipperary", "county wexford", "county tipperary"]
         }}
-        Here are the related Wikipedia documents:
-        {{
-            "title": "Wind farm",
-            "content": "A wind farm or wind park is a group of wind turbines in the same location used to produce electricity. A large wind farm may consist of several hundred individual wind turbines and cover an extended area of hundreds of square miles..."
-        }}
+        Here is the metadata from related Wikipedia documents:
+        [
+            {{
+                "title": "Wind power in Ireland",
+                "summary": "As of 2021 the island of Ireland has 5,585 megawatt and the Republic of Ireland has 4,309 MW of installed wind power nameplate capacity...",
+                "source": "https://en.wikipedia.org/wiki/Wind_power_in_Ireland"
+            }},
+            {{
+                "title": "List of wind farms in the Republic of Ireland",
+                "summary": "This is a list of wind farms in the Republic of Ireland...",
+                "source": "https://en.wikipedia.org/wiki/List_of_wind_farms_in_the_Republic_of_Ireland"
+            }}
+        ]
 
         User 2:
         Summary:
-        "The farm with 17 turbines is scheduled for 2012. The table shows that 'garracummer' has 17 turbines and is scheduled for 2012. Wind farms consist of multiple wind turbines to generate electricity."
+        "The farm with 17 turbines, Garracummer, is scheduled for 2012 according to the table. Wind power in the Republic of Ireland is significant, with over 300 wind farms generating electricity. As of 2021, the Republic of Ireland has 4,309 MW of installed wind power capacity, contributing to a high wind power penetration in the country."
 
-        User 1:
-        I need an expert to help me create a concise summary of the table. Here is the statement: All 12 clubs play a total of 22 games for the WRU Division One East.
-        Here is the table caption: WRU Division One East Standings
-        Here is the table:
-        {{
-            "club": ["pontypool rfc", "caerphilly rfc", "blackwood rfc", "bargoed rfc", "uwic rfc", "llanharan rfc", "newbridge rfc", "rumney rfc", "newport saracens rfc", "beddau rfc", "fleur de lys rfc", "llantrisant rfc"],
-            "played": [22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22],
-            "drawn": [2, 2, 2, 0, 2, 1, 2, 2, 0, 0, 1, 0],
-            "lost": [2, 4, 6, 8, 7, 12, 11, 12, 14, 15, 16, 18],
-            "points for": [648, 482, 512, 538, 554, 436, 355, 435, 344, 310, 300, 402],
-            "points against": [274, 316, 378, 449, 408, 442, 400, 446, 499, 483, 617, 592],
-            "tries for": [81, 56, 60, 72, 71, 44, 36, 56, 45, 32, 34, 55],
-            "tries against": [32, 37, 42, 52, 50, 51, 47, 52, 64, 61, 77, 77],
-            "try bonus": [12, 7, 8, 10, 6, 1, 2, 5, 2, 2, 2, 4],
-            "losing bonus": [1, 3, 3, 4, 2, 7, 3, 3, 3, 4, 4, 6],
-            "points": [89, 78, 71, 70, 64, 46, 45, 44, 37, 34, 28, 26]
-        }}
-        Here are the related Wikipedia documents:
-        {{
-            "title": "Rugby union",
-            "content": "Rugby union, widely known simply as rugby, is a full-contact team sport that originated in England in the first half of the 19th century..."
-        }}
-
-        User 2:
-        Summary:
-        "All 12 clubs have played 22 games. The table shows the standings for each club, all of which have played 22 games. Rugby union is a full-contact sport originating from England."
-
-        Now, generate a summary for the given table, addressing the statement and using the Wikipedia documents for enhanced understanding.
+        Now, generate a summary for the given table, addressing the statement and using the Wikipedia metadata for enhanced understanding.
 
         Statement:
         {statement}
@@ -370,8 +350,8 @@ class CallLLM:
         Table:
         {json.dumps(table, indent=2)}
 
-        Wikipedia documents:
-        {json.dumps([doc['content'] for doc in docs], indent=2)}
+        Wikipedia metadata:
+        {json.dumps(metadata_list, indent=2)}
 
         Please return the result in the following format:
         {{

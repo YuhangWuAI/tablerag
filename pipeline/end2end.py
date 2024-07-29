@@ -9,10 +9,12 @@ from .compoments import get_instruction
 from typing import List
 import logging
 
-# 配置日志
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levellevel)s - %(message)s')
+logging.basicConfig(
+    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
+    datefmt='%m/%d/%Y %H:%M:%S',
+    level=logging.INFO,
+)
 
-logging.debug("Starting script")
 
 def save_jsonl_file(
     prompt_list: List,

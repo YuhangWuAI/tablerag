@@ -1,12 +1,8 @@
 import requests
-from ..agents.Metadata.metadata import MetadataApi
 from ..agents.call_llm import CallLLM
 from ..contract.enum_type import TableAugmentationType
 from ..data_loader.table_linearizer import StructuredDataLinearizer
-from ..contract.enum_type import TableSerializationType
 from langchain.retrievers import WikipediaRetriever
-from langchain.tools import Tool
-from langchain.utilities import GoogleSearchAPIWrapper
 import pandas as pd
 import json
 import time
@@ -69,8 +65,6 @@ class TableAugmentation:
                     print_warning=False,
                 )
             )
-
-
 
 
     def get_term_explanations(self, parsed_example: dict) -> str:

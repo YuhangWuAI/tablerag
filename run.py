@@ -197,43 +197,6 @@ if __name__ == "__main__":
     args = add_arguments()
     update_config("config.json", args)
 
-    if args.debug:
-        table_provider = TableProvider(
-            task_name=args.task_name,
-            split=args.split,
-            table_sampling_type=args.table_sampling_type,
-            table_augmentation_type=args.table_augmentation_type,
-            n_cluster=args.n_cluster,
-            top_k=args.top_k,
-            embedding_type=args.embedding_type,
-            whether_column_grounding=args.whether_column_grounding
-        )
-
-        # 从数据集中获取 parsed_example 示例
-        table_loader = table_provider.table_loader
-        k_shot_examples = table_loader.get_k_shot_example(1)  # 获取一个示例
-
-        # 假设 parse_table 返回包含 'table' 键的字典
-        parsed_example = table_loader.parse_table(k_shot_examples[0])
-
-        query = "What is the average age of the people who have a job?"
-        filtered_table = table_provider.table_sampler.run(query, parsed_example)
-        for _example in filtered_table:
-            # Replace some cells with None
-            random_row_index = np.random.randint(0, len(_example), size=2)
-            random_col_index = np.random.randint(0, len(_example.columns), size=2)
-            for i in range(len(random_row_index)):
-                row_idx = random_row_index[i]
-                col_idx = random_col_index[i]
-                _example.iloc[row_idx, col_idx] = None
-            print("Original Tables:\n {}".format(_example))
-            _example_cleansing = table_provider.table_cleanser.fill_empty_column_name(
-                _example
-            )
-            print("Cleansed Tables:\n {}".format(_example_cleansing))
-
-        print(table_loader.get_k_shot_example(3))
-
 
     if args.test:
         TestAgents.test_str_normalize('2008-04-13 00:00:00', '2008-4-13 0:0:0')

@@ -1,7 +1,5 @@
 from .table_sampling import TableSampling
 from .table_augmentation import TableAugmentation
-from .table_cleansing import TableCleansing
-from .table_grounding import TableGrounding
 from ..data_loader import TableLoader
 from ..agents import CallLLM
 
@@ -41,4 +39,3 @@ class TableProvider:
             split=split,
             table_augmentation_type=table_augmentation_type,
         )
-        self.table_cleanser = TableCleansing()

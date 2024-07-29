@@ -23,11 +23,7 @@ class TableSerializationType(Enum):
 
 @unique
 class TableSamplingType(Enum):
-    evenly_sample = "evenly_sample"
-    clustering_sample = "clustering_sample"
     embedding_sample = "embedding_sample"
-    random_sample = "random_sample"
-    table_to_text_sample = "table_to_text_sample"
     auto_row_filter = "auto_row_filter"
 
 

@@ -6,7 +6,6 @@ from torch_scatter import scatter_mean
 
 from ...data.config import MODE2LOSS
 from ...metadata.column_type import SubCategory
-from ...metadata.metadata_data.df_idx_dictionary import DF_IDX_DICT
 from .co_attention import CoAttention
 from .config import Metadata2Config
 from .embedding import InputEmbedding

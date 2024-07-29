@@ -11,7 +11,6 @@ from sklearn import metrics
 from torch.nn.parallel import DistributedDataParallel
 from transformers import TapasModel
 
-from .metadata_data.table_fields import Metadata_Label
 from ..model import FieldRecognizer, Metadata2, MetadataTapas
 from ..model import get_tf_config, get_metadata2_config
 

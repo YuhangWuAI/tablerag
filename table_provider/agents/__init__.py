@@ -6,5 +6,5 @@ from .FeatureExtraction import (
     generate_numerical_range,
     generate_time_series_intervals,
 )
-from .call_llm import CallLLM, CodeLLM, Role, Config
+from .call_llm import CallLLM, Config
 from .embedder.call_embedding import Embedder

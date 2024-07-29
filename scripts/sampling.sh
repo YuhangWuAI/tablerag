@@ -1,5 +1,6 @@
 # End-to-end Jsonl Generation
-sampling_methods=("auto_row_filter")
+# auto_row_filter
+sampling_methods=("embedding_sample")
 task_name=("tabfact")
 
 # Empirical study on table sampling types

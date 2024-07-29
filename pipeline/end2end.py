@@ -118,7 +118,7 @@ def end2end(
     experiment_name: str = None,
     whether_cot: bool = False,
     whether_self_consistency: bool = False,
-    use_sampled_table_for_augmentation = True,
+    use_sampled_table_for_augmentation = False,
     whether_column_grounding: bool = False,
 ):
     logging.debug("Starting end2end process")
@@ -268,7 +268,7 @@ def end2end(
 
                 try:
                     filter_table = table_provider.table_sampler.run(query, parsed_sample)
-                    print(f"Filtered table generated for sample {i}")  # 添加打印语句
+                    print(f"Filtered table generated for sample {i}:\n{filter_table}") # 添加打印语句
                 except Exception as e:
                     print(f"Error in table sampling for sample {i}: {e}")  # 添加打印语句
                     continue

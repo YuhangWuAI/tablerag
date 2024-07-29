@@ -45,14 +45,7 @@ class TableCleansingType(Enum):
 
 @unique
 class TableAugmentationType(Enum):
-    extra_structural_info_table_size = "table_size"
-    extra_structural_info_header_hierarchy = "header_hierarchy"
-    extra_analytical_roles = "metadata"
-    extra_summary_statistics_info_categories = "header_field_categories"
-    extra_summary_statistics_info_trunk_summary = "trunk_summary"
-    extra_intermediate_NL_reasoning_steps = "intermediate_NL_reasoning_steps"
     external_retrieved_knowledge_info_term_explanations = "term_explanations"
     external_retrieved_knowledge_info_docs_references = "docs_references"
-    assemble_neural_symbolic_augmentation = "assemble_neural_symbolic_augmentation"
     assemble_retrieval_based_augmentation = "assemble_retrieval_based_augmentation"
     invalid = "None"

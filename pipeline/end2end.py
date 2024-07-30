@@ -171,8 +171,8 @@ def end2end(
     logging.debug("Batch size: %d", batch_size)
     print(f"Batch size: {batch_size}")
     num_samples = (
-        sample_size if sample_size is not None else len(table_provider.table_loader.dataset)
-    )  # 根据参数决定处理样本数量
+        sample_size if sample_size is not None else (len(dataset) if load_local_dataset else len(table_provider.table_loader.dataset))
+    )
     logging.debug("Number of samples: %d", num_samples)
     print(f"Number of samples: {num_samples}")
 
@@ -182,7 +182,6 @@ def end2end(
     logging.debug("Number of batches: %d, Remaining samples: %d", num_batches, remaining_samples)
     print(f"Number of batches: {num_batches}, Remaining samples: {remaining_samples}")
 
-    # 进度条优化
     logging.debug("Initializing progress bar")
     print("Initializing progress bar")
     with tqdm(
@@ -287,7 +286,7 @@ def end2end(
         if remaining_samples > 0:
             logging.debug("Processing remaining samples")
             print("Processing remaining samples")
-            batch_prompt = []
+            batch_prompt, augmentation_prompt = [], []
             start_index = num_batches * batch_size
             end_index = start_index + remaining_samples
             batch = (

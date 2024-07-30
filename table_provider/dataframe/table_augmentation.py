@@ -82,7 +82,6 @@ class TableAugmentation:
         
         # Call terms explanation method
         generated_text = self.call_llm.generate_terms_explanation(table, statement, caption)
-        print("Generated explanations:", generated_text)
         
         # Directly return the generated text as augmentation info
         return generated_text

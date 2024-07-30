@@ -42,7 +42,7 @@ class TableSampling:
             )
         # set the default sampling type
         if table_sampling_type == "default":
-            table_sampling_type = "auto_row_filter"
+            table_sampling_type = "embedding_sample"
         self.table_sampling_type = table_sampling_type
 
         # Initialize the embedder

@@ -2,7 +2,8 @@ from .table_sampling import TableSampling
 from .table_augmentation import TableAugmentation
 from ..data_loader import TableLoader
 from ..agents import CallLLM
-
+import warnings
+warnings.filterwarnings("ignore")
 
 class TableProvider:
     def __init__(self) -> None:

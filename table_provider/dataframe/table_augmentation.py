@@ -2,11 +2,12 @@ import requests
 from ..agents.call_llm import CallLLM
 from ..contract.enum_type import TableAugmentationType
 from ..data_loader.table_linearizer import StructuredDataLinearizer
-from langchain.retrievers import WikipediaRetriever
+from langchain_community.retrievers import WikipediaRetriever
 import pandas as pd
 import json
 import time
-
+import warnings
+warnings.filterwarnings("ignore")
 
 class TableAugmentation:
     def __init__(

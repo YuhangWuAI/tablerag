@@ -7,6 +7,8 @@ from table_provider import CallLLM, TableProvider
 from .evaluation.evaluator import Evaluator
 from typing import List, Optional
 import logging
+import warnings
+warnings.filterwarnings("ignore")
 
 logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',

@@ -10,7 +10,8 @@ import tiktoken  # for counting tokens
 from typing import List, Tuple, Union
 from scipy import spatial  # for calculating vector similarities for search
 from tenacity import retry, stop_after_attempt, wait_random_exponential
-
+import warnings
+warnings.filterwarnings("ignore")
 
 class Config:
     def __init__(self, config_path: str = "config.json"):

@@ -2,7 +2,8 @@ from datasets import load_dataset
 from .table_linearizer import StructuredDataLinearizer
 from ..contract.enum_type import TaskName, TableSerializationType
 from ..agents.call_llm import CallLLM
-
+import warnings
+warnings.filterwarnings("ignore")
 
 class TableLoader:
     def __init__(

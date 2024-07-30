@@ -9,6 +9,8 @@ from table_provider import (
     TaskName,
 )
 from pipeline.end2end import end2end
+import warnings
+warnings.filterwarnings("ignore")
 
 def add_arguments():
     # Create an ArgumentParser object
@@ -80,7 +82,7 @@ def add_arguments():
     )
     parser.add_argument('--test', action='store_true', help='Enable test mode.')
     parser.add_argument('--debug', action='store_true', help='Enable debug mode.')
-    parser.add_argument('--azure_blob', action='store_true', help='Enable azure blob.')
+    parser.add_argument('--azure_blob', action='store_true', help='Enable azure_blob.')
     parser.add_argument('--save_jsonl', action='store_true', help='Enable save jsonl.')
     parser.add_argument('--whether_cot', action='store_true', help='Enable cot.')
     parser.add_argument(
@@ -215,4 +217,5 @@ if __name__ == "__main__":
         load_local_dataset=args.load_local_dataset,
         whether_column_grounding=args.whether_column_grounding,
         sample_size=args.sample_size  
+        
     )

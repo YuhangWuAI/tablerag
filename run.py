@@ -209,7 +209,5 @@ if __name__ == "__main__":
         save_jsonl=args.save_jsonl,
         azure_blob=args.azure_blob,
         load_local_dataset=args.load_local_dataset,
-        whether_cot=args.whether_cot,
-        whether_self_consistency=args.self_consistency,
         whether_column_grounding=args.whether_column_grounding,
     )

@@ -39,6 +39,19 @@ def save_jsonl_file_single(
         json_string = json.dumps(data)
         file.write(json_string + '\n')
 
+def load_processed_indices(file_path: str):
+    processed_indices = set()
+    if os.path.exists(file_path):
+        with open(file_path, 'r') as file:
+            lines = file.readlines()
+            for i, line in enumerate(lines):
+                try:
+                    json.loads(line)
+                    processed_indices.add(i)
+                except json.JSONDecodeError:
+                    break
+    return processed_indices
+
 def end2end(
     task_name: str,
     split: str,
@@ -54,7 +67,8 @@ def end2end(
     experiment_name: str = None,
     use_sampled_table_for_augmentation = False,
     whether_column_grounding: bool = False,
-    sample_size: Optional[int] = None,  
+    sample_size: Optional[int] = None,
+    overwrite_existing: bool = False,
 ):
     logging.debug("Starting end2end process")
     print("Starting end2end process")
@@ -69,16 +83,19 @@ def end2end(
     print(f"File save path: {file_save_path}")
 
     # whether the task is already done
-    if os.path.exists(file_save_path):
-        logging.info("Task already done, skipping: %s", file_save_path)
-        print(f"Task already done, skipping: {file_save_path}")
-        return
+    if os.path.exists(file_save_path) and not overwrite_existing:
+        processed_indices = load_processed_indices(file_save_path)
+        if len(processed_indices) >= sample_size:
+            logging.info("Task already done, skipping: %s", file_save_path)
+            print(f"Task already done, skipping: {file_save_path}")
+            return
+    else:
+        processed_indices = set()
 
     # Load progress
-    processed_indices = set()
     if os.path.exists(progress_save_path):
         with open(progress_save_path, "r") as progress_file:
-            processed_indices = set(json.load(progress_file))
+            processed_indices.update(set(json.load(progress_file)))
 
     # Initializing tableprovider and get instruction
     print("Initializing TableProvider")
@@ -197,7 +214,7 @@ def end2end(
                     else ""
                 )
                 logging.debug("Augmentation info for sample %d: %s", i, augmentation_info)
-                print(f"Augmentation info for sample {i}: {augmentation_info}")
+                print(f"Augmentation info for sample %i: {augmentation_info}")
 
                 # This prompt joint all the information for answering questions
                 prompt = "\n".join(
@@ -224,7 +241,7 @@ def end2end(
                         print_warning=False,
                     )
                     logging.debug("Truncated prompt for sample %d", i)
-                    print(f"Truncated prompt for sample {i}")
+                    print(f"Truncated prompt for sample %i")
                     batch_prompt.append(truncated_prompt)
 
                 # Save progress
@@ -244,7 +261,7 @@ def end2end(
 
             pbar.update(batch_size)
             logging.debug("Finished processing batch number: %d", batch_num)
-            print(f"Finished processing batch number: {batch_num}")
+            print(f"Finished processing batch number: %d")
             batches.append(batch_prompt)
 
         if remaining_samples > 0:
@@ -277,7 +294,7 @@ def end2end(
                 query = parsed_sample["query"]
                 grd.append(parsed_sample["label"])
                 logging.debug("Query: %s", query)
-                print(f"Query: {query}")
+                print(f"Query: %query")
 
                 try:
                     filter_table = table_provider.table_sampler.run(
@@ -287,7 +304,7 @@ def end2end(
                     print(f"Filtered table generated for remaining sample %d")
                 except Exception as e:
                     logging.error("Error in table sampling for remaining sample %d: %s", i, e)
-                    print(f"Error in table sampling for remaining sample %d: {e}")
+                    print(f"Error in table sampling for remaining sample %d: %e")
                     print("Skipping batch:", i)
                     continue
                 augmentation_info = (
@@ -296,7 +313,7 @@ def end2end(
                     else ""
                 )
                 logging.debug("Augmentation info for remaining sample %d: %s", i, augmentation_info)
-                print(f"Augmentation info for remaining sample %d: {augmentation_info}")
+                print(f"Augmentation info for remaining sample %d: %augmentation_info")
                 prompt = "\n".join(
                     [
                         "query:",
@@ -345,7 +362,7 @@ def end2end(
         print("Calling LLM directly")
         # call the LLMs
         for batch in tqdm(
-            batches, desc=f"Calling LLM for {experiment_name}", ncols=150
+            batches, desc=f"Calling LLM for %experiment_name", ncols=150
         ):
             response = table_provider.call_llm.generate_text(
                 batch, model_type=CallLLM().GPT_MODEL
@@ -367,8 +384,8 @@ def end2end(
 
         # Evaluation
         numbers = Evaluator().run(pred, grd, task_name)
-        logging.info(f"Evaluation results of {experiment_name}_{task_name}:", numbers)
-        print(f"Evaluation results of {experiment_name}_{task_name}: {numbers}")
+        logging.info(f"Evaluation results of %experiment_name_%task_name:", numbers)
+        print(f"Evaluation results of %experiment_name_%task_name: %numbers")
         evaluation_save_path = f"pipeline/data/Exp-{formatted_today}/{experiment_name}/output_evaluation.json"
 
         # mkdir

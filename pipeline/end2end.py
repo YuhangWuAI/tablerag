@@ -5,7 +5,7 @@ import time
 from tqdm import tqdm
 from table_provider import CallLLM, TableProvider
 from .evaluation.evaluator import Evaluator
-from typing import List
+from typing import List, Optional
 import logging
 
 logging.basicConfig(
@@ -116,6 +116,7 @@ def end2end(
     experiment_name: str = None,
     use_sampled_table_for_augmentation = False,
     whether_column_grounding: bool = False,
+    sample_size: Optional[int] = None,  
 ):
     logging.debug("Starting end2end process")
     print("Starting end2end process")
@@ -170,8 +171,8 @@ def end2end(
     logging.debug("Batch size: %d", batch_size)
     print(f"Batch size: {batch_size}")
     num_samples = (
-        len(dataset) if load_local_dataset else len(table_provider.table_loader.dataset)
-    )
+        sample_size if sample_size is not None else len(table_provider.table_loader.dataset)
+    )  # 根据参数决定处理样本数量
     logging.debug("Number of samples: %d", num_samples)
     print(f"Number of samples: {num_samples}")
 
@@ -181,13 +182,14 @@ def end2end(
     logging.debug("Number of batches: %d, Remaining samples: %d", num_batches, remaining_samples)
     print(f"Number of batches: {num_batches}, Remaining samples: {remaining_samples}")
 
-    # Progress bar
+    # 进度条优化
     logging.debug("Initializing progress bar")
     print("Initializing progress bar")
     with tqdm(
-        total=num_batches + (1 if remaining_samples > 0 else 0),
+        total=num_samples,
         desc=f"Processing {experiment_name}_{task_name}",
         ncols=150,
+        bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [elapsed: {elapsed} remaining: {remaining}]'
     ) as pbar:
         logging.debug("Progress bar initialized")
         print("Progress bar initialized")
@@ -259,6 +261,8 @@ def end2end(
                     ]
                 )
 
+                print("Prompt: /n", prompt)
+
                 if (
                     table_provider.call_llm.num_tokens(prompt)
                     < table_provider.call_llm.TOTAL_TOKENS
@@ -274,7 +278,7 @@ def end2end(
                     print(f"Truncated prompt for sample {i}")
                     batch_prompt.append(truncated_prompt)
                 augmentation_prompt.append(augmentation_info)
-            pbar.update(1)
+            pbar.update(batch_size)
             logging.debug("Finished processing batch number: %d", batch_num)
             print(f"Finished processing batch number: {batch_num}")
             batches.append(batch_prompt)
@@ -295,7 +299,7 @@ def end2end(
             print(f"Processing samples from index {start_index} to {end_index}")
             for i in range(remaining_samples):
                 logging.debug("Processing remaining sample %d", i)
-                print(f"Processing remaining sample {i}")
+                print(f"Processing remaining sample %d", i)
                 parsed_sample = (
                     batch[i]
                     if load_local_dataset
@@ -325,7 +329,7 @@ def end2end(
                     else ""
                 )
                 logging.debug("Augmentation info for remaining sample %d: %s", i, augmentation_info)
-                print(f"Augmentation info for remaining sample {i}: {augmentation_info}")
+                print(f"Augmentation info for remaining sample %d: {augmentation_info}")
                 prompt = "\n".join(
                     [
                         "query:",
@@ -345,10 +349,10 @@ def end2end(
                         prompt, print_warning=False
                     )
                     logging.debug("Truncated prompt for remaining sample %d", i)
-                    print(f"Truncated prompt for remaining sample {i}")
+                    print(f"Truncated prompt for remaining sample %d")
                     batch_prompt.append(truncated_prompt)
                 augmentation_prompt.append(augmentation_info)
-            pbar.update(1)
+            pbar.update(remaining_samples)
             logging.debug("Finished processing remaining samples")
             print("Finished processing remaining samples")
             batches.append(batch_prompt)

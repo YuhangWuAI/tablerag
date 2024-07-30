@@ -79,9 +79,6 @@ class TableAugmentation:
         caption = parsed_example.get("table", {}).get("caption", "")
         
         # Print the extracted information
-        print("Original Table:", json.dumps(table, indent=2))
-        print("Statement:", statement)
-        print("Caption:", caption)
         
         # Call terms explanation method
         generated_text = self.call_llm.generate_terms_explanation(table, statement, caption)

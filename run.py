@@ -1,6 +1,5 @@
 import os
 import json
-import unittest
 import argparse
 import numpy as np
 from table_provider import (
@@ -94,6 +93,12 @@ def add_arguments():
         '--whether_column_grounding',
         action='store_true',
         help='Enable column grounding.',
+    )
+    parser.add_argument(
+        '--sample_size',
+        type=int,
+        help='Number of samples to process. If not specified, process the entire dataset.',
+        default=1
     )
 
     # Add arguments for config
@@ -195,7 +200,6 @@ if __name__ == "__main__":
     args = add_arguments()
     update_config("config.json", args)
 
-
     end2end(
         task_name=args.task_name,
         split=args.split,
@@ -210,4 +214,5 @@ if __name__ == "__main__":
         azure_blob=args.azure_blob,
         load_local_dataset=args.load_local_dataset,
         whether_column_grounding=args.whether_column_grounding,
+        sample_size=args.sample_size  
     )

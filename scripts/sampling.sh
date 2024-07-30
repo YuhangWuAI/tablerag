@@ -7,7 +7,7 @@ task_name=("tabfact")
 for task in "${task_name[@]}"; do
     for sampling_method in "${sampling_methods[@]}"; do
         echo ">>>>>>>>>>>>>>>>>>Start with $task $sampling_method<<<<<<<<<<<<<<<<<<<<<<"
-        python run.py  --gpt_model gpt-3.5-turbo --total_tokens 160000 -t $task -r $sampling_method --experiment_name table_sampling --load_local_dataset --azure_blob --table_token_limit_portion 70 --augmentation_token_limit_portion 0
+        python run.py  --gpt_model gpt-3.5-turbo --total_tokens 160000 -t $task -r $sampling_method --sample_size 2 --experiment_name table_sampling --load_local_dataset --azure_blob --table_token_limit_portion 70 --augmentation_token_limit_portion 0
         echo ">>>>>>>>>>>>>>>>>>Done with $task $sampling_method<<<<<<<<<<<<<<<<<<<<<<<"
     done
 done

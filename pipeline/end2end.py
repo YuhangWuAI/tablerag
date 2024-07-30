@@ -14,73 +14,30 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
-def save_jsonl_file(
-    prompt_list: List,
-    label_list: List,
+def save_jsonl_file_single(
+    prompt: str,
+    label: str,
     file_path: str,
-    pred_list: List = None,
+    pred: str = None,
 ):
-    def flatten_iterative(lst):
-        """
-        Flatten a list of lists iteratively.
-        """
-        stack = lst[::-1]
-        result = []
-        while stack:
-            item = stack.pop()
-            if isinstance(item, list):
-                stack.extend(item[::-1])
-            else:
-                result.append(item)
-        return result
-
     # mkdir
     directory = os.path.dirname(file_path)
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-    # adjust Babel input
-    data_list = []
-    flatten_prompt_list = (
-        flatten_iterative(prompt_list)
-        if isinstance(prompt_list, list)
-        and all(isinstance(sub_list, list) for sub_list in prompt_list)
-        else prompt_list
-    )
-
-    if pred_list is None:
-        for prompt, label in zip(flatten_prompt_list, label_list):
-            used_tokens = CallLLM().num_tokens(prompt)
-            data_list.append(
-                {
-                    'prompt': prompt,
-                    'label': label,
-                    'used_tokens': used_tokens,
-                }
-            )
-    else:
-        flatten_pred_list = (
-            flatten_iterative(pred_list)
-            if isinstance(pred_list, list)
-            and all(isinstance(sub_list, list) for sub_list in pred_list)
-            else pred_list
-        )
-        for prompt, label, pred in zip(flatten_prompt_list, label_list, flatten_pred_list):
-            used_tokens = CallLLM().num_tokens(prompt)
-            data_list.append(
-                {
-                    'prompt': prompt,
-                    'label': label,
-                    'pred': pred,
-                    'used_tokens': used_tokens,
-                }
-            )
+    used_tokens = CallLLM().num_tokens(prompt)
+    data = {
+        'prompt': prompt,
+        'label': label,
+        'used_tokens': used_tokens,
+    }
+    if pred is not None:
+        data['pred'] = pred
 
     # save jsonl
-    with open(file_path, 'w') as file:
-        for item in data_list:
-            json_string = json.dumps(item)
-            file.write(json_string + '\n')
+    with open(file_path, 'a') as file:
+        json_string = json.dumps(data)
+        file.write(json_string + '\n')
 
 def end2end(
     task_name: str,
@@ -106,6 +63,7 @@ def end2end(
     formatted_today = today.strftime('%y%m%d')
 
     file_save_path = f"pipeline/data/Exp-{formatted_today}/{experiment_name}/{task_name}_{table_sampling_type}_{table_augmentation_type}_{k_shot}.jsonl"
+    progress_save_path = f"pipeline/data/Exp-{formatted_today}/{experiment_name}/{task_name}_progress.json"
 
     logging.debug("File save path: %s", file_save_path)
     print(f"File save path: {file_save_path}")
@@ -115,6 +73,12 @@ def end2end(
         logging.info("Task already done, skipping: %s", file_save_path)
         print(f"Task already done, skipping: {file_save_path}")
         return
+
+    # Load progress
+    processed_indices = set()
+    if os.path.exists(progress_save_path):
+        with open(progress_save_path, "r") as progress_file:
+            processed_indices = set(json.load(progress_file))
 
     # Initializing tableprovider and get instruction
     print("Initializing TableProvider")
@@ -190,6 +154,10 @@ def end2end(
             logging.debug("Processing samples from index %d to %d", start_index, end_index)
             print(f"Processing samples from index {start_index} to {end_index}")
             for i in range(batch_size):
+                index = start_index + i
+                if index in processed_indices:
+                    continue
+                
                 print("====================================================================================================================")
                 print(f"Processing sample {i} in batch {batch_num}")
                 parsed_sample = (
@@ -258,6 +226,22 @@ def end2end(
                     logging.debug("Truncated prompt for sample %d", i)
                     print(f"Truncated prompt for sample {i}")
                     batch_prompt.append(truncated_prompt)
+
+                # Save progress
+                processed_indices.add(index)
+                with open(progress_save_path, "w") as progress_file:
+                    json.dump(list(processed_indices), progress_file)
+                
+                # Save jsonl
+                if save_jsonl:
+                    logging.debug("Saving results as jsonl")
+                    print("Saving results as jsonl")
+                    save_jsonl_file_single(
+                        batch_prompt[-1],
+                        grd[-1],
+                        file_save_path
+                    )
+
             pbar.update(batch_size)
             logging.debug("Finished processing batch number: %d", batch_num)
             print(f"Finished processing batch number: {batch_num}")
@@ -277,6 +261,10 @@ def end2end(
             logging.debug("Processing samples from index %d to %d", start_index, end_index)
             print(f"Processing samples from index {start_index} to {end_index}")
             for i in range(remaining_samples):
+                index = start_index + i
+                if index in processed_indices:
+                    continue
+
                 logging.debug("Processing remaining sample %d", i)
                 print(f"Processing remaining sample %d", i)
                 parsed_sample = (
@@ -296,10 +284,10 @@ def end2end(
                         query, parsed_sample
                     )
                     logging.debug("Filtered table generated for remaining sample %d", i)
-                    print(f"Filtered table generated for remaining sample {i}")
+                    print(f"Filtered table generated for remaining sample %d")
                 except Exception as e:
                     logging.error("Error in table sampling for remaining sample %d: %s", i, e)
-                    print(f"Error in table sampling for remaining sample {i}: {e}")
+                    print(f"Error in table sampling for remaining sample %d: {e}")
                     print("Skipping batch:", i)
                     continue
                 augmentation_info = (
@@ -330,23 +318,29 @@ def end2end(
                     logging.debug("Truncated prompt for remaining sample %d", i)
                     print(f"Truncated prompt for remaining sample %d")
                     batch_prompt.append(truncated_prompt)
+
+                # Save progress
+                processed_indices.add(index)
+                with open(progress_save_path, "w") as progress_file:
+                    json.dump(list(processed_indices), progress_file)
+                
+                # Save jsonl
+                if save_jsonl:
+                    logging.debug("Saving results as jsonl")
+                    print("Saving results as jsonl")
+                    save_jsonl_file_single(
+                        batch_prompt[-1],
+                        grd[-1],
+                        file_save_path
+                    )
+
             pbar.update(remaining_samples)
             logging.debug("Finished processing remaining samples")
             print("Finished processing remaining samples")
             batches.append(batch_prompt)
 
-    # save as jsonl
-    if save_jsonl:
-        logging.debug("Saving results as jsonl")
-        print("Saving results as jsonl")
-        save_jsonl_file(
-            batches,
-            grd,
-            file_save_path
-        )
-
     # directly call LLM
-    elif azure_blob:
+    if azure_blob:
         logging.debug("Calling LLM directly")
         print("Calling LLM directly")
         # call the LLMs
@@ -370,7 +364,6 @@ def end2end(
         ) as f:
             for item in pred:
                 f.write("%s\n" % item)
-
 
         # Evaluation
         numbers = Evaluator().run(pred, grd, task_name)
@@ -402,6 +395,6 @@ def end2end(
             json.dump(existing_data, file, indent=4)
 
         # save the response
-        save_jsonl_file(
+        save_jsonl_file_single(
             batches, grd, file_save_path, pred
         )

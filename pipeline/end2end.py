@@ -14,12 +14,10 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
-
 def save_jsonl_file(
     prompt_list: List,
     label_list: List,
     file_path: str,
-    augmentation_list: List,
     pred_list: List = None,
 ):
     def flatten_iterative(lst):
@@ -50,21 +48,11 @@ def save_jsonl_file(
         else prompt_list
     )
 
-    flatten_augmentation_prompt_list = (
-        flatten_iterative(augmentation_list)
-        if isinstance(augmentation_list, list)
-        and all(isinstance(sub_list, list) for sub_list in augmentation_list)
-        else augmentation_list
-    )
-
     if pred_list is None:
-        for prompt, label, augmentation in zip(
-            flatten_prompt_list, label_list, flatten_augmentation_prompt_list
-        ):
+        for prompt, label in zip(flatten_prompt_list, label_list):
             used_tokens = CallLLM().num_tokens(prompt)
             data_list.append(
                 {
-                    'augmentation': augmentation,
                     'prompt': prompt,
                     'label': label,
                     'used_tokens': used_tokens,
@@ -77,16 +65,10 @@ def save_jsonl_file(
             and all(isinstance(sub_list, list) for sub_list in pred_list)
             else pred_list
         )
-        for prompt, label, augmentation, pred in zip(
-            flatten_prompt_list,
-            label_list,
-            flatten_augmentation_prompt_list,
-            flatten_pred_list,
-        ):
+        for prompt, label, pred in zip(flatten_prompt_list, label_list, flatten_pred_list):
             used_tokens = CallLLM().num_tokens(prompt)
             data_list.append(
                 {
-                    'augmentation': augmentation,
                     'prompt': prompt,
                     'label': label,
                     'pred': pred,
@@ -99,7 +81,6 @@ def save_jsonl_file(
         for item in data_list:
             json_string = json.dumps(item)
             file.write(json_string + '\n')
-
 
 def end2end(
     task_name: str,
@@ -178,10 +159,11 @@ def end2end(
 
     num_batches = num_samples // batch_size
     remaining_samples = num_samples % batch_size
-    batches, augmentation_batches = [], []
+    batches = []
     logging.debug("Number of batches: %d, Remaining samples: %d", num_batches, remaining_samples)
     print(f"Number of batches: {num_batches}, Remaining samples: {remaining_samples}")
 
+    # 进度条优化
     logging.debug("Initializing progress bar")
     print("Initializing progress bar")
     with tqdm(
@@ -197,7 +179,7 @@ def end2end(
         for batch_num in range(num_batches):
             logging.debug("Processing batch number: %d", batch_num)
             print(f"Processing batch number: {batch_num}")
-            batch_prompt, augmentation_prompt = [], []
+            batch_prompt = []
             start_index = batch_num * batch_size
             end_index = start_index + batch_size
             batch = (
@@ -276,17 +258,15 @@ def end2end(
                     logging.debug("Truncated prompt for sample %d", i)
                     print(f"Truncated prompt for sample {i}")
                     batch_prompt.append(truncated_prompt)
-                augmentation_prompt.append(augmentation_info)
             pbar.update(batch_size)
             logging.debug("Finished processing batch number: %d", batch_num)
             print(f"Finished processing batch number: {batch_num}")
             batches.append(batch_prompt)
-            augmentation_batches.append(augmentation_prompt)
 
         if remaining_samples > 0:
             logging.debug("Processing remaining samples")
             print("Processing remaining samples")
-            batch_prompt, augmentation_prompt = [], []
+            batch_prompt = []
             start_index = num_batches * batch_size
             end_index = start_index + remaining_samples
             batch = (
@@ -350,13 +330,10 @@ def end2end(
                     logging.debug("Truncated prompt for remaining sample %d", i)
                     print(f"Truncated prompt for remaining sample %d")
                     batch_prompt.append(truncated_prompt)
-                augmentation_prompt.append(augmentation_info)
             pbar.update(remaining_samples)
             logging.debug("Finished processing remaining samples")
             print("Finished processing remaining samples")
             batches.append(batch_prompt)
-            augmentation_batches.append(augmentation_prompt)
-
 
     # save as jsonl
     if save_jsonl:
@@ -365,8 +342,7 @@ def end2end(
         save_jsonl_file(
             batches,
             grd,
-            file_save_path,
-            augmentation_batches,
+            file_save_path
         )
 
     # directly call LLM
@@ -427,5 +403,5 @@ def end2end(
 
         # save the response
         save_jsonl_file(
-            batches, grd, file_save_path, augmentation_batches, pred
+            batches, grd, file_save_path, pred
         )

@@ -327,7 +327,7 @@ def end2end(
                         "query:",
                         query,
                         "the table needed to be answered: \n",
-                        filter_table.to_html(),
+                        filter_table(),
                         augmentation_info,
                     ]
                 )
@@ -378,7 +378,7 @@ def end2end(
 
         for batch_prompt in tqdm(batches, desc=f"Calling LLM for {experiment_name}", ncols=150):
             for prompt in batch_prompt:
-                retrieved_docs = colbert.retrieve(prompt, top_k=3, force_fast=False, rerank=False, rerank_top_k=1)
+                retrieved_docs = colbert.retrieve(prompt, top_k=1, force_fast=False, rerank=False, rerank_top_k=1)
                 
                 # Instead of generating response using LLM, directly append the retrieved document content
                 retrieved_content = [doc['content'] for doc in retrieved_docs]
@@ -421,7 +421,7 @@ def end2end(
         # Update the existing data with the new data
         existing_data.update(
             {
-                f"{experiment_name}-{task_name}-{table_sampling_type}-{table_augmentation_type}-{embedding_type}-{CallLLM().GPT_MODEL}-token_allocation-A:{augmentation_tokens}T:{max_truncate_tokens}-w/ use_header_grounding-{whether_column_grounding}": numbers,
+                f"{experiment_name}-{task_name}-{table_sampling_type}-{table_augmentation_type}-{embedding_type}-{CallLLM().GPT_MODEL}-use_header_grounding-{whether_column_grounding}": numbers,
             }
         )
 

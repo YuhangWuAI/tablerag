@@ -24,9 +24,8 @@ class ColBERT:
         # 初步检索
         results = self.RAG.search(query, index_name=self.index_name, k=top_k, force_fast=force_fast)
 
-        print(f"Query: {query}")
-        for i, result in enumerate(results):
-            print(f"Result {i+1}: {result}")
+        #for i, result in enumerate(results):
+        #    print(f"Result {i+1}: {result}")
 
         # 如果启用重排序
         if rerank:

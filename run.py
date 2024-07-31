@@ -100,7 +100,7 @@ def add_arguments():
         '--sample_size',
         type=int,
         help='Number of samples to process. If not specified, process the entire dataset.',
-        default=10
+        default=1
     )
 
     # Add arguments for config
@@ -217,5 +217,4 @@ if __name__ == "__main__":
         load_local_dataset=args.load_local_dataset,
         whether_column_grounding=args.whether_column_grounding,
         sample_size=args.sample_size  
-        
     )

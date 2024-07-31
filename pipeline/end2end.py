@@ -3,6 +3,7 @@ import os
 import datetime
 import time
 from tqdm import tqdm
+from pipeline.compoments.colbert import ColBERT
 from table_provider import CallLLM, TableProvider
 from .evaluation.evaluator import Evaluator
 from typing import List, Optional
@@ -27,11 +28,9 @@ def save_jsonl_file_single(
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-    used_tokens = CallLLM().num_tokens(prompt)
     data = {
         'prompt': prompt,
         'label': label,
-        'used_tokens': used_tokens,
     }
     if pred is not None:
         data['pred'] = pred
@@ -71,6 +70,8 @@ def end2end(
     whether_column_grounding: bool = False,
     sample_size: Optional[int] = None,
     overwrite_existing: bool = False,
+    colbert_model_name: str = "colbert-ir/colbertv2.0",  # Add this parameter for ColBERT model
+    index_name: str = "my_index",  # Add this parameter for the index name
 ):
     logging.debug("Starting end2end process")
     print("Starting end2end process")
@@ -83,7 +84,6 @@ def end2end(
 
     logging.debug("File save path: %s", file_save_path)
     print(f"File save path: {file_save_path}")
-
 
     # if not exist create it
     progress_directory = os.path.dirname(progress_save_path)
@@ -167,7 +167,7 @@ def end2end(
         # Processing batches (storing all the information)
         for batch_num in range(num_batches):
             logging.debug("Processing batch number: %d", batch_num)
-            print(f"Processing batch number: {batch_num}")
+            print(f"Processing batch number: %d")
             batch_prompt = []
             start_index = batch_num * batch_size
             end_index = start_index + batch_size
@@ -364,18 +364,28 @@ def end2end(
             print("Finished processing remaining samples")
             batches.append(batch_prompt)
 
-    # directly call LLM
+    # Step 1: Embed and index the JSONL file using ColBERT
     if azure_blob:
-        logging.debug("Calling LLM directly")
-        print("Calling LLM directly")
-        # call the LLMs
-        for batch in tqdm(
-            batches, desc=f"Calling LLM for %experiment_name", ncols=150
-        ):
-            response = table_provider.call_llm.generate_text(
-                batch, model_type=CallLLM().GPT_MODEL
-            )
-            pred.append(response)
+        logging.debug("Embedding and indexing JSONL file using ColBERT")
+        print("Embedding and indexing JSONL file using ColBERT")
+        colbert = ColBERT(file_save_path, colbert_model_name, index_name)
+        colbert.embed_and_index()
+
+        # Step 2: Retrieve documents using ColBERT and generate responses
+        logging.debug("Retrieving documents using ColBERT and generating responses")
+        print("Retrieving documents using ColBERT and generating responses")
+
+
+        for batch_prompt in tqdm(batches, desc=f"Calling LLM for {experiment_name}", ncols=150):
+            for prompt in batch_prompt:
+                retrieved_docs = colbert.retrieve(prompt, top_k=3, force_fast=False, rerank=False, rerank_top_k=1)
+                
+                # Instead of generating response using LLM, directly append the retrieved document content
+                retrieved_content = [doc['content'] for doc in retrieved_docs]
+                # Optionally, you can concatenate all retrieved documents' content into one response or store them as a list
+                # For example, let's store them as a list of retrieved documents:
+                pred.append(retrieved_content)
+
 
         # mkdir
         directory = os.path.dirname(file_save_path)
@@ -392,8 +402,8 @@ def end2end(
 
         # Evaluation
         numbers = Evaluator().run(pred, grd, task_name)
-        logging.info(f"Evaluation results of %experiment_name_%task_name:", numbers)
-        print(f"Evaluation results of %experiment_name_%task_name: %numbers")
+        logging.info(f"Evaluation results of {experiment_name}_{task_name}: {numbers}")
+        print(f"Evaluation results of {experiment_name}_{task_name}: {numbers}")
         evaluation_save_path = f"pipeline/data/Exp-{formatted_today}/{experiment_name}/output_evaluation.json"
 
         # mkdir

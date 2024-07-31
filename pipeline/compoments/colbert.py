@@ -3,7 +3,7 @@ from ragatouille import RAGPretrainedModel
 import warnings
 warnings.filterwarnings("ignore")
 
-class RAGatouillePipeline:
+class ColBERT:
     def __init__(self, jsonl_path: str, model_name: str, index_name: str):
         self.jsonl_path = jsonl_path
         self.model_name = model_name
@@ -23,7 +23,11 @@ class RAGatouillePipeline:
     def retrieve(self, query: str, top_k: int = 1, force_fast: bool = False, rerank: bool = False, rerank_top_k: int = 1):
         # 初步检索
         results = self.RAG.search(query, index_name=self.index_name, k=top_k, force_fast=force_fast)
-        
+
+        print(f"Query: {query}")
+        for i, result in enumerate(results):
+            print(f"Result {i+1}: {result}")
+
         # 如果启用重排序
         if rerank:
             # 从返回结果中提取文档内容
@@ -34,8 +38,8 @@ class RAGatouillePipeline:
         
         return results
 
-def ragatouille_pipeline(jsonl_path: str, model_name: str, index_name: str, queries: list, top_k: int = 1, force_fast: bool = False, rerank: bool = False, rerank_top_k: int = 1):
-    pipeline = RAGatouillePipeline(jsonl_path, model_name, index_name)
+def colbert_pipeline(jsonl_path: str, model_name: str, index_name: str, queries: list, top_k: int = 1, force_fast: bool = False, rerank: bool = False, rerank_top_k: int = 1):
+    pipeline = ColBERT(jsonl_path, model_name, index_name)
     pipeline.embed_and_index()
     responses = {}
     for query in queries:
@@ -51,5 +55,5 @@ if __name__ == "__main__":
     queries = ["the scheduled date for the farm with 17 turbine be 2012"]
     
     # 控制返回结果数量和重排序
-    responses = ragatouille_pipeline(jsonl_path, model_name, index_name, queries, top_k=3, force_fast=True, rerank=True, rerank_top_k=1)
+    responses = colbert_pipeline(jsonl_path, model_name, index_name, queries, top_k=3, force_fast=True, rerank=True, rerank_top_k=1)
     print(responses)

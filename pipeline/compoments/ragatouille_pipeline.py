@@ -18,18 +18,28 @@ class RAGatouillePipeline:
     def embed_and_index(self):
         data = self.load_jsonl()
         docs = [item['prompt'] for item in data]
-        self.RAG.index(index_name=self.index_name, collection=docs)
+        self.RAG.index(index_name=self.index_name, collection=docs, split_documents=False)
 
-    def retrieve(self, query: str, top_k: int = 1):
-        results = self.RAG.search(query, index_name=self.index_name, k=top_k)
+    def retrieve(self, query: str, top_k: int = 1, force_fast: bool = False, rerank: bool = False, rerank_top_k: int = 1):
+        # 初步检索
+        results = self.RAG.search(query, index_name=self.index_name, k=top_k, force_fast=force_fast)
+        
+        # 如果启用重排序
+        if rerank:
+            # 从返回结果中提取文档内容
+            documents = [result['content'] for result in results]
+            # 重新排序
+            reranked_results = self.RAG.rerank(query=query, documents=documents, k=rerank_top_k)
+            return reranked_results
+        
         return results
 
-def ragatouille_pipeline(jsonl_path: str, model_name: str, index_name: str, queries: list, top_k: int = 1):
+def ragatouille_pipeline(jsonl_path: str, model_name: str, index_name: str, queries: list, top_k: int = 1, force_fast: bool = False, rerank: bool = False, rerank_top_k: int = 1):
     pipeline = RAGatouillePipeline(jsonl_path, model_name, index_name)
     pipeline.embed_and_index()
     responses = {}
     for query in queries:
-        retrieved_docs = pipeline.retrieve(query, top_k)
+        retrieved_docs = pipeline.retrieve(query, top_k, force_fast, rerank, rerank_top_k)
         responses[query] = retrieved_docs
     return responses
 
@@ -39,5 +49,7 @@ if __name__ == "__main__":
     model_name = "colbert-ir/colbertv2.0"
     index_name = "my_index"
     queries = ["the scheduled date for the farm with 17 turbine be 2012"]
-    responses = ragatouille_pipeline(jsonl_path, model_name, index_name, queries)
+    
+    # 控制返回结果数量和重排序
+    responses = ragatouille_pipeline(jsonl_path, model_name, index_name, queries, top_k=3, force_fast=True, rerank=True, rerank_top_k=1)
     print(responses)

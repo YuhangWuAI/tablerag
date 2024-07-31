@@ -35,6 +35,11 @@ class Config:
         ]  # truncate tables to this many columns before calling the API
         self.USE_SELF_CONSISTENCY = config.get('use_self_consistency', False)
 
+        self.client = openai.OpenAI(
+            api_key=self.OPENAI_API_KEY, 
+            base_url=self.API_BASE
+        )
+
 class CallLLM:
     """Class for calling the OpenAI Language Model API."""
 
@@ -55,6 +60,7 @@ class CallLLM:
         self.USE_SELF_CONSISTENCY = config.USE_SELF_CONSISTENCY
         os.environ["OPENAI_API_KEY"] = self.OPENAI_API_KEY
         os.environ["API_BASE"] = self.API_BASE
+        self.client = config.client
 
     def call_llm_embedding(self, text: str) -> List[float]:
         """Return an embedding for a string."""
@@ -370,36 +376,19 @@ class CallLLM:
     @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
     def generate_text(self, prompt: str) -> str:
         """Generate text based on the prompt and instruction."""
-        openai.api_key = self.OPENAI_API_KEY
-        openai.api_base = self.API_BASE  # Set proxy base URL
-
         try:
             print("Calling OpenAI API for text generation")
-            if self.GPT_MODEL in ["text-davinci-003", "text-davinci-002"]:
-                response = openai.Completion.create(
-                    model=self.GPT_MODEL,
-                    prompt=f"{prompt} \n\n:",
-                    temperature=0.5,
-                    max_tokens=96,
-                    top_p=1.0,
-                    frequency_penalty=0.0,
-                    presence_penalty=0.0,
-                )
-                result = response["choices"][0]["text"].strip()
-            elif self.GPT_MODEL in ["gpt-3.5-turbo", "gpt-4"]:
-                response = openai.ChatCompletion.create(
-                    model=self.GPT_MODEL,
-                    messages=[{"role": "user", "content": prompt}],
-                    temperature=0.5,
-                    max_tokens=96,
-                    top_p=1.0,
-                    frequency_penalty=0.0,
-                    presence_penalty=0.0,
-                )
-                result = response["choices"][0]["message"]["content"].strip()
-            else:
-                raise ValueError(f"Model type '{self.GPT_MODEL}' not supported.")
-            print("Generated Code Snippet / Terms successfully!")
+            response = self.client.chat.completions.create(
+                model=self.GPT_MODEL,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.5,
+                max_tokens=96,
+                top_p=1.0,
+                frequency_penalty=0.0,
+                presence_penalty=0.0,
+            )
+            result = response.choices[0].message.content.strip()
+            print("Generated text successfully!")
             return result
         except Exception as e:
             print("Error in generate_text:", e)

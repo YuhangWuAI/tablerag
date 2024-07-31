@@ -1,5 +1,7 @@
 import json
 from ragatouille import RAGPretrainedModel
+import warnings
+warnings.filterwarnings("ignore")
 
 class RAGatouillePipeline:
     def __init__(self, jsonl_path: str, model_name: str, index_name: str):
@@ -33,7 +35,7 @@ def ragatouille_pipeline(jsonl_path: str, model_name: str, index_name: str, quer
 
 if __name__ == "__main__":
     # Example usage:
-    jsonl_path = "pipeline/data/Exp-240730/table_augmentation/tabfact_default_term_explanations_1.jsonl"
+    jsonl_path = "/home/yuhangwu/Desktop/Projects/TableProcess/pipeline/data/Exp-240731/table_augmentation/tabfact_default_term_explanations_1.jsonl"
     model_name = "colbert-ir/colbertv2.0"
     index_name = "my_index"
     queries = ["the scheduled date for the farm with 17 turbine be 2012"]

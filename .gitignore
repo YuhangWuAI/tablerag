@@ -10,4 +10,4 @@ dataloader/__pycache__/
 pipeline/data/
 /.DS_Store
 table_provider/agents/embedder/*
-./ragatouille
+./ragatouille/

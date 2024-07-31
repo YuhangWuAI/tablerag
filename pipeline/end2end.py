@@ -84,6 +84,12 @@ def end2end(
     logging.debug("File save path: %s", file_save_path)
     print(f"File save path: {file_save_path}")
 
+
+    # if not exist create it
+    progress_directory = os.path.dirname(progress_save_path)
+    if not os.path.exists(progress_directory):
+        os.makedirs(progress_directory)
+
     # whether the task is already done
     if os.path.exists(file_save_path) and not overwrite_existing:
         processed_indices = load_processed_indices(file_save_path)

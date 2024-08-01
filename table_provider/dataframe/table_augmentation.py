@@ -144,10 +144,10 @@ class TableAugmentation:
     def assemble_retrieval_based_augmentation(
         self, parsed_example: dict
     ) -> pd.DataFrame:
-        return "\n".join(
+        return "\n".join([
             self.get_term_explanations(parsed_example),
             self.get_docs_references(parsed_example),
-        )
+        ])
     
     # Ablation experiments
     def func_set(self) -> dict:

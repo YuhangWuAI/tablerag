@@ -3,7 +3,7 @@ import os
 import datetime
 import time
 from tqdm import tqdm
-from pipeline.compoments.colbert import ColBERT
+from pipeline.compoments.ColBERT import ColBERT
 from pipeline.compoments.request_serializer import serialize_request, deserialize_request
 from table_provider import CallLLM, TableProvider
 from .evaluation.evaluator import Evaluator
@@ -11,8 +11,9 @@ from typing import List, Optional
 import warnings
 warnings.filterwarnings("ignore")
 
+
 def save_jsonl_file_single(
-    request: str,
+    request: dict,
     label: str,
     file_path: str,
     pred: str = None,
@@ -22,8 +23,16 @@ def save_jsonl_file_single(
     if not os.path.exists(directory):
         os.makedirs(directory)
 
+    # 组织 request 的内容，并添加描述信息
+    request_str = (
+        f"query:\n{request['query']}\n"
+        f"table_html:\n{request['table_html']}\n"
+        f"terms_explanation:\n{request.get('terms_explanation', '')}\n"
+        f"table_summary:\n{request.get('table_summary', '')}"
+    )
+
     data = {
-        'request': json.loads(request),  # 直接存储解析后的request字典
+        'request': request_str,  # 保存为 request 字段
         'label': label,
     }
     if pred is not None:
@@ -33,20 +42,6 @@ def save_jsonl_file_single(
     with open(file_path, 'a') as file:
         json_string = json.dumps(data, indent=4)
         file.write(json_string + '\n')
-
-
-def load_processed_indices(file_path: str):
-    processed_indices = set()
-    if os.path.exists(file_path):
-        with open(file_path, 'r') as file:
-            lines = file.readlines()
-            for i, line in enumerate(lines):
-                try:
-                    json.loads(line)
-                    processed_indices.add(i)
-                except json.JSONDecodeError:
-                    break
-    return processed_indices
 
 def end2end(
     task_name: str,
@@ -291,17 +286,8 @@ def end2end(
                     table_html=filter_table.to_html(),
                     augmentation_info=augmentation_info  
                 )
-                if (
-                    table_provider.call_llm.num_tokens(request)
-                    < table_provider.call_llm.TOTAL_TOKENS
-                ):
-                    batch_request.append(request)
-                else:
-                    truncated_request = table_provider.call_llm.truncated_string(
-                        request, print_warning=False
-                    )
-                    print("Truncated request for remaining sample ", i, "\n")
-                    batch_request.append(truncated_request)
+
+                batch_request.append(request)
 
                 # Save progress
                 processed_indices.add(index)

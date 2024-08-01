@@ -17,7 +17,7 @@ class ColBERT:
 
     def embed_and_index(self):
         data = self.load_jsonl()
-        docs = [item['prompt'] for item in data]
+        docs = [item['request'] for item in data]
         self.RAG.index(index_name=self.index_name, collection=docs, split_documents=False)
 
     def retrieve(self, query: str, top_k: int = 1, force_fast: bool = False, rerank: bool = False, rerank_top_k: int = 1):
@@ -48,10 +48,10 @@ def colbert_pipeline(jsonl_path: str, model_name: str, index_name: str, queries:
 
 if __name__ == "__main__":
     # Example usage:
-    jsonl_path = "/home/yuhangwu/Desktop/Projects/TableProcess/pipeline/data/Exp-240731/table_augmentation/tabfact_default_term_explanations_1.jsonl"
+    jsonl_path = "/home/yuhangwu/Desktop/Projects/TableProcess/pipeline/data/Exp-240801/table_augmentation/tabfact_default_term_explanations_1.jsonl"
     model_name = "colbert-ir/colbertv2.0"
     index_name = "my_index"
-    queries = ["the scheduled date for the farm with 17 turbine be 2012"]
+    queries = ["touchdown atlantic , in the category of sporting , be establish in 2010"]
     
     # 控制返回结果数量和重排序
     responses = colbert_pipeline(jsonl_path, model_name, index_name, queries, top_k=3, force_fast=True, rerank=True, rerank_top_k=1)

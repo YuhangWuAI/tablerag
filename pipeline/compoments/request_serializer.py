@@ -1,12 +1,12 @@
 import json
 
-def serialize_request(query: str, table_html: str, augmentation_info: dict) -> str:
+def serialize_request(query: str, table_html: str, augmentation_info: dict) -> dict:
     try:
         # 从 augmentation_info 中提取 terms_explanation 和 table_summary，如果不存在则为空字符串
         terms_explanation = augmentation_info.get("terms_explanation", "")
         table_summary = augmentation_info.get("table_summary", "")
 
-        # 构建请求字典
+        # 构建请求字典并返回
         request_dict = {
             "query": query,
             "table_html": table_html,
@@ -14,14 +14,13 @@ def serialize_request(query: str, table_html: str, augmentation_info: dict) -> s
             "table_summary": table_summary,
         }
         
-        # 将字典序列化为 JSON 字符串
-        request = json.dumps(request_dict, indent=4)
-        return request
+        return request_dict
 
     except Exception as e:
         print(f"Error in serialize_request: {e}")
-        # 返回一个空的 JSON 字符串，确保后续代码仍然可以正常运行
-        return "{}"
+        # 返回一个空的字典，确保后续代码仍然可以正常运行
+        return {}
+
 
 def deserialize_request(request: str) -> dict:
     try:

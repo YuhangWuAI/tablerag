@@ -2,7 +2,7 @@ import json
 
 def serialize_request(query: str, table_html: str, augmentation_info: dict) -> str:
     try:
-        # 从 augmentation_info 中提取 terms_explanation 和 table_summary
+        # 从 augmentation_info 中提取 terms_explanation 和 table_summary，如果不存在则为空字符串
         terms_explanation = augmentation_info.get("terms_explanation", "")
         table_summary = augmentation_info.get("table_summary", "")
 
@@ -28,7 +28,7 @@ def deserialize_request(request: str) -> dict:
         # 将 JSON 字符串解析为字典
         request_dict = json.loads(request)
         
-        # 提取和解析相关字段
+        # 提取和解析相关字段，确保即使字段不存在也能返回默认值
         parsed_data = {
             "query": request_dict.get("query", ""),
             "table_html": request_dict.get("table_html", ""),

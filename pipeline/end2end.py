@@ -5,43 +5,13 @@ import time
 from tqdm import tqdm
 from pipeline.compoments.ColBERT import ColBERT
 from pipeline.compoments.request_serializer import serialize_request, deserialize_request
+from pipeline.data_processing.save_jsonl import load_processed_indices, save_jsonl_file
 from table_provider import CallLLM, TableProvider
 from .evaluation.evaluator import Evaluator
 from typing import List, Optional
 import warnings
 warnings.filterwarnings("ignore")
 
-
-def save_jsonl_file_single(
-    request: dict,
-    label: str,
-    file_path: str,
-    pred: str = None,
-):
-    # mkdir
-    directory = os.path.dirname(file_path)
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-
-    # 组织 request 的内容，并添加描述信息
-    request_str = (
-        f"query:\n{request['query']}\n"
-        f"table_html:\n{request['table_html']}\n"
-        f"terms_explanation:\n{request.get('terms_explanation', '')}\n"
-        f"table_summary:\n{request.get('table_summary', '')}"
-    )
-
-    data = {
-        'request': request_str,  # 保存为 request 字段
-        'label': label,
-    }
-    if pred is not None:
-        data['pred'] = pred
-
-    # save jsonl
-    with open(file_path, 'a') as file:
-        json_string = json.dumps(data, indent=4)
-        file.write(json_string + '\n')
 
 def end2end(
     task_name: str,
@@ -227,7 +197,7 @@ def end2end(
                 # Save jsonl
                 if save_jsonl:
                     print("Saving results as jsonl\n")
-                    save_jsonl_file_single(
+                    save_jsonl_file(
                         batch_request[-1],
                         grd[-1],
                         file_save_path
@@ -297,7 +267,7 @@ def end2end(
                 # Save jsonl
                 if save_jsonl:
                     print("Saving results as jsonl\n")
-                    save_jsonl_file_single(
+                    save_jsonl_file(
                         batch_request[-1],
                         grd[-1],
                         file_save_path
@@ -371,7 +341,7 @@ def end2end(
             json.dump(existing_data, file, indent=4)
 
         # save the response
-        save_jsonl_file_single(
+        save_jsonl_file(
             batches, grd, file_save_path, pred
         )
     '''

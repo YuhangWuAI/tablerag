@@ -52,21 +52,8 @@ class TableAugmentation:
             augmentation_info = self.func_set()[self.table_augmentation_type](
                 parsed_example
             )
-        # print(f"Augmentation info: {augmentation_info}")
-        if (
-            self.call_llm.num_tokens(augmentation_info)
-            < self.call_llm.AUGMENTATION_TOKEN_LIMIT
-        ):
-            return augmentation_info
-        else:
-            return (
-                    self.call_llm.truncated_string(
-                    augmentation_info,
-                    self.call_llm.AUGMENTATION_TOKEN_LIMIT,
-                    print_warning=False,
-                )
-            )
-
+        # 直接返回 augmentation_info，不进行截断处理
+        return augmentation_info
 
     def get_term_explanations(self, parsed_example: dict) -> str:
         print("Starting get_term_explanations method")
@@ -138,8 +125,6 @@ class TableAugmentation:
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
             return "An unexpected error occurred"
-
-
 
     def assemble_retrieval_based_augmentation(
         self, parsed_example: dict

@@ -31,19 +31,19 @@ class TableAugmentation:
             )
         self.table_augmentation_type = table_augmentation_type
 
-    def run(self, parsed_example: dict) -> pd.DataFrame:
+    def run(self, parsed_example: dict) -> dict:
         """
         Run the table augmentation.
         Args:
             query: the query
             table: the table
         Returns:
-            the augmented table
+            A dictionary with the augmented table including 'terms_explanation' and 'table_summary' fields.
         """
         assert parsed_example is not None, "Table is None"
         assert len(parsed_example["table"]["rows"]) > 0, "Table has no rows"
         assert len(parsed_example["table"]["header"]) > 0, "Table has no header"
-        # Run the row filter
+        # Run the augmentation
         if self.table_augmentation_type == "header_field_categories":
             augmentation_info = self.func_set()["metadata"](
                 parsed_example, only_return_categories=True
@@ -52,10 +52,11 @@ class TableAugmentation:
             augmentation_info = self.func_set()[self.table_augmentation_type](
                 parsed_example
             )
-        # 直接返回 augmentation_info，不进行截断处理
+        
+        # Return the augmentation info as a dictionary
         return augmentation_info
 
-    def get_term_explanations(self, parsed_example: dict) -> str:
+    def get_term_explanations(self, parsed_example: dict) -> dict:
         print("Starting get_term_explanations method")
         
         # Extract the table, query (statement), and caption from the parsed example
@@ -66,15 +67,13 @@ class TableAugmentation:
         statement = parsed_example.get("query", "")
         caption = parsed_example.get("table", {}).get("caption", "")
         
-        # Print the extracted information
-        
         # Call terms explanation method
         generated_text = self.call_llm.generate_terms_explanation(table, statement, caption)
         
-        # Directly return the generated text as augmentation info
-        return generated_text
+        # Return the generated text in a dictionary under the 'terms_explanation' key
+        return {"terms_explanation": generated_text}
         
-    def get_docs_references(self, parsed_example: dict) -> str:
+    def get_docs_references(self, parsed_example: dict) -> dict:
         print("Starting get_docs_references method")
 
         retriever = WikipediaRetriever(lang="en", load_max_docs=2)
@@ -118,21 +117,23 @@ class TableAugmentation:
             generated_summary = self.call_llm.generate_table_summary(metadata_list, table, statement, caption)
             print("Generated summary:", generated_summary)
             
-            return generated_summary
+            # Return the generated summary in a dictionary under the 'table_summary' key
+            return {"table_summary": generated_summary}
         except requests.exceptions.RequestException as e:
             print(f"An error occurred while retrieving documents: {e}")
-            return "Document retrieval failed"
+            return {"table_summary": "Document retrieval failed"}
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
-            return "An unexpected error occurred"
+            return {"table_summary": "An unexpected error occurred"}
 
     def assemble_retrieval_based_augmentation(
         self, parsed_example: dict
-    ) -> pd.DataFrame:
-        return "\n".join([
-            self.get_term_explanations(parsed_example),
-            self.get_docs_references(parsed_example),
-        ])
+    ) -> dict:
+        term_explanations = self.get_term_explanations(parsed_example)
+        docs_references = self.get_docs_references(parsed_example)
+        
+        # Merge the dictionaries and return as a single dictionary
+        return {**term_explanations, **docs_references}
     
     # Ablation experiments
     def func_set(self) -> dict:

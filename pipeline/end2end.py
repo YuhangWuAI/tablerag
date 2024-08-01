@@ -110,9 +110,6 @@ def end2end(
         whether_column_grounding,
     )
 
-    max_truncate_tokens = table_provider.call_llm.MAX_TRUNCATE_TOKENS
-    augmentation_tokens = table_provider.call_llm.AUGMENTATION_TOKEN_LIMIT
-
     # Loading local dataset if required
     if load_local_dataset:
         print("Loading local dataset\n")
@@ -165,7 +162,7 @@ def end2end(
                 if index in processed_indices:
                     continue
                 
-                print("====================================================================================================================\n")
+                print("=============================================================================================================================\n")
                 print("Processing sample ", i, " in batch ", batch_num, "\n")
                 parsed_sample = (
                     batch[i]
@@ -260,7 +257,8 @@ def end2end(
                 index = start_index + i
                 if index in processed_indices:
                     continue
-
+                
+                print("=============================================================================================================================\n")
                 print("Processing remaining sample ", i, "\n")
                 parsed_sample = (
                     batch[i]

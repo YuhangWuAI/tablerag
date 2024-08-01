@@ -100,7 +100,7 @@ def add_arguments():
         '--sample_size',
         type=int,
         help='Number of samples to process. If not specified, process the entire dataset.',
-        default=1
+        default=3
     )
 
     # Add arguments for config

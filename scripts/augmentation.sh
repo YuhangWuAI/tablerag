@@ -1,7 +1,7 @@
 # End-to-end Jsonl Generation
 # docs_references and term_explanations and assemble_retrieval_based_augmentation
 task_name=("tabfact")
-augmentation_types=("assemble_retrieval_based_augmentation")
+augmentation_types=("term_explanations")
 
 # Empirical study on augmentation types
 for augmentation_type in "${augmentation_types[@]}"; do

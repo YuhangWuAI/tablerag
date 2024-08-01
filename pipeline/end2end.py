@@ -4,7 +4,7 @@ import datetime
 import time
 from tqdm import tqdm
 from pipeline.compoments.colbert import ColBERT
-from pipeline.compoments.request_serializer import serialize_request
+from pipeline.compoments.request_serializer import serialize_request, deserialize_request
 from table_provider import CallLLM, TableProvider
 from .evaluation.evaluator import Evaluator
 from typing import List, Optional
@@ -17,9 +17,8 @@ logging.basicConfig(
     datefmt='%m/%d/%Y %H:%M:%S',
     level=logging.INFO,
 )
-
 def save_jsonl_file_single(
-    prompt: str,
+    request: str,
     label: str,
     file_path: str,
     pred: str = None,
@@ -30,7 +29,7 @@ def save_jsonl_file_single(
         os.makedirs(directory)
 
     data = {
-        'prompt': prompt,
+        'request': request,
         'label': label,
     }
     if pred is not None:
@@ -166,110 +165,199 @@ def end2end(
         print("Progress bar initialized")
 
         # Processing batches (storing all the information)
-    for batch_num in range(num_batches):
-        logging.debug("Processing batch number: %d", batch_num)
-        print(f"Processing batch number: %d")
-        batch_request = []
-        start_index = batch_num * batch_size
-        end_index = start_index + batch_size
-        batch = (
-            dataset[start_index:end_index]
-            if load_local_dataset
-            else table_provider.table_loader.dataset[start_index:end_index]
-        )
-        logging.debug("Processing samples from index %d to %d", start_index, end_index)
-        print(f"Processing samples from index {start_index} to {end_index}")
-        for i in range(batch_size):
-            index = start_index + i
-            if index in processed_indices:
-                continue
-            
-            print("====================================================================================================================")
-            print(f"Processing sample {i} in batch {batch_num}")
-            parsed_sample = (
-                batch[i]
+        for batch_num in range(num_batches):
+            logging.debug("Processing batch number: %d", batch_num)
+            print(f"Processing batch number: %d")
+            batch_request = []
+            start_index = batch_num * batch_size
+            end_index = start_index + batch_size
+            batch = (
+                dataset[start_index:end_index]
                 if load_local_dataset
-                else table_provider.table_loader.parse_table(
-                    {key: value[i] for key, value in batch.items()}
-                )
+                else table_provider.table_loader.dataset[start_index:end_index]
             )
+            logging.debug("Processing samples from index %d to %d", start_index, end_index)
+            print(f"Processing samples from index {start_index} to {end_index}")
+            for i in range(batch_size):
+                index = start_index + i
+                if index in processed_indices:
+                    continue
+                
+                print("====================================================================================================================")
+                print(f"Processing sample {i} in batch {batch_num}")
+                parsed_sample = (
+                    batch[i]
+                    if load_local_dataset
+                    else table_provider.table_loader.parse_table(
+                        {key: value[i] for key, value in batch.items()}
+                    )
+                )
 
-            query = parsed_sample["query"]
-            grd.append(parsed_sample["label"])
-            print(f"Query: {query}")
+                query = parsed_sample["query"]
+                grd.append(parsed_sample["label"])
+                print(f"Query: {query}")
 
-            try:
-                filter_table = table_provider.table_sampler.run(query, parsed_sample)
-                print(f"Filtered table generated for sample {i}:\n{filter_table}")
-            except Exception as e:
-                print(f"Error in table sampling for sample {i}: {e}")
-                continue
+                try:
+                    filter_table = table_provider.table_sampler.run(query, parsed_sample)
+                    print(f"Filtered table generated for sample {i}:\n{filter_table}")
+                except Exception as e:
+                    print(f"Error in table sampling for sample {i}: {e}")
+                    continue
 
-            augmentation_input = parsed_sample
-            if use_sampled_table_for_augmentation:
-                print("Using sampled table for augmentation")
-                augmentation_input = {
-                    "query": parsed_sample["query"],
-                    "table": {
-                        "header": filter_table.columns.tolist(),
-                        "rows": filter_table.to_dict('records'),
-                        "caption": parsed_sample["table"].get("caption", "")
+                augmentation_input = parsed_sample
+                if use_sampled_table_for_augmentation:
+                    print("Using sampled table for augmentation")
+                    augmentation_input = {
+                        "query": parsed_sample["query"],
+                        "table": {
+                            "header": filter_table.columns.tolist(),
+                            "rows": filter_table.to_dict('records'),
+                            "caption": parsed_sample["table"].get("caption", "")
+                        }
                     }
-                }
-            print("Augmentation input", augmentation_input)
-            augmentation_info = (
-                table_provider.table_augmentation.run(augmentation_input)
-                if table_augmentation_type != "None"
-                else ""
-            )
-            logging.debug("Augmentation info for sample %d: %s", i, augmentation_info)
-            print(f"Augmentation info for sample %i: {augmentation_info}")
-
-            # 使用新的serialize_request函数生成request
-            request = serialize_request(
-                query=query,
-                table_html=filter_table.to_html(),
-                explanations=parsed_sample.get("explanations", {}),
-                summary=augmentation_info  # 假设summary是augmentation_info的一部分
-            )
-
-            print("Request: /n", request)
-
-            if (
-                table_provider.call_llm.num_tokens(request)
-                < table_provider.call_llm.TOTAL_TOKENS
-            ):
-                batch_request.append(request)
-            else:
-                truncated_request = table_provider.call_llm.truncated_string(
-                    request,
-                    table_provider.call_llm.TOTAL_TOKENS,
-                    print_warning=False,
+                print("Augmentation input", augmentation_input)
+                augmentation_info = (
+                    table_provider.table_augmentation.run(augmentation_input)
+                    if table_augmentation_type != "None"
+                    else ""
                 )
-                logging.debug("Truncated request for sample %d", i)
-                print(f"Truncated request for sample %i")
-                batch_request.append(truncated_request)
+                logging.debug("Augmentation info for sample %d: %s", i, augmentation_info)
+                print(f"Augmentation info for sample %i: {augmentation_info}")
 
-            # Save progress
-            processed_indices.add(index)
-            with open(progress_save_path, "w") as progress_file:
-                json.dump(list(processed_indices), progress_file)
-            
-            # Save jsonl
-            if save_jsonl:
-                logging.debug("Saving results as jsonl")
-                print("Saving results as jsonl")
-                save_jsonl_file_single(
-                    batch_request[-1],
-                    grd[-1],
-                    file_save_path
+                # 使用新的serialize_request函数生成request
+                request = serialize_request(
+                    query=query,
+                    table_html=filter_table.to_html(),
+                    explanations=parsed_sample.get("explanations", {}),
+                    summary=augmentation_info  # 假设summary是augmentation_info的一部分
                 )
 
-        pbar.update(batch_size)
-        logging.debug("Finished processing batch number: %d", batch_num)
-        print(f"Finished processing batch number: %d")
-        batches.append(batch_request)
+                print("Request: /n", request)
 
+                if (
+                    table_provider.call_llm.num_tokens(request)
+                    < table_provider.call_llm.TOTAL_TOKENS
+                ):
+                    batch_request.append(request)
+                else:
+                    truncated_request = table_provider.call_llm.truncated_string(
+                        request,
+                        table_provider.call_llm.TOTAL_TOKENS,
+                        print_warning=False,
+                    )
+                    logging.debug("Truncated request for sample %d", i)
+                    print(f"Truncated request for sample %i")
+                    batch_request.append(truncated_request)
+
+                # Save progress
+                processed_indices.add(index)
+                with open(progress_save_path, "w") as progress_file:
+                    json.dump(list(processed_indices), progress_file)
+                
+                # Save jsonl
+                if save_jsonl:
+                    logging.debug("Saving results as jsonl")
+                    print("Saving results as jsonl")
+                    save_jsonl_file_single(
+                        batch_request[-1],
+                        grd[-1],
+                        file_save_path
+                    )
+
+            pbar.update(batch_size)
+            logging.debug("Finished processing batch number: %d", batch_num)
+            print(f"Finished processing batch number: %d")
+            batches.append(batch_request)
+
+        if remaining_samples > 0:
+            logging.debug("Processing remaining samples")
+            print("Processing remaining samples")
+            batch_request = []
+            start_index = num_batches * batch_size
+            end_index = start_index + remaining_samples
+            batch = (
+                dataset[start_index:end_index]
+                if load_local_dataset
+                else table_provider.table_loader.dataset[start_index:endindex]
+            )
+            logging.debug("Processing samples from index %d to %d", start_index, end_index)
+            print(f"Processing samples from index {start_index} to {end_index}")
+            for i in range(remaining_samples):
+                index = start_index + i
+                if index in processed_indices:
+                    continue
+
+                logging.debug("Processing remaining sample %d", i)
+                print(f"Processing remaining sample %d", i)
+                parsed_sample = (
+                    batch[i]
+                    if load_local_dataset
+                    else table_provider.table_loader.parse_table(
+                        {key: value[i] for key, value in batch.items()}
+                    )
+                )
+                query = parsed_sample["query"]
+                grd.append(parsed_sample["label"])
+                logging.debug("Query: %s", query)
+                print(f"Query: %query")
+
+                try:
+                    filter_table = table_provider.table_sampler.run(
+                        query, parsed_sample
+                    )
+                    logging.debug("Filtered table generated for remaining sample %d", i)
+                    print(f"Filtered table generated for remaining sample %d")
+                except Exception as e:
+                    logging.error("Error in table sampling for remaining sample %d: %s", i, e)
+                    print(f"Error in table sampling for remaining sample %d: %e")
+                    print("Skipping batch:", i)
+                    continue
+                augmentation_info = (
+                    table_provider.table_augmentation.run(parsed_sample)
+                    if table_augmentation_type != "None"
+                    else ""
+                )
+                logging.debug("Augmentation info for remaining sample %d: %s", i, augmentation_info)
+                print(f"Augmentation info for remaining sample %d: %augmentation_info")
+                request = serialize_request(
+                    query=query,
+                    table_html=filter_table.to_html(),
+                    explanations=parsed_sample.get("explanations", {}),
+                    summary=augmentation_info  # 假设summary是augmentation_info的一部分
+                )
+                if (
+                    table_provider.call_llm.num_tokens(request)
+                    < table_provider.call_llm.TOTAL_TOKENS
+                ):
+                    batch_request.append(request)
+                else:
+                    truncated_request = table_provider.call_llm.truncated_string(
+                        request, print_warning=False
+                    )
+                    logging.debug("Truncated request for remaining sample %d", i)
+                    print(f"Truncated request for remaining sample %d")
+                    batch_request.append(truncated_request)
+
+                # Save progress
+                processed_indices.add(index)
+                with open(progress_save_path, "w") as progress_file:
+                    json.dump(list(processed_indices), progress_file)
+                
+                # Save jsonl
+                if save_jsonl:
+                    logging.debug("Saving results as jsonl")
+                    print("Saving results as jsonl")
+                    save_jsonl_file_single(
+                        batch_request[-1],
+                        grd[-1],
+                        file_save_path
+                    )
+
+            pbar.update(remaining_samples)
+            logging.debug("Finished processing remaining samples")
+            print("Finished processing remaining samples")
+            batches.append(batch_request)
+    '''
     # Step 1: Embed and index the JSONL file using ColBERT
     if azure_blob:
         logging.debug("Embedding and indexing JSONL file using ColBERT")
@@ -282,9 +370,9 @@ def end2end(
         print("Retrieving documents using ColBERT and generating responses")
 
 
-        for batch_prompt in tqdm(batches, desc=f"Calling LLM for {experiment_name}", ncols=150):
-            for prompt in batch_prompt:
-                retrieved_docs = colbert.retrieve(prompt, top_k=1, force_fast=False, rerank=False, rerank_top_k=1)
+        for batch_request in tqdm(batches, desc=f"Calling LLM for {experiment_name}", ncols=150):
+            for request in batch_request:
+                retrieved_docs = colbert.retrieve(request, top_k=1, force_fast=False, rerank=False, rerank_top_k=1)
                 
                 # Instead of generating response using LLM, directly append the retrieved document content
                 retrieved_content = [doc['content'] for doc in retrieved_docs]
@@ -339,3 +427,4 @@ def end2end(
         save_jsonl_file_single(
             batches, grd, file_save_path, pred
         )
+    '''

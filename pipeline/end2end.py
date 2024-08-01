@@ -4,6 +4,7 @@ import datetime
 import time
 from tqdm import tqdm
 from pipeline.compoments.colbert import ColBERT
+from pipeline.compoments.request_serializer import serialize_request
 from table_provider import CallLLM, TableProvider
 from .evaluation.evaluator import Evaluator
 from typing import List, Optional

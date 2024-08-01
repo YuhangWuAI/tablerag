@@ -2,16 +2,16 @@ import json
 
 def serialize_request(query: str, table_html: str, augmentation_info: dict) -> str:
     try:
-        # 从 augmentation_info 中提取 summary 和 explanations
-        summary = augmentation_info.get("summary", "")
-        explanations = augmentation_info.get("explanations", {})
+        # 从 augmentation_info 中提取 terms_explanation 和 table_summary
+        terms_explanation = augmentation_info.get("terms_explanation", "")
+        table_summary = augmentation_info.get("table_summary", "")
 
         # 构建请求字典
         request_dict = {
             "query": query,
             "table_html": table_html,
-            "explanations": explanations,
-            "summary": summary,
+            "terms_explanation": terms_explanation,
+            "table_summary": table_summary,
         }
         
         # 将字典序列化为 JSON 字符串
@@ -32,8 +32,8 @@ def deserialize_request(request: str) -> dict:
         parsed_data = {
             "query": request_dict.get("query", ""),
             "table_html": request_dict.get("table_html", ""),
-            "explanations": request_dict.get("explanations", {}),
-            "summary": request_dict.get("summary", ""),
+            "terms_explanation": request_dict.get("terms_explanation", ""),
+            "table_summary": request_dict.get("table_summary", ""),
         }
         return parsed_data
 
@@ -43,6 +43,6 @@ def deserialize_request(request: str) -> dict:
         return {
             "query": "",
             "table_html": "",
-            "explanations": {},
-            "summary": "",
+            "terms_explanation": "",
+            "table_summary": "",
         }

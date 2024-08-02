@@ -32,6 +32,7 @@ def end2end(
     colbert_model_name: str = "colbert-ir/colbertv2.0",  # Add this parameter for ColBERT model
     index_name: str = "my_index",  # Add this parameter for the index name
     call_llm: bool = True,  # Add this parameter to control whether to call LLM or not
+    run_evaluation: bool = False,  # Add this parameter to control whether to run evaluation
 ):
     print("Starting end2end process\n")
     
@@ -41,6 +42,7 @@ def end2end(
     file_save_path = f"pipeline/data/Exp-{formatted_today}/{experiment_name}/{task_name}_{table_sampling_type}_{table_augmentation_type}_{k_shot}.jsonl"
     progress_save_path = f"pipeline/data/Exp-{formatted_today}/{experiment_name}/{task_name}_progress.json"
     retrieval_results_save_path = f"pipeline/data/Exp-{formatted_today}/{experiment_name}/{task_name}_retrieval_results.jsonl"
+    grd_save_path = f"pipeline/data/Exp-{formatted_today}/{experiment_name}/{task_name}_grd_pred.jsonl"  # Save grd and pred together
 
     print("File save path: ", file_save_path, "\n")
 
@@ -139,7 +141,8 @@ def end2end(
                 )
 
                 query = parsed_sample["query"]
-                grd.append(parsed_sample["label"])
+                grd_value = parsed_sample["label"]
+                grd.append(grd_value)
                 print("Query: ", query, "\n")
 
                 try:
@@ -176,6 +179,9 @@ def end2end(
 
                 print("Request:\n", request, "\n")
 
+                # Save grd to file
+                with open(grd_save_path, "a") as f:
+                    f.write(json.dumps({"grd": grd_value}) + "\n")
 
                 batch_request.append(request)
 
@@ -223,7 +229,8 @@ def end2end(
                     )
                 )
                 query = parsed_sample["query"]
-                grd.append(parsed_sample["label"])
+                grd_value = parsed_sample["label"]
+                grd.append(grd_value)
                 print("Query: ", query, "\n")
 
                 try:
@@ -248,6 +255,10 @@ def end2end(
                 )
 
                 batch_request.append(request)
+
+                # Save grd to file
+                with open(grd_save_path, "a") as f:
+                    f.write(json.dumps({"grd": grd_value}) + "\n")
 
                 # Save progress
                 processed_indices.add(index)
@@ -306,55 +317,21 @@ def end2end(
                         terms_explanation = item['terms_explanation']
                         table_summary = item['table_summary']
 
-                        print("CallLLM for the final answer /n")
+                        print("CallLLM for the final answer \n")
                         # Generate the final answer
                         final_answer = CallLLM().generate_final_answer(query, table_html, terms_explanation, table_summary)
                         
+                        print("\n Final answer is :", final_answer)
                         pred.append(final_answer)
 
-        # mkdir
-        directory = os.path.dirname(file_save_path)
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-        # save the response
-        with open(
-            f"pipeline/data/Exp-{formatted_today}/{experiment_name}/{task_name}_{table_sampling_type}_{table_augmentation_type}.txt",
-            "w",
-        ) as f:
-            for item in pred:
-                f.write("%s\n" % item)
+                        # 保存 pred 和 grd 到文件
+                        with open(grd_save_path, "a") as f:
+                            f.write(json.dumps({"pred": final_answer, "grd": grd_value}) + "\n")
 
-        '''
-        # Evaluation
-        numbers = Evaluator().run(pred, grd, task_name)
-        print("Evaluation results of ", experiment_name, "_", task_name, ": ", numbers, "\n")
-        evaluation_save_path = f"pipeline/data/Exp-{formatted_today}/{experiment_name}/output_evaluation.json"
+        # Step 3: Evaluation
+        if run_evaluation:
+            print("Running evaluation...\n")
+            numbers = Evaluator().run(pred, grd, task_name)
+            print("Evaluation results of ", experiment_name, "_", task_name, ": ", numbers, "\n")
 
-        # mkdir
-        directory = os.path.dirname(evaluation_save_path)
-        if not os.path.exists(directory):
-            os.makedirs(directory)
 
-        # Read the existing data from the file
-        try:
-            with open(evaluation_save_path, "r") as file:
-                existing_data = json.load(file)
-        except:
-            existing_data = {}
-
-        # Update the existing data with the new data
-        existing_data.update(
-            {
-                f"{experiment_name}-{task_name}-{table_sampling_type}-{table_augmentation_type}-{embedding_type}-{CallLLM().GPT_MODEL}-use_header_grounding-{whether_column_grounding}": numbers,
-            }
-        )
-
-        # Write the updated data back to the file
-        with open(evaluation_save_path, "w") as file:
-            json.dump(existing_data, file, indent=4)
-
-        # save the response
-        save_jsonl_file(
-            batches, grd, file_save_path, pred
-        )
-        '''

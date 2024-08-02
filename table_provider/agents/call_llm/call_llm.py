@@ -382,7 +382,7 @@ class CallLLM:
                 model=self.GPT_MODEL,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.5,
-                max_tokens=96,
+                max_tokens=500,
                 top_p=1.0,
                 frequency_penalty=0.0,
                 presence_penalty=0.0,

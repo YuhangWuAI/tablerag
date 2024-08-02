@@ -1,6 +1,6 @@
 {
     "passage_offset": 0,
-    "num_passages": 1,
-    "num_embeddings": 111,
+    "num_passages": 4,
+    "num_embeddings": 458,
     "embedding_offset": 0
 }

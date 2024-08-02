@@ -16,7 +16,7 @@ def save_jsonl_file(
 
     # 组织 request 的内容，并添加描述信息
     request_str = (
-        f"query:\n{request['query']}\n"
+        f"query_need_to_answer:\n{request['query']}\n"
         f"table_html:\n{request['table_html']}\n"
         f"terms_explanation:\n{request.get('terms_explanation', '')}\n"
         f"table_summary:\n{request.get('table_summary', '')}"

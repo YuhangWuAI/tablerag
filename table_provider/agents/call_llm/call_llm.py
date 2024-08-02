@@ -371,7 +371,87 @@ class CallLLM:
         generated_text = self.generate_text(prompt)
         return generated_text
 
-    
+    @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
+    def generate_final_answer(self, query_need_to_answer: str, table_html: str, terms_explanation: str, table_summary: str) -> str:
+        print("\n Calling OpenAI API for generating the final answer !!! \n")
+
+        prompt = f"""
+        Example: You will be given a statement, a table summary, the full table content, and terms explanations.
+        Your task is to determine whether the statement is true or false based on the table and provided information.
+        Return 1 if the statement is true, and 0 if it is false. Provide only the number '1' or '0' as the answer without any additional text.
+
+        User 1:
+        Statement: "The scheduled date for the farm with 17 turbines is 2012."
+        Table Summary: "This table lists various wind farms in Ireland, their scheduled dates, capacities, turbines, types, and locations."
+        Table:
+        <table border="1" class="dataframe">
+        <thead>
+            <tr style="text-align: right;">
+            <th></th>
+            <th>wind farm</th>
+            <th>scheduled</th>
+            <th>capacity (mw)</th>
+            <th>turbines</th>
+            <th>type</th>
+            <th>location</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+            <th>0</th>
+            <td>codling</td>
+            <td>unknown</td>
+            <td>1100</td>
+            <td>220</td>
+            <td>unknown</td>
+            <td>county wicklow</td>
+            </tr>
+            <tr>
+            <th>1</th>
+            <td>carrowleagh</td>
+            <td>2012</td>
+            <td>36.8</td>
+            <td>16</td>
+            <td>enercon e - 70 2.3</td>
+            <td>county cork</td>
+            </tr>
+            <tr>
+            <th>2</th>
+            <td>garracummer</td>
+            <td>2012</td>
+            <td>42.5</td>
+            <td>17</td>
+            <td>nordex n90 2.5 mw</td>
+            <td>county tipperary</td>
+            </tr>
+            <!-- more rows -->
+        </tbody>
+        </table>
+        Terms Explanation:
+        {{
+            "scheduled": "The planned date for the wind farm to be operational.",
+            "turbines": "The number of wind turbines in the wind farm."
+        }}
+
+        User 2:
+        1
+
+        Now, verify the following statement and return only '1' or '0' as the result.
+
+        Statement: "{query_need_to_answer}"
+        Table Summary: "{table_summary}"
+        Table: {table_html}
+        Terms Explanation: {terms_explanation}
+
+        Return only '1' or '0'.
+        """
+
+        # This is where the LLM is called to generate the answer
+        generated_text = self.generate_text(prompt)
+        return generated_text.strip()  # Ensure any whitespace is removed, returning only the digit
+
+
+
 
 
     @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))

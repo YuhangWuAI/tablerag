@@ -42,7 +42,7 @@ class TableSampling:
             )
         # set the default sampling type
         if table_sampling_type == "default":
-            table_sampling_type = "embedding_sample"
+            table_sampling_type = "auto_row_filter"
         self.table_sampling_type = table_sampling_type
 
         # Initialize the embedder
@@ -158,6 +158,10 @@ class TableSampling:
 
         # Call LLM for code generation
         code_snippet = self.call_llm.call_llm_code_generation(context)
+        
+        # Remove undesired code block markers
+        code_snippet = code_snippet.replace('```python', '').replace('```', '').strip()
+        
         code_snippet = code_snippet.replace('>>> ', '')
         print(f"Finally Generated code snippet: {code_snippet}")
 

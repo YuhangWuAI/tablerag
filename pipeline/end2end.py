@@ -3,7 +3,7 @@ import os
 import datetime
 import time
 from tqdm import tqdm
-from pipeline.compoments.ColBERT import ColBERT
+from pipeline.ColBERT.ColBERT import ColBERT
 from pipeline.compoments.request_serializer import serialize_request, deserialize_request
 from pipeline.data_processing.save_jsonl import load_processed_indices, save_jsonl_file
 from table_provider import CallLLM, TableProvider
@@ -175,19 +175,8 @@ def end2end(
 
                 print("Request:\n", request, "\n")
 
-                if (
-                    table_provider.call_llm.num_tokens(request)
-                    < table_provider.call_llm.TOTAL_TOKENS
-                ):
-                    batch_request.append(request)
-                else:
-                    truncated_request = table_provider.call_llm.truncated_string(
-                        request,
-                        table_provider.call_llm.TOTAL_TOKENS,
-                        print_warning=False,
-                    )
-                    print("Truncated request for sample ", i, "\n")
-                    batch_request.append(truncated_request)
+
+                batch_request.append(request)
 
                 # Save progress
                 processed_indices.add(index)
@@ -277,7 +266,7 @@ def end2end(
             print("Finished processing remaining samples\n")
             batches.append(batch_request)
 
-    '''
+    
     # Step 1: Embed and index the JSONL file using ColBERT
     if azure_blob:
         print("Embedding and indexing JSONL file using ColBERT\n")
@@ -287,23 +276,25 @@ def end2end(
         # Step 2: Retrieve documents using ColBERT and generate responses
         print("Retrieving documents using ColBERT and generating responses\n")
 
-
-        for batch_request in tqdm(batches, desc=f"Calling LLM for {experiment_name}", ncols=150):
+        print("batch_request: ", batch_request)
+        for batch_request in tqdm(batches, desc=f"Calling ColBERT for retrieval, experiment_name: {experiment_name}", ncols=150):
             for request in batch_request:
-                retrieved_docs = colbert.retrieve(request, top_k=1, force_fast=False, rerank=False, rerank_top_k=1)
+                # 从request中提取query进行检索
+                query = request.get("query")
+                print("\n Extracted query for retrieval: \n", query)
+
+                retrieved_docs = colbert.retrieve(query, top_k=1, force_fast=False, rerank=False, rerank_top_k=1)
                 
                 # Instead of generating response using LLM, directly append the retrieved document content
-                retrieved_content = [doc['content'] for doc in retrieved_docs]
+                print("retrieved_docs: \n", retrieved_docs)
                 # Optionally, you can concatenate all retrieved documents' content into one response or store them as a list
                 # For example, let's store them as a list of retrieved documents:
-                pred.append(retrieved_content)
-
+                pred.append(retrieved_docs)
 
         # mkdir
         directory = os.path.dirname(file_save_path)
         if not os.path.exists(directory):
             os.makedirs(directory)
-
         # save the response
         with open(
             f"pipeline/data/Exp-{formatted_today}/{experiment_name}/{task_name}_{table_sampling_type}_{table_augmentation_type}.txt",
@@ -312,6 +303,7 @@ def end2end(
             for item in pred:
                 f.write("%s\n" % item)
 
+        '''
         # Evaluation
         numbers = Evaluator().run(pred, grd, task_name)
         print("Evaluation results of ", experiment_name, "_", task_name, ": ", numbers, "\n")
@@ -344,4 +336,4 @@ def end2end(
         save_jsonl_file(
             batches, grd, file_save_path, pred
         )
-    '''
+        '''

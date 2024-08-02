@@ -51,8 +51,8 @@ if __name__ == "__main__":
     jsonl_path = "/home/yuhangwu/Desktop/Projects/TableProcess/pipeline/data/Exp-240801/table_augmentation/tabfact_default_term_explanations_1.jsonl"
     model_name = "colbert-ir/colbertv2.0"
     index_name = "my_index"
-    queries = ["touchdown atlantic , in the category of sporting , be establish in 2010"]
+    queries = ["the scheduled date for the farm with 17 turbine be 2012"]
     
     # 控制返回结果数量和重排序
-    responses = colbert_pipeline(jsonl_path, model_name, index_name, queries, top_k=3, force_fast=True, rerank=True, rerank_top_k=1)
+    responses = colbert_pipeline(jsonl_path, model_name, index_name, queries, top_k=3, force_fast=False, rerank=False, rerank_top_k=1)
     print(responses)

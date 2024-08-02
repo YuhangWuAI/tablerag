@@ -6,13 +6,11 @@ from tqdm import tqdm
 from pipeline.ColBERT.ColBERT import ColBERT
 from pipeline.compoments.request_serializer import deserialize_retrieved_text, serialize_request
 from pipeline.data_processing.save_jsonl import load_processed_indices, save_jsonl_file
-from table_provider import CallLLM
 from table_provider import CallLLM, TableProvider
 from .evaluation.evaluator import Evaluator
 from typing import List, Optional
 import warnings
 warnings.filterwarnings("ignore")
-
 
 def end2end(
     task_name: str,
@@ -33,6 +31,7 @@ def end2end(
     overwrite_existing: bool = False,
     colbert_model_name: str = "colbert-ir/colbertv2.0",  # Add this parameter for ColBERT model
     index_name: str = "my_index",  # Add this parameter for the index name
+    call_llm: bool = True,  # Add this parameter to control whether to call LLM or not
 ):
     print("Starting end2end process\n")
     
@@ -41,6 +40,7 @@ def end2end(
 
     file_save_path = f"pipeline/data/Exp-{formatted_today}/{experiment_name}/{task_name}_{table_sampling_type}_{table_augmentation_type}_{k_shot}.jsonl"
     progress_save_path = f"pipeline/data/Exp-{formatted_today}/{experiment_name}/{task_name}_progress.json"
+    retrieval_results_save_path = f"pipeline/data/Exp-{formatted_today}/{experiment_name}/{task_name}_retrieval_results.jsonl"
 
     print("File save path: ", file_save_path, "\n")
 
@@ -290,19 +290,27 @@ def end2end(
                 
                 parsed_content = deserialize_retrieved_text(retrieved_docs)
 
+                # 保存检索结果和对应的查询
+                retrieval_result = {
+                    "query": query,
+                    "retrieved_docs": parsed_content
+                }
 
-                for item in parsed_content:
-                    query = item['query_need_to_answer']
-                    table_html = item['table_html']
-                    terms_explanation = item['terms_explanation']
-                    table_summary = item['table_summary']
+                with open(retrieval_results_save_path, "a") as f:
+                    f.write(json.dumps(retrieval_result) + "\n")
 
-                    print("CallLLM for the final answer /n")
-                    # Generate the final answer
-                    final_answer = CallLLM().generate_final_answer(query, table_html, terms_explanation, table_summary)
-                    
+                if call_llm:
+                    for item in parsed_content:
+                        query = item['query_need_to_answer']
+                        table_html = item['table_html']
+                        terms_explanation = item['terms_explanation']
+                        table_summary = item['table_summary']
 
-                pred.append(final_answer)
+                        print("CallLLM for the final answer /n")
+                        # Generate the final answer
+                        final_answer = CallLLM().generate_final_answer(query, table_html, terms_explanation, table_summary)
+                        
+                        pred.append(final_answer)
 
         # mkdir
         directory = os.path.dirname(file_save_path)

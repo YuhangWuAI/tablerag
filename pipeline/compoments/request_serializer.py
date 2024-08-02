@@ -22,26 +22,47 @@ def serialize_request(query: str, table_html: str, augmentation_info: dict) -> d
         return {}
 
 
-def deserialize_request(request: str) -> dict:
-    try:
-        # 将 JSON 字符串解析为字典
-        request_dict = json.loads(request)
-        
-        # 提取和解析相关字段，确保即使字段不存在也能返回默认值
-        parsed_data = {
-            "query": request_dict.get("query", ""),
-            "table_html": request_dict.get("table_html", ""),
-            "terms_explanation": request_dict.get("terms_explanation", ""),
-            "table_summary": request_dict.get("table_summary", ""),
-        }
-        return parsed_data
 
-    except Exception as e:
-        print(f"Error in deserialize_request: {e}")
-        # 返回一个包含默认值的字典，确保后续代码仍然可以正常运行
-        return {
-            "query": "",
-            "table_html": "",
-            "terms_explanation": "",
-            "table_summary": "",
+def deserialize_retrieved_text(retrieved_docs):
+    parsed_results = []
+
+    for doc in retrieved_docs:
+        content = doc.get('content', '')
+        
+        # 初始化解析后的字典
+        parsed_data = {
+            'query': '',
+            'table_html': '',
+            'terms_explanation': '',
+            'table_summary': ''
         }
+        
+        try:
+            # 解析出 query
+            query_start = content.find('query:\n') + len('query:\n')
+            table_html_start = content.find('table_html:\n')
+            parsed_data['query'] = content[query_start:table_html_start].strip()
+
+            # 解析出 table_html
+            table_html_start += len('table_html:\n')
+            terms_explanation_start = content.find('terms_explanation:\n')
+            parsed_data['table_html'] = content[table_html_start:terms_explanation_start].strip()
+
+            # 解析出 terms_explanation
+            terms_explanation_start += len('terms_explanation:\n')
+            table_summary_start = content.find('table_summary:\n')
+            terms_explanation_json = content[terms_explanation_start:table_summary_start].strip()
+            parsed_data['terms_explanation'] = json.loads(terms_explanation_json) if terms_explanation_json else {}
+
+            # 解析出 table_summary
+            table_summary_start += len('table_summary:\n')
+            parsed_data['table_summary'] = content[table_summary_start:].strip()
+
+        except Exception as e:
+            print(f"Error in deserializing retrieved text: {e}")
+            # 遇到错误时，返回空解析数据
+            continue
+
+        parsed_results.append(parsed_data)
+    
+    return parsed_results

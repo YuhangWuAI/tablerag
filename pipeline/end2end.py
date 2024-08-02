@@ -4,7 +4,7 @@ import datetime
 import time
 from tqdm import tqdm
 from pipeline.ColBERT.ColBERT import ColBERT
-from pipeline.compoments.request_serializer import serialize_request, deserialize_request
+from pipeline.compoments.request_serializer import deserialize_retrieved_text, serialize_request
 from pipeline.data_processing.save_jsonl import load_processed_indices, save_jsonl_file
 from table_provider import CallLLM, TableProvider
 from .evaluation.evaluator import Evaluator
@@ -285,10 +285,13 @@ def end2end(
 
                 retrieved_docs = colbert.retrieve(query, top_k=1, force_fast=False, rerank=False, rerank_top_k=1)
                 
-                # Instead of generating response using LLM, directly append the retrieved document content
-                print("retrieved_docs: \n", retrieved_docs)
-                # Optionally, you can concatenate all retrieved documents' content into one response or store them as a list
-                # For example, let's store them as a list of retrieved documents:
+                print("\n retrieved_docs: \n", retrieved_docs)
+                
+                parsed_content = deserialize_retrieved_text(retrieved_docs)
+
+                for item in parsed_content:
+                    print("\n Parsed Content \n:", item)
+
                 pred.append(retrieved_docs)
 
         # mkdir

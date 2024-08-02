@@ -25,14 +25,15 @@ def serialize_request(query: str, table_html: str, augmentation_info: dict) -> d
 import json
 
 
+from typing import List, Dict
 
-def deserialize_retrieved_text(retrieved_docs):
+def deserialize_retrieved_text(retrieved_docs: List[Dict[str, str]]) -> List[Dict[str, str]]:
     parsed_results = []
 
     for doc in retrieved_docs:
         content = doc.get('content', '')
 
-        # 初始化解析后的字典
+        # 初始化解析后的字典，所有值均为字符串
         parsed_data = {
             'query_need_to_answer': '',
             'table_html': '',
@@ -59,9 +60,9 @@ def deserialize_retrieved_text(retrieved_docs):
             if terms_explanation_start != -1 and table_summary_start != -1:
                 terms_explanation_json = content[terms_explanation_start:table_summary_start].strip()
                 try:
-                    parsed_data['terms_explanation'] = json.loads(terms_explanation_json) if terms_explanation_json else {}
+                    parsed_data['terms_explanation'] = json.dumps(json.loads(terms_explanation_json)) if terms_explanation_json else ''
                 except json.JSONDecodeError:
-                    parsed_data['terms_explanation'] = {}  # 解析失败时，设置为空字典
+                    parsed_data['terms_explanation'] = ''  # 解析失败时，设置为空字符串
 
             # 解析出 table_summary
             table_summary_start += len('table_summary:')

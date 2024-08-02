@@ -289,8 +289,18 @@ def end2end(
                 
                 parsed_content = deserialize_retrieved_text(retrieved_docs)
 
+
+                # 对于每个解析后的内容生成答案
                 for item in parsed_content:
-                    print("\n Parsed Content \n:", item)
+                    query = item['query_need_to_answer']
+                    table_html = item['table_html']
+                    terms_explanation = item['terms_explanation']
+                    table_summary = item['table_summary']
+
+                    # 生成最终的答案
+                    final_answer = generate_final_answer(query, table_html, terms_explanation, table_summary)
+
+                    print("Final Answer:", final_answer)
 
                 pred.append(retrieved_docs)
 

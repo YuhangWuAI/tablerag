@@ -387,6 +387,8 @@ class CallLLM:
                 frequency_penalty=0.0,
                 presence_penalty=0.0,
             )
+            print("API Response:", response)
+
             result = response.choices[0].message.content.strip()
             print("Generated text successfully!")
             return result

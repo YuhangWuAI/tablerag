@@ -4,7 +4,7 @@ from tqdm import tqdm
 import os
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
 sys.path.append(project_root)
-from pipeline.ColBERT.ColBERT_test import ColBERT
+from pipeline.ColBERT.ColBERT import ColBERT
 from pipeline.evaluation.evaluator import Evaluator
 
 

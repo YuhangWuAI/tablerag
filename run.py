@@ -56,11 +56,12 @@ def add_arguments():
         '--embedding_type',
         choices=[
             "text-embedding-ada-002",
+            "text-embedding-3-small",
             "bge-large-en",
             "sentence-transformer",
             "text-embedding-ada-001",
         ],
-        default="text-embedding-ada-002",
+        default="text-embedding-3-small",
         type=str,
         help="Type of embedding.",
     )
@@ -100,7 +101,7 @@ def add_arguments():
         '--sample_size',
         type=int,
         help='Number of samples to process. If not specified, process the entire dataset.',
-        default=4
+        default=1
     )
 
     # Add arguments for config
@@ -154,8 +155,8 @@ def update_config(file_path, args):
     else:
         config = {
             "model": {
-                "EMBEDDING_MODEL": "text-embedding-ada-002",
-                "GPT_MODEL": "gpt-3.5-turbo-1106",
+                "EMBEDDING_MODEL": "text-embedding-3-small",
+                "GPT_MODEL": "gpt-4o-mini",
             },
             "api_key": "sk-BIWqoUKgrFI6a5ar53E73fA468194104A6644f6d48Af32Da",
             "batch_size": 16,

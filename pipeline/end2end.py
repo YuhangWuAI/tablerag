@@ -42,7 +42,7 @@ def end2end(
     file_save_path = f"pipeline/data/Exp-{formatted_today}/{experiment_name}/{task_name}_{table_sampling_type}_{table_augmentation_type}_{k_shot}.jsonl"
     progress_save_path = f"pipeline/data/Exp-{formatted_today}/{experiment_name}/{task_name}_progress.json"
     retrieval_results_save_path = f"pipeline/data/Exp-{formatted_today}/{experiment_name}/{task_name}_retrieval_results.jsonl"
-    grd_save_path = f"pipeline/data/Exp-{formatted_today}/{experiment_name}/{task_name}_grd_pred.jsonl"  # Save grd and pred together
+    grd_pred_save_path = f"pipeline/data/Exp-{formatted_today}/{experiment_name}/{task_name}_grd_pred.jsonl"  # Save grd and pred together
 
     print("File save path: ", file_save_path, "\n")
 
@@ -179,10 +179,6 @@ def end2end(
 
                 print("Request:\n", request, "\n")
 
-                # Save grd to file
-                with open(grd_save_path, "a") as f:
-                    f.write(json.dumps({"grd": grd_value}) + "\n")
-
                 batch_request.append(request)
 
                 # Save progress
@@ -256,10 +252,6 @@ def end2end(
 
                 batch_request.append(request)
 
-                # Save grd to file
-                with open(grd_save_path, "a") as f:
-                    f.write(json.dumps({"grd": grd_value}) + "\n")
-
                 # Save progress
                 processed_indices.add(index)
                 with open(progress_save_path, "w") as progress_file:
@@ -324,14 +316,12 @@ def end2end(
                         print("\n Final answer is :", final_answer)
                         pred.append(final_answer)
 
-                        # 保存 pred 和 grd 到文件
-                        with open(grd_save_path, "a") as f:
-                            f.write(json.dumps({"pred": final_answer, "grd": grd_value}) + "\n")
+                        # 每处理一个样本保存一次 `grd` 和 `pred`
+                        with open(grd_pred_save_path, "w") as f:
+                            f.write(json.dumps({"grd": grd, "pred": pred}) + "\n")
 
         # Step 3: Evaluation
         if run_evaluation:
             print("Running evaluation...\n")
             numbers = Evaluator().run(pred, grd, task_name)
             print("Evaluation results of ", experiment_name, "_", task_name, ": ", numbers, "\n")
-
-

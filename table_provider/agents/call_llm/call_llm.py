@@ -383,7 +383,7 @@ class CallLLM:
 
         User 1:
         Statement: "The scheduled date for the farm with 17 turbines is 2012."
-        Table Summary: "This table lists various wind farms in Ireland, their scheduled dates, capacities, turbines, types, and locations."
+        Table Summary: "This table is used to determine the truth of the statement: the scheduled date for the farm with 17 turbines is 2012. The Garracummer wind farm, which has 17 turbines, is indeed scheduled for 2012 as indicated in the table. Wind power is a significant energy source in Ireland, contributing to a high percentage of the country's electricity needs, with the Republic of Ireland boasting a total installed capacity of 4,309 MW as of 2021."
         Table:
         <table border="1" class="dataframe">
         <thead>
@@ -393,39 +393,16 @@ class CallLLM:
             <th>scheduled</th>
             <th>capacity (mw)</th>
             <th>turbines</th>
-            <th>type</th>
-            <th>location</th>
             </tr>
         </thead>
         <tbody>
             <tr>
-            <th>0</th>
-            <td>codling</td>
-            <td>unknown</td>
-            <td>1100</td>
-            <td>220</td>
-            <td>unknown</td>
-            <td>county wicklow</td>
-            </tr>
-            <tr>
-            <th>1</th>
-            <td>carrowleagh</td>
-            <td>2012</td>
-            <td>36.8</td>
-            <td>16</td>
-            <td>enercon e - 70 2.3</td>
-            <td>county cork</td>
-            </tr>
-            <tr>
-            <th>2</th>
+            <th>12</th>
             <td>garracummer</td>
             <td>2012</td>
             <td>42.5</td>
             <td>17</td>
-            <td>nordex n90 2.5 mw</td>
-            <td>county tipperary</td>
             </tr>
-            <!-- more rows -->
         </tbody>
         </table>
         Terms Explanation:
@@ -437,6 +414,36 @@ class CallLLM:
         User 2:
         1
 
+        User 3:
+        Statement: "The most recent locomotive to be manufactured was made more than 10 years after the first was manufactured."
+        Table Summary: "This table is used to determine the truth of the statement: the most recent locomotive to be manufacture was made more than 10 years after the first was manufactured. The first locomotives listed in the table were manufactured between 1889 and 1907, while the most recent locomotive was manufactured in 1923. This indicates that the most recent locomotive was made 16 years after the first ones, thus supporting the truth of the statement. The list provides an overview of locomotives from the Palatinate Railway, highlighting the historical context of railway development in the region."
+        Table:
+        <table border="1" class="dataframe">
+        <thead>
+            <tr style="text-align: right;">
+            <th></th>
+            <th>class</th>
+            <th>year (s) of manufacture</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+            <th>1</th>
+            <td>l 2</td>
+            <td>1903 - 1905</td>
+            </tr>
+            <!-- more rows -->
+        </tbody>
+        </table>
+        Terms Explanation:
+        {{
+            "year (s) of manufacture": "The years when the locomotives or railbuses were built.",
+            "axle arrangement ( uic ) bauart": "The configuration of the wheels on the locomotive or railbus, as defined by the UIC (International Union of Railways) classification system."
+        }}
+
+        User 4:
+        0
+
         Now, verify the following statement and return only '1' or '0' as the result.
 
         Statement: "{query_need_to_answer}"
@@ -447,6 +454,7 @@ class CallLLM:
         If you cannot determine whether the statement is true or false based on the provided information, return '0'. Otherwise, return '1' for true or '0' for false.
         Return only '1' or '0'.
         """
+
 
 
         # This is where the LLM is called to generate the answer

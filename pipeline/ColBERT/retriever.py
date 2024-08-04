@@ -2,6 +2,7 @@ import json
 import sys
 from tqdm import tqdm
 import os
+
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
 sys.path.append(project_root)
 from pipeline.ColBERT.ColBERT import ColBERT
@@ -29,6 +30,7 @@ def generate_retrieval_results(
     
     # Define the output file paths
     retrieval_results_save_path = os.path.join(base_output_dir, os.path.basename(dataset_path).replace(".jsonl", "_retrieval_results.jsonl"))
+    progress_save_path = os.path.join(base_output_dir, os.path.basename(dataset_path).replace(".jsonl", "_progress.json"))
     
     # Step 1: Embed and index the JSONL file using ColBERT
     print("Embedding and indexing JSONL file using ColBERT\n")
@@ -43,10 +45,20 @@ def generate_retrieval_results(
     if num_queries is not None:
         queries_grds = queries_grds[:num_queries]
 
-    # Step 3: Perform retrieval and save the results
+    # Step 3: Load progress if exists
+    start_index = 0
+    if os.path.exists(progress_save_path):
+        with open(progress_save_path, 'r') as f:
+            start_index = int(f.read().strip())
+        print(f"Resuming from index {start_index}\n")
+
+    # Step 4: Perform retrieval and save the results
     print("Retrieving documents using ColBERT and saving results\n")
-    with open(retrieval_results_save_path, "a") as f:
-        for i, item in tqdm(enumerate(queries_grds), desc="Processing samples", ncols=150):
+    total_samples = len(queries_grds)
+    successful_retrievals = 0
+    
+    with open(retrieval_results_save_path, "a") as f, open(progress_save_path, "w") as progress_file:
+        for i, item in tqdm(enumerate(queries_grds[start_index:], start=start_index), desc="Processing samples", total=total_samples, ncols=150):
             try:
                 query = item["query"]
                 print("Query:", query, "\n")
@@ -65,12 +77,22 @@ def generate_retrieval_results(
                 # 逐条保存检索结果
                 f.write(json.dumps(retrieval_result) + "\n")
 
-            except KeyError as e:
-                print(f"KeyError for sample {i}: {e}. Skipping this sample.\n")
-                continue
+                # Check if the retrieval was successful
+                if parsed_content and parsed_content[0]["query_need_to_answer"] == query:
+                    successful_retrievals += 1
+
+                # Update progress
+                progress_file.seek(0)
+                progress_file.write(str(i + 1))
+                progress_file.truncate()
+
             except Exception as e:
-                print(f"Error processing sample {i}: {e}. Skipping this sample.\n")
-                continue
+                print(f"Error processing sample {i}: {e}. Terminating.\n")
+                break
+
+    # Step 5: Calculate and print the recall accuracy
+    recall_accuracy = successful_retrievals / total_samples if total_samples > 0 else 0
+    print(f"Recall Accuracy: {recall_accuracy * 100:.2f}% ({successful_retrievals}/{total_samples})")
 
 if __name__ == "__main__":
     dataset_path = "/home/yuhangwu/Desktop/Projects/TableProcess/pipeline/data/Exp-240802/table_augmentation/tabfact_default_assemble_retrieval_based_augmentation_1.jsonl"

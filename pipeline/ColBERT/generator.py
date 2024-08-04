@@ -86,5 +86,5 @@ def generate_and_evaluate(
         return numbers
 
 if __name__ == "__main__":
-    retrieval_results_save_path = "pipeline/data/retrieval_results/tabfact_default_assemble_retrieval_based_augmentation_1_retrieval_results.jsonl"
+    retrieval_results_save_path = "/home/yuhangwu/Desktop/Projects/TableProcess/pipeline/data/retrieval_results/tabfact_default_assemble_retrieval_based_augmentation_1_retrieval_results.jsonl"
     generate_and_evaluate(retrieval_results_save_path)

@@ -414,7 +414,7 @@ class CallLLM:
         User 2:
         1
 
-        User 3:
+        User 1:
         Statement: "The most recent locomotive to be manufactured was made more than 10 years after the first was manufactured."
         Table Summary: "This table is used to determine the truth of the statement: the most recent locomotive to be manufacture was made more than 10 years after the first was manufactured. The first locomotives listed in the table were manufactured between 1889 and 1907, while the most recent locomotive was manufactured in 1923. This indicates that the most recent locomotive was made 16 years after the first ones, thus supporting the truth of the statement. The list provides an overview of locomotives from the Palatinate Railway, highlighting the historical context of railway development in the region."
         Table:
@@ -441,7 +441,7 @@ class CallLLM:
             "axle arrangement ( uic ) bauart": "The configuration of the wheels on the locomotive or railbus, as defined by the UIC (International Union of Railways) classification system."
         }}
 
-        User 4:
+        User 2:
         0
 
         Now, verify the following statement and return only '1' or '0' as the result.

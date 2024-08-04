@@ -31,8 +31,8 @@ def end2end(
     overwrite_existing: bool = False,
     colbert_model_name: str = "colbert-ir/colbertv2.0",  # Add this parameter for ColBERT model
     index_name: str = "my_index",  # Add this parameter for the index name
-    call_llm: bool = False,  # Add this parameter to control whether to call LLM or not
-    run_evaluation: bool = False,  # Add this parameter to control whether to run evaluation
+    call_llm: bool = True,  # Add this parameter to control whether to call LLM or not
+    run_evaluation: bool = True,  # Add this parameter to control whether to run evaluation
 ):
     print("Starting end2end process\n")
     
@@ -171,9 +171,16 @@ def end2end(
                 )
                 print("Augmentation info for sample ", i, ": ", augmentation_info, "\n")
 
+
+                try:
+                    table_html = filter_table.to_html()
+                except AttributeError as e:
+                    print(f"Error in converting table to HTML: {e}. Converting table to string instead.\n")
+                    table_html = filter_table.to_string()
+
                 request = serialize_request(
                     query=query,
-                    table_html=filter_table.to_html(),
+                    table_html=table_html,
                     augmentation_info=augmentation_info  
                 )
 

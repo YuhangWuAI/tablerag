@@ -89,7 +89,7 @@ def end2end(
     # whether the task is already done
     if os.path.exists(file_save_path) and not overwrite_existing:
         processed_indices = load_processed_indices(file_save_path)
-        if len(processed_indices) >= sample_size:
+        if len(processed_indices) >= num_samples:
             print("Task already done, skipping: ", file_save_path, "\n")
             return
     else:

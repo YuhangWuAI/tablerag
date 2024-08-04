@@ -24,10 +24,8 @@ def generate_and_evaluate(
 
     # Define the output file paths
     grd_pred_save_path = os.path.join(base_output_dir, os.path.basename(retrieval_results_save_path).replace("_retrieval_results.jsonl", "_grd_pred.jsonl"))
+    progress_save_path = os.path.join(base_output_dir, os.path.basename(retrieval_results_save_path).replace("_retrieval_results.jsonl", "_generation_progress.json"))
 
-    # 定义 query 和 grd 的文件路径
-    dataset_path = "/home/yuhangwu/Desktop/Projects/TableProcess/source/dataset/tabfact.jsonl"
-    
     # Load the original dataset to retrieve the ground truth (grd)
     with open(dataset_path, 'r') as f:
         original_data = [json.loads(line) for line in f]
@@ -36,12 +34,19 @@ def generate_and_evaluate(
 
     grd, pred = [], []
 
-    # Step 1: If call_llm is True, load the retrieval results and generate responses
+    # Step 1: Load progress if exists
+    start_index = 0
+    if os.path.exists(progress_save_path):
+        with open(progress_save_path, 'r') as f:
+            start_index = int(f.read().strip())
+        print(f"Resuming from index {start_index}\n")
+
+    # Step 2: If call_llm is True, load the retrieval results and generate responses
     print("Generating responses using LLM\n")
     with open(retrieval_results_save_path, 'r') as f:
         retrieval_results = [json.loads(line) for line in f]
 
-    for i, result in tqdm(enumerate(retrieval_results), desc="Generating LLM responses", ncols=150):
+    for i, result in tqdm(enumerate(retrieval_results[start_index:], start=start_index), desc="Generating LLM responses", ncols=150):
         try:
             query = result["query"]
             grd_value = grd_dict.get(query, None)
@@ -65,11 +70,15 @@ def generate_and_evaluate(
                 with open(grd_pred_save_path, "w") as f:
                     f.write(json.dumps({"grd": grd, "pred": pred}) + "\n")
 
+                # Save progress
+                with open(progress_save_path, "w") as progress_file:
+                    progress_file.write(str(i + 1))
+
         except Exception as e:
             print(f"Error generating response for sample {i}: {e}. Skipping this sample.\n")
-            continue
+            break
 
-    # Step 2: Evaluation
+    # Step 3: Evaluation
     if run_evaluation:
         print("Running evaluation...\n")
         numbers = Evaluator().run(pred, grd, task_name)
@@ -78,5 +87,4 @@ def generate_and_evaluate(
 
 if __name__ == "__main__":
     retrieval_results_save_path = "pipeline/data/retrieval_results/tabfact_default_assemble_retrieval_based_augmentation_1_retrieval_results.jsonl"
-    dataset_path = "/home/yuhangwu/Desktop/Projects/TableProcess/source/dataset/tabfact.jsonl"
-    generate_and_evaluate(retrieval_results_save_path, dataset_path)
+    generate_and_evaluate(retrieval_results_save_path)

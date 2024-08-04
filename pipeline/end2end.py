@@ -46,24 +46,6 @@ def end2end(
 
     print("File save path: ", file_save_path, "\n")
 
-    # if not exist create it
-    progress_directory = os.path.dirname(progress_save_path)
-    if not os.path.exists(progress_directory):
-        os.makedirs(progress_directory)
-
-    # whether the task is already done
-    if os.path.exists(file_save_path) and not overwrite_existing:
-        processed_indices = load_processed_indices(file_save_path)
-        if len(processed_indices) >= sample_size:
-            print("Task already done, skipping: ", file_save_path, "\n")
-            return
-    else:
-        processed_indices = set()
-
-    # Load progress
-    if os.path.exists(progress_save_path):
-        with open(progress_save_path, "r") as progress_file:
-            processed_indices.update(set(json.load(progress_file)))
 
     # Initializing tableprovider and get instruction
     print("Initializing TableProvider\n")
@@ -97,6 +79,27 @@ def end2end(
         sample_size if sample_size is not None else (len(dataset) if load_local_dataset else len(table_provider.table_loader.dataset))
     )
     print("Number of samples: ", num_samples, "\n")
+
+
+    # if not exist create it
+    progress_directory = os.path.dirname(progress_save_path)
+    if not os.path.exists(progress_directory):
+        os.makedirs(progress_directory)
+
+    # whether the task is already done
+    if os.path.exists(file_save_path) and not overwrite_existing:
+        processed_indices = load_processed_indices(file_save_path)
+        if len(processed_indices) >= sample_size:
+            print("Task already done, skipping: ", file_save_path, "\n")
+            return
+    else:
+        processed_indices = set()
+
+    # Load progress
+    if os.path.exists(progress_save_path):
+        with open(progress_save_path, "r") as progress_file:
+            processed_indices.update(set(json.load(progress_file)))
+
 
     num_batches = num_samples // batch_size
     remaining_samples = num_samples % batch_size

@@ -369,7 +369,7 @@ class CallLLM:
         """
 
         generated_text = self.generate_text(prompt)
-        return generated_text
+        return generated_text   
 
     @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
     def generate_final_answer(self, query_need_to_answer: str, table_html: str, terms_explanation: str, table_summary: str) -> str:
@@ -378,7 +378,8 @@ class CallLLM:
         prompt = f"""
         Example: You will be given a statement, a table summary, the full table content, and terms explanations.
         Your task is to determine whether the statement is true or false based on the table and provided information.
-        Return 1 if the statement is true, and 0 if it is false. Provide only the number '1' or '0' as the answer without any additional text.
+        Return 1 if the statement is true, and 0 if it is false or if you cannot determine the answer based on the provided information.
+        Provide only the number '1' or '0' as the answer without any additional text.
 
         User 1:
         Statement: "The scheduled date for the farm with 17 turbines is 2012."
@@ -443,8 +444,10 @@ class CallLLM:
         Table: {table_html}
         Terms Explanation: {terms_explanation}
 
+        If you cannot determine whether the statement is true or false based on the provided information, return '0'. Otherwise, return '1' for true or '0' for false.
         Return only '1' or '0'.
         """
+
 
         # This is where the LLM is called to generate the answer
         generated_text = self.generate_text(prompt)

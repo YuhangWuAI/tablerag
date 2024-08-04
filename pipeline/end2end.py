@@ -145,63 +145,66 @@ def end2end(
                 grd.append(grd_value)
                 print("Query: ", query, "\n")
 
-                try:
-                    filter_table = table_provider.table_sampler.run(query, parsed_sample)
-                    print("Filtered table generated for sample ", i, ":\n", filter_table, "\n")
-                except Exception as e:
-                    print("Error in table sampling for sample ", i, ": ", e, "\n")
-                    continue
+                try: 
+                    try:
+                        filter_table = table_provider.table_sampler.run(query, parsed_sample)
+                        print("Filtered table generated for sample ", i, ":\n", filter_table, "\n")
+                    except Exception as e:
+                        print("Error in table sampling for sample ", i, ": ", e, "\n")
+                        continue
 
-                augmentation_input = parsed_sample
-                if use_sampled_table_for_augmentation:
-                    print("Using sampled table for augmentation\n")
-                    augmentation_input = {
-                        "query": parsed_sample["query"],
-                        "table": {
-                            "header": filter_table.columns.tolist(),
-                            "rows": filter_table.to_dict('records'),
-                            "caption": parsed_sample["table"].get("caption", "")
+                    augmentation_input = parsed_sample
+                    if use_sampled_table_for_augmentation:
+                        print("Using sampled table for augmentation\n")
+                        augmentation_input = {
+                            "query": parsed_sample["query"],
+                            "table": {
+                                "header": filter_table.columns.tolist(),
+                                "rows": filter_table.to_dict('records'),
+                                "caption": parsed_sample["table"].get("caption", "")
+                            }
                         }
-                    }
-                print("Augmentation input: ", augmentation_input, "\n")
-                augmentation_info = (
-                    table_provider.table_augmentation.run(augmentation_input)
-                    if table_augmentation_type != "None"
-                    else ""
-                )
-                print("Augmentation info for sample ", i, ": ", augmentation_info, "\n")
+                    print("Augmentation input: ", augmentation_input, "\n")
+                    augmentation_info = (
+                        table_provider.table_augmentation.run(augmentation_input)
+                        if table_augmentation_type != "None"
+                        else ""
+                    )
+                    print("Augmentation info for sample ", i, ": ", augmentation_info, "\n")
 
 
-                try:
-                    table_html = filter_table.to_html()
-                except AttributeError as e:
-                    print(f"Error in converting table to HTML: {e}. Converting table to string instead.\n")
-                    table_html = filter_table.to_string()
+                    try:
+                        table_html = filter_table.to_html()
+                    except AttributeError as e:
+                        print(f"Error in converting table to HTML: {e}. Converting table to string instead.\n")
+                        table_html = filter_table.to_string()
 
-                request = serialize_request(
-                    query=query,
-                    table_html=table_html,
-                    augmentation_info=augmentation_info  
-                )
-
-                print("Request:\n", request, "\n")
-
-                batch_request.append(request)
-
-                # Save progress
-                processed_indices.add(index)
-                with open(progress_save_path, "w") as progress_file:
-                    json.dump(list(processed_indices), progress_file)
-                
-                # Save jsonl
-                if save_jsonl:
-                    print("Saving results as jsonl\n")
-                    save_jsonl_file(
-                        batch_request[-1],
-                        grd[-1],
-                        file_save_path
+                    request = serialize_request(
+                        query=query,
+                        table_html=table_html,
+                        augmentation_info=augmentation_info  
                     )
 
+                    print("Request:\n", request, "\n")
+
+                    batch_request.append(request)
+
+                    # Save progress
+                    processed_indices.add(index)
+                    with open(progress_save_path, "w") as progress_file:
+                        json.dump(list(processed_indices), progress_file)
+                    
+                    # Save jsonl
+                    if save_jsonl:
+                        print("Saving results as jsonl\n")
+                        save_jsonl_file(
+                            batch_request[-1],
+                            grd[-1],
+                            file_save_path
+                        )
+                except Exception as e:
+                    print(f"Error in processing sample {i} in batch {batch_num}: {e}. Skipping this sample.\n")
+                    continue
             pbar.update(batch_size)
             print("Finished processing batch number: ", batch_num, "\n")
             batches.append(batch_request)

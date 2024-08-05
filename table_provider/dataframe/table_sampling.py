@@ -40,7 +40,7 @@ class TableSampling:
             raise ValueError(
                 f"Table sampling type {table_sampling_type} is not supported"
             )
-        # set the default sampling type
+        # set the default sampling type /auto_row_filter/auto_row_filter/embedding_sample
         if table_sampling_type == "default":
             table_sampling_type = "auto_row_filter"
         self.table_sampling_type = table_sampling_type

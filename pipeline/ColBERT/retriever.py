@@ -10,6 +10,9 @@ from pipeline.compoments.request_serializer import deserialize_retrieved_text
 
 import warnings
 warnings.filterwarnings("ignore")
+import torch
+
+torch.cuda.empty_cache()
 
 def generate_retrieval_results(
     dataset_path: str,  # 用于嵌入和检索的文档路径
@@ -95,6 +98,6 @@ def generate_retrieval_results(
     print(f"Recall Accuracy: {recall_accuracy * 100:.2f}% ({successful_retrievals}/{total_samples})")
 
 if __name__ == "__main__":
-    dataset_path = "/home/yuhangwu/Desktop/Projects/TableProcess/pipeline/data/Exp-240804/table_augmentation/tabfact_default_assemble_retrieval_based_augmentation_1.jsonl"
+    dataset_path = "/home/yuhangwu/Desktop/Projects/TableProcess/pipeline/data/Exp-240804/table_augmentation/tabfact_default_docs_references_1.jsonl"
     index_name = "my_index"
     generate_retrieval_results(dataset_path, index_name, num_queries=None)  # 这里可以控制提取多少个 query 和 grd

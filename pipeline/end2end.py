@@ -283,7 +283,7 @@ def end2end(
             print("Finished processing remaining samples\n")
             batches.append(batch_request)
 
-    
+    '''
     # Step 1: Embed and index the JSONL file using ColBERT
     if azure_blob:
         print("Embedding and indexing JSONL file using ColBERT\n")
@@ -338,3 +338,4 @@ def end2end(
             print("Running evaluation...\n")
             numbers = Evaluator().run(pred, grd, task_name)
             print("Evaluation results of ", experiment_name, "_", task_name, ": ", numbers, "\n")
+    '''

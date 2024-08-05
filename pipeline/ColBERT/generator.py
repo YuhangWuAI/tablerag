@@ -16,7 +16,9 @@ def generate_and_evaluate(
     dataset_path: str = "/home/yuhangwu/Desktop/Projects/TableProcess/source/dataset/tabfact.jsonl",
     task_name: str = "tabfact",
     base_output_dir: str = "/home/yuhangwu/Desktop/Projects/TableProcess/pipeline/data/prediction",
-    run_evaluation: bool = True
+    run_evaluation: bool = True,
+    remove_terms_explanation: bool = False,
+    remove_table_summary: bool = False
 ):
     # Ensure output directories exist
     if not os.path.exists(base_output_dir):
@@ -55,8 +57,10 @@ def generate_and_evaluate(
             for item in parsed_content:
                 query_to_answer = item['query_need_to_answer']
                 table_html = item['table_html']
-                terms_explanation = item['terms_explanation']
-                table_summary = item['table_summary']
+                
+                # 根据实验需求移除部分信息
+                terms_explanation = "" if remove_terms_explanation else item['terms_explanation']
+                table_summary = "" if remove_table_summary else item['table_summary']
 
                 print("Calling LLM for the final answer\n")
                 # Generate the final answer
@@ -86,5 +90,7 @@ def generate_and_evaluate(
         return numbers
 
 if __name__ == "__main__":
-    retrieval_results_save_path = "/home/yuhangwu/Desktop/Projects/TableProcess/pipeline/data/retrieval_results/tabfact_default_assemble_retrieval_based_augmentation_1_retrieval_results.jsonl"
-    generate_and_evaluate(retrieval_results_save_path)
+    retrieval_results_save_path = "/home/yuhangwu/Desktop/Projects/TableProcess/pipeline/data/retrieval_results/tabfact_default_docs_references_1_retrieval_results.jsonl"
+    
+    # 调用时根据实验需求设置参数
+    generate_and_evaluate(retrieval_results_save_path, remove_terms_explanation=True, remove_table_summary=True)

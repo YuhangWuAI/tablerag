@@ -373,7 +373,14 @@ class CallLLM:
 
     @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
     def generate_final_answer(self, query_need_to_answer: str, table_html: str, terms_explanation: str, table_summary: str) -> str:
-        print("\n Calling OpenAI API for generating the final answer !!! \n")
+        print("\nCalling OpenAI API for generating the final answer !!!\n")
+
+        # 检查术语解释和表格总结是否为空，如果为空，使用一个指示性的占位符
+        if not terms_explanation.strip():
+            terms_explanation = "[No terms explanation provided]"
+
+        if not table_summary.strip():
+            table_summary = "[No table summary provided]"
 
         prompt = f"""
         Example: You will be given a statement, a table summary, the full table content, and terms explanations.
@@ -455,12 +462,9 @@ class CallLLM:
         Return only '1' or '0'.
         """
 
-
-
         # This is where the LLM is called to generate the answer
         generated_text = self.generate_text(prompt)
         return generated_text.strip()  # Ensure any whitespace is removed, returning only the digit
-
 
 
 

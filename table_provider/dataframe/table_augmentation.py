@@ -88,8 +88,6 @@ class TableAugmentation:
                 print("No caption found, using header instead:", parsed_example['table']['header'])
                 docs = retriever.get_relevant_documents(" ".join(parsed_example["table"]["header"]))
             
-            # Ensure this wait is required, might not be needed
-            time.sleep(5)
             
             # Extract relevant metadata from the retrieved documents
             metadata_list = []

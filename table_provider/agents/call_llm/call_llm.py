@@ -372,7 +372,7 @@ class CallLLM:
         return generated_text   
 
     @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
-    def generate_final_answer(self, query_need_to_answer: str, table_formatted: str, terms_explanation: str, table_summary: str) -> str:
+    def tabfact_generate_final_answer(self, query_need_to_answer: str, table_formatted: str, terms_explanation: str, table_summary: str) -> str:
         print("\nCalling OpenAI API for generating the final answer !!!\n")
 
         # 检查术语解释和表格总结是否为空，如果为空，使用一个指示性的占位符

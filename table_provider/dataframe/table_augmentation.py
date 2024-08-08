@@ -88,7 +88,6 @@ class TableAugmentation:
                 print("No caption found, using header instead:", parsed_example['table']['header'])
                 docs = retriever.get_relevant_documents(" ".join(parsed_example["table"]["header"]))
             
-            
             # Extract relevant metadata from the retrieved documents
             metadata_list = []
             for doc in docs:
@@ -102,6 +101,9 @@ class TableAugmentation:
             # Print the metadata for debugging
             print("Retrieved metadata: ", metadata_list)
 
+            # Extract context from parsed_example
+            context = parsed_example.get("context", [])
+            
             # Extract table, statement, and caption from parsed_example
             table = {
                 "header": parsed_example.get("table", {}).get("header", []),
@@ -110,9 +112,9 @@ class TableAugmentation:
             statement = parsed_example.get("query", "")
             caption = parsed_example.get("table", {}).get("caption", "")
 
-            # Call the method to generate table summary using metadata
-            print("Calling generate_table_summary with metadata")
-            generated_summary = self.call_llm.generate_table_summary(metadata_list, table, statement, caption)
+            # Call the method to generate table summary using individual parameters
+            print("Calling generate_table_summary with individual parameters")
+            generated_summary = self.call_llm.generate_table_summary(metadata_list, context, table, statement, caption)
             print("Generated summary:", generated_summary)
             
             # Return the generated summary in a dictionary under the 'table_summary' key
@@ -123,6 +125,7 @@ class TableAugmentation:
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
             return {"table_summary": "An unexpected error occurred"}
+
 
     def assemble_retrieval_based_augmentation(
         self, parsed_example: dict

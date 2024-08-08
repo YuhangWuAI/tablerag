@@ -312,12 +312,12 @@ class CallLLM:
 
 
     @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
-    def generate_table_summary(self, metadata_list: list, context: list, table: dict, statement: str, caption: str) -> str:
+    def generate_table_summary(self, metadata_list: list, context: list, table: dict, query: str, caption: str) -> str:
         prompt = f"""
-        Example: You will be given a table, a statement, the table's caption, metadata from related Wikipedia documents, and the context of the table. Your task is to generate a concise summary for the table that directly addresses the statement, using the Wikipedia metadata and the context to enhance understanding. Ensure the summary starts with the phrase 'This table is used to determine the truth of the statement: [statement]' and includes only content related to the statement. Do not directly reveal the answer, but guide the reader to make an informed decision based on the provided information.
+        Example: You will be given a table, a query (which can be either a statement or a question), the table's caption, metadata from related Wikipedia documents, and the context of the table. Your task is to generate a concise summary for the table that directly addresses the query, using the Wikipedia metadata and the context to enhance understanding. Ensure the summary starts with the phrase 'This table is used to answer the query: [query]' and includes only content related to the query. Do not directly reveal the answer, but guide the reader to make an informed decision based on the provided information.
 
         User 1:
-        I need an expert to help me create a concise summary of the table. Here is the statement: The scheduled date for the farm with 17 turbines be 2012.
+        I need an expert to help me create a concise summary of the table. Here is the query: The scheduled date for the farm with 17 turbines be 2012.
         Here is the table caption: Wind Farm Details in Ireland
         Here is the table:
         {{
@@ -345,14 +345,14 @@ class CallLLM:
 
         User 2:
         Summary:
-        "This table is used to determine the truth of the statement: The scheduled date for the farm with 17 turbines be 2012. The farm with 17 turbines, Garracummer, is scheduled for 2012 according to the table. Wind power in the Republic of Ireland is significant, with over 300 wind farms generating electricity. As of 2021, the Republic of Ireland has 4,309 MW of installed wind power capacity, contributing to a high wind power penetration in the country."
+        "This table is used to answer the query: The scheduled date for the farm with 17 turbines be 2012. The farm with 17 turbines, Garracummer, is scheduled for 2012 according to the table. Wind power in the Republic of Ireland is significant, with over 300 wind farms generating electricity. As of 2021, the Republic of Ireland has 4,309 MW of installed wind power capacity, contributing to a high wind power penetration in the country."
 
-        Now, generate a summary for the given table, addressing the statement and using the Wikipedia metadata and the context provided for enhanced understanding. Ensure the summary starts with the phrase 'This table is used to determine the truth of the statement: [statement]' and includes only content related to the statement. Please avoid directly revealing the answer.
+        Now, generate a summary for the given table, addressing the query and using the Wikipedia metadata and the context provided for enhanced understanding. Ensure the summary starts with the phrase 'This table is used to answer the query: [query]' and includes only content related to the query. Please avoid directly revealing the answer.
 
-        Statement:
-        {statement}
+        Query:
+        {query}
 
-        This table is used to determine the truth of the statement: {statement}
+        This table is used to answer the query: {query}
 
         Table caption:
         {caption}
@@ -368,7 +368,7 @@ class CallLLM:
 
         Please return the result in the following format:
         {{
-            "summary": "The summary that includes the statement, context from the caption, and relevant Wikipedia information."
+            "summary": "The summary that includes the query, context from the caption, and relevant Wikipedia information."
         }}
         """
 
@@ -394,7 +394,7 @@ class CallLLM:
 
         User 1:
         Statement: "The scheduled date for the farm with 17 turbines is 2012."
-        Table Summary: "This table is used to determine the truth of the statement: the scheduled date for the farm with 17 turbines is 2012. The Garracummer wind farm, which has 17 turbines, is indeed scheduled for 2012 as indicated in the table. Wind power is a significant energy source in Ireland, contributing to a high percentage of the country's electricity needs, with the Republic of Ireland boasting a total installed capacity of 4,309 MW as of 2021."
+        Table Summary: "This table is used to answer the query: the scheduled date for the farm with 17 turbines is 2012. The Garracummer wind farm, which has 17 turbines, is indeed scheduled for 2012 as indicated in the table. Wind power is a significant energy source in Ireland, contributing to a high percentage of the country's electricity needs, with the Republic of Ireland boasting a total installed capacity of 4,309 MW as of 2021."
         Table:
         <table border="1" class="dataframe">
         <thead>
@@ -427,7 +427,7 @@ class CallLLM:
 
         User 1:
         Statement: "The most recent locomotive to be manufactured was made more than 10 years after the first was manufactured."
-        Table Summary: "This table is used to determine the truth of the statement: the most recent locomotive to be manufacture was made more than 10 years after the first was manufactured. The first locomotives listed in the table were manufactured between 1889 and 1907, while the most recent locomotive was manufactured in 1923. This indicates that the most recent locomotive was made 16 years after the first ones, thus supporting the truth of the statement. The list provides an overview of locomotives from the Palatinate Railway, highlighting the historical context of railway development in the region."
+        Table Summary: "This table is used to answer the query: the most recent locomotive to be manufacture was made more than 10 years after the first was manufactured. The first locomotives listed in the table were manufactured between 1889 and 1907, while the most recent locomotive was manufactured in 1923. This indicates that the most recent locomotive was made 16 years after the first ones, thus supporting the truth of the statement. The list provides an overview of locomotives from the Palatinate Railway, highlighting the historical context of railway development in the region."
         Table:
         <table border="1" class="dataframe">
         <thead>

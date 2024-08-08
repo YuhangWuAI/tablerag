@@ -312,9 +312,9 @@ class CallLLM:
 
 
     @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
-    def generate_table_summary(self, metadata_list: list, table: dict, statement: str, caption: str) -> str:
+    def generate_table_summary(self, metadata_list: list, context: list, table: dict, statement: str, caption: str) -> str:
         prompt = f"""
-        Example: You will be given a table, a statement, the table's caption, and metadata from related Wikipedia documents. Your task is to generate a concise summary for the table that directly addresses the statement, using the Wikipedia metadata to enhance understanding. Ensure the summary starts with the phrase 'This table is used to determine the truth of the statement: [statement]' and includes only content related to the statement.
+        Example: You will be given a table, a statement, the table's caption, metadata from related Wikipedia documents, and the context of the table. Your task is to generate a concise summary for the table that directly addresses the statement, using the Wikipedia metadata and the context to enhance understanding. Ensure the summary starts with the phrase 'This table is used to determine the truth of the statement: [statement]' and includes only content related to the statement. Do not directly reveal the answer, but guide the reader to make an informed decision based on the provided information.
 
         User 1:
         I need an expert to help me create a concise summary of the table. Here is the statement: The scheduled date for the farm with 17 turbines be 2012.
@@ -341,12 +341,13 @@ class CallLLM:
                 "source": "https://en.wikipedia.org/wiki/List_of_wind_farms_in_the_Republic_of_Ireland"
             }}
         ]
+        Here is the context of the table: The table is part of a broader analysis of wind power development in Ireland, comparing different wind farms' schedules, capacities, and locations.
 
         User 2:
         Summary:
         "This table is used to determine the truth of the statement: The scheduled date for the farm with 17 turbines be 2012. The farm with 17 turbines, Garracummer, is scheduled for 2012 according to the table. Wind power in the Republic of Ireland is significant, with over 300 wind farms generating electricity. As of 2021, the Republic of Ireland has 4,309 MW of installed wind power capacity, contributing to a high wind power penetration in the country."
 
-        Now, generate a summary for the given table, addressing the statement and using the Wikipedia metadata for enhanced understanding. Ensure the summary starts with the phrase 'This table is used to determine the truth of the statement: [statement]' and includes only content related to the statement.
+        Now, generate a summary for the given table, addressing the statement and using the Wikipedia metadata and the context provided for enhanced understanding. Ensure the summary starts with the phrase 'This table is used to determine the truth of the statement: [statement]' and includes only content related to the statement. Please avoid directly revealing the answer.
 
         Statement:
         {statement}
@@ -362,6 +363,9 @@ class CallLLM:
         Wikipedia metadata:
         {json.dumps(metadata_list, indent=2)}
 
+        Context:
+        {json.dumps(context, indent=2)}
+
         Please return the result in the following format:
         {{
             "summary": "The summary that includes the statement, context from the caption, and relevant Wikipedia information."
@@ -369,7 +373,7 @@ class CallLLM:
         """
 
         generated_text = self.generate_text(prompt)
-        return generated_text   
+        return generated_text
 
     @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
     def tabfact_generate_final_answer(self, query_need_to_answer: str, table_formatted: str, terms_explanation: str, table_summary: str) -> str:

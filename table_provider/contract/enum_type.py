@@ -7,7 +7,6 @@ class TaskName(Enum):
     hybridqa = "hybridqa"
     sqa = "sqa"
     tabfact = "tabfact"
-    totto = "totto"
 
 
 @unique

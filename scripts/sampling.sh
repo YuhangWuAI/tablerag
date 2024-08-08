@@ -1,6 +1,7 @@
 # End-to-end Jsonl Generation
 # auto_row_filter and embedding_sample
 sampling_methods=("auto_row_filter")
+# feverous hybridqa sqa and tabfact
 task_name=("tabfact")
 
 # Empirical study on table sampling types

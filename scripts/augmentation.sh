@@ -1,6 +1,8 @@
-# End-to-end Jsonl Generation
-# docs_references and term_explanations and assemble_retrieval_based_augmentation
+
+# feverous hybridqa sqa and tabfact
 task_name=("tabfact")
+
+# docs_references and term_explanations and assemble_retrieval_based_augmentation
 augmentation_types=("docs_references")
 
 # Empirical study on augmentation types
@@ -11,4 +13,3 @@ for augmentation_type in "${augmentation_types[@]}"; do
         echo ">>>>>>>>>>>>>>>>>>Done with $task $augmentation_type<<<<<<<<<<<<<<<<<<<<<<<"
     done
 done
-

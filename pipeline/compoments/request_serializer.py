@@ -1,17 +1,19 @@
 import json
 
-def serialize_request(query: str, table_formatted: str, augmentation_info: dict) -> dict:
+
+def serialize_request(query: str, table_formatted: str, augmentation_info: dict, context: str) -> dict:
     try:
         # 从 augmentation_info 中提取 terms_explanation 和 table_summary，如果不存在则为空字符串
         terms_explanation = augmentation_info.get("terms_explanation", "")
         table_summary = augmentation_info.get("table_summary", "")
 
-        # 构建请求字典并返回
+        # 构建请求字典并返回，添加 table_context 字段
         request_dict = {
             "query": query,
             "table_formatted": table_formatted,
             "terms_explanation": terms_explanation,
             "table_summary": table_summary,
+            "table_context": context  # 添加 context 到请求字典中
         }
         
         return request_dict
@@ -21,8 +23,6 @@ def serialize_request(query: str, table_formatted: str, augmentation_info: dict)
         # 返回一个空的字典，确保后续代码仍然可以正常运行
         return {}
 
-
-import json
 
 
 from typing import List, Dict
@@ -38,7 +38,8 @@ def deserialize_retrieved_text(retrieved_docs: List[Dict[str, str]]) -> List[Dic
             'query_need_to_answer': '',
             'table_formatted': '',
             'terms_explanation': '',
-            'table_summary': ''
+            'table_summary': '',
+            'table_context': ''  # 初始化 table_context 字段
         }
         
         try:
@@ -66,8 +67,14 @@ def deserialize_retrieved_text(retrieved_docs: List[Dict[str, str]]) -> List[Dic
 
             # 解析出 table_summary
             table_summary_start += len('table_summary:')
-            if table_summary_start != -1:
-                parsed_data['table_summary'] = content[table_summary_start:].strip()
+            table_context_start = content.find('table_context:')
+            if table_summary_start != -1 and table_context_start != -1:
+                parsed_data['table_summary'] = content[table_summary_start:table_context_start].strip()
+
+            # 解析出 table_context
+            table_context_start += len('table_context:')
+            if table_context_start != -1:
+                parsed_data['table_context'] = content[table_context_start:].strip()
 
         except Exception as e:
             print(f"Error in deserializing retrieved text: {e}")

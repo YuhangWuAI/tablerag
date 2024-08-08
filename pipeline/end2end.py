@@ -146,6 +146,9 @@ def end2end(
 
                 query = parsed_sample["query"]
                 grd_value = parsed_sample["label"]
+                context = parsed_sample.get("context", "")  # Extract context if available
+                context = " ".join(context)
+                print("context: \n", context)
                 grd.append(grd_value)
                 print("Query: ", query, "\n")
 
@@ -196,7 +199,8 @@ def end2end(
                     request = serialize_request(
                         query=query,
                         table_formatted=table_formatted,
-                        augmentation_info=augmentation_info  
+                        augmentation_info=augmentation_info,
+                        context=context  # Include the context in the request serialization
                     )
 
                     print("Request:\n", request, "\n")
@@ -250,6 +254,7 @@ def end2end(
                 )
                 query = parsed_sample["query"]
                 grd_value = parsed_sample["label"]
+                context = parsed_sample.get("context", "")  # Extract context if available
                 grd.append(grd_value)
                 print("Query: ", query, "\n")
 
@@ -289,12 +294,11 @@ def end2end(
                 request = serialize_request(
                     query=query,
                     table_formatted=table_formatted,
-                    augmentation_info=augmentation_info  
+                    augmentation_info=augmentation_info,
+                    context=context  # Include the context in the request serialization
                 )
 
                 print("Request:\n", request, "\n")
-
-            
 
                 batch_request.append(request)
 

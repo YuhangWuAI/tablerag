@@ -9,27 +9,30 @@ def save_jsonl_file(
     file_path: str,
     pred: str = None,
 ):
-    # mkdir
+    # Create the directory if it does not exist
     directory = os.path.dirname(file_path)
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-    # 组织 request 的内容，并添加描述信息
+    # Construct the request string, now including the table_context (or context) field
     request_str = (
         f"query_need_to_answer:\n{request['query']}\n"
         f"table_formatted:\n{request['table_formatted']}\n"
         f"terms_explanation:\n{request.get('terms_explanation', '')}\n"
-        f"table_summary:\n{request.get('table_summary', '')}"
+        f"table_summary:\n{request.get('table_summary', '')}\n"
+        f"table_context:\n{request.get('table_context', '')}"  # Ensure the context is included
     )
 
+    # Prepare the data dictionary to be saved
     data = {'request': request_str, 'label': label}
     if pred is not None:
         data['pred'] = pred
 
-    # save jsonl: 将 json.dumps 的 indent 参数设置为 None 以确保输出为单行
+    # Append the JSON-serialized data to the file
     with open(file_path, 'a') as file:
-        json_string = json.dumps(data, ensure_ascii=False)  # 不使用缩进和换行
+        json_string = json.dumps(data, ensure_ascii=False)  # Ensuring no ASCII escaping and single-line output
         file.write(json_string + '\n')
+
 
 def load_processed_indices(file_path: str):
     processed_indices = set()

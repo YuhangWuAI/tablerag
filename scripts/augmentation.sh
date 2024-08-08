@@ -1,9 +1,8 @@
-
 # feverous hybridqa sqa and tabfact
-task_name=("tabfact")
+task_name=("feverous")
 
 # docs_references and term_explanations and assemble_retrieval_based_augmentation
-augmentation_types=("docs_references")
+augmentation_types=("assemble_retrieval_based_augmentation")
 
 # Empirical study on augmentation types
 for augmentation_type in "${augmentation_types[@]}"; do

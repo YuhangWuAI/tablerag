@@ -56,7 +56,7 @@ def generate_and_evaluate(
 
             for item in parsed_content:
                 query_to_answer = item['query_need_to_answer']
-                table_html = item['table_html']
+                table_formatted = item['table_formatted']
                 
                 # 根据实验需求移除部分信息
                 terms_explanation = "" if remove_terms_explanation else item['terms_explanation']
@@ -64,7 +64,7 @@ def generate_and_evaluate(
 
                 print("Calling LLM for the final answer\n")
                 # Generate the final answer
-                final_answer = CallLLM().generate_final_answer(query_to_answer, table_html, terms_explanation, table_summary)
+                final_answer = CallLLM().generate_final_answer(query_to_answer, table_formatted, terms_explanation, table_summary)
 
                 print("\nFinal answer is:", final_answer)
                 pred.append(final_answer)

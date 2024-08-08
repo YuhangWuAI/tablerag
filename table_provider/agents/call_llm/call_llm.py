@@ -372,7 +372,7 @@ class CallLLM:
         return generated_text   
 
     @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
-    def generate_final_answer(self, query_need_to_answer: str, table_html: str, terms_explanation: str, table_summary: str) -> str:
+    def generate_final_answer(self, query_need_to_answer: str, table_formatted: str, terms_explanation: str, table_summary: str) -> str:
         print("\nCalling OpenAI API for generating the final answer !!!\n")
 
         # 检查术语解释和表格总结是否为空，如果为空，使用一个指示性的占位符
@@ -455,7 +455,7 @@ class CallLLM:
 
         Statement: "{query_need_to_answer}"
         Table Summary: "{table_summary}"
-        Table: {table_html}
+        Table: {table_formatted}
         Terms Explanation: {terms_explanation}
 
         If you cannot determine whether the statement is true or false based on the provided information, return '0'. Otherwise, return '1' for true or '0' for false.

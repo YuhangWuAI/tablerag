@@ -29,6 +29,7 @@ def end2end(
     whether_column_grounding: bool = False,
     sample_size: Optional[int] = None,
     overwrite_existing: bool = False,
+    table_format: str = "markdown",
     colbert_model_name: str = "colbert-ir/colbertv2.0",  # Add this parameter for ColBERT model
     index_name: str = "my_index",  # Add this parameter for the index name
     call_llm: bool = True,  # Add this parameter to control whether to call LLM or not
@@ -177,14 +178,24 @@ def end2end(
 
 
                     try:
-                        table_html = filter_table.to_html()
+                        if table_format == "html":
+                            table_formatted = filter_table.to_html()
+                        elif table_format == "markdown":
+                            try:
+                                from tabulate import tabulate
+                                table_formatted = tabulate(filter_table, headers="keys", tablefmt="pipe")
+                            except ImportError:
+                                print("Tabulate module not installed, falling back to string format.")
+                                table_formatted = filter_table.to_string()
+                        else:
+                            table_formatted = filter_table.to_string()
                     except AttributeError as e:
-                        print(f"Error in converting table to HTML: {e}. Converting table to string instead.\n")
-                        table_html = filter_table.to_string()
+                        print(f"Error in converting table: {e}. Converting table to string instead.\n")
+                        table_formatted = filter_table.to_string()
 
                     request = serialize_request(
                         query=query,
-                        table_html=table_html,
+                        table_formatted=table_formatted,
                         augmentation_info=augmentation_info  
                     )
 
@@ -257,11 +268,33 @@ def end2end(
                     else ""
                 )
                 print("Augmentation info for remaining sample ", i, ": ", augmentation_info, "\n")
+
+
+                try:
+                    if table_format == "html":
+                        table_formatted = filter_table.to_html()
+                    elif table_format == "markdown":
+                        try:
+                            from tabulate import tabulate
+                            table_formatted = tabulate(filter_table, headers="keys", tablefmt="pipe")
+                        except ImportError:
+                            print("Tabulate module not installed, falling back to string format.")
+                            table_formatted = filter_table.to_string()
+                    else:
+                        table_formatted = filter_table.to_string()
+                except AttributeError as e:
+                    print(f"Error in converting table: {e}. Converting table to string instead.\n")
+                    table_formatted = filter_table.to_string()
+
                 request = serialize_request(
                     query=query,
-                    table_html=filter_table.to_html(),
+                    table_formatted=table_formatted,
                     augmentation_info=augmentation_info  
                 )
+
+                print("Request:\n", request, "\n")
+
+            
 
                 batch_request.append(request)
 

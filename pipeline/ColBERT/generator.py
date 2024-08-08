@@ -12,14 +12,25 @@ import warnings
 warnings.filterwarnings("ignore")
 
 def generate_and_evaluate(
+    dataset_name: str,  # 新增参数，指定数据集名称
     retrieval_results_save_path: str,
-    dataset_path: str = "/home/yuhangwu/Desktop/Projects/TableProcess/source/dataset/tabfact.jsonl",
-    task_name: str = "tabfact",
     base_output_dir: str = "/home/yuhangwu/Desktop/Projects/TableProcess/pipeline/data/prediction",
     run_evaluation: bool = True,
     remove_terms_explanation: bool = False,
     remove_table_summary: bool = False
 ):
+    # 根据数据集名称设置数据集路径
+    dataset_path = f"/home/yuhangwu/Desktop/Projects/TableProcess/source/dataset/{dataset_name}.jsonl"
+    
+    # 根据数据集名称生成对应的生成函数名称
+    generate_function_name = f"{dataset_name}_generate_final_answer"
+    
+    # 获取CallLLM类中的生成函数
+    llm_generate_function = getattr(CallLLM(), generate_function_name, None)
+
+    if llm_generate_function is None:
+        raise ValueError(f"Function {generate_function_name} is not defined in CallLLM.")
+
     # Ensure output directories exist
     if not os.path.exists(base_output_dir):
         os.makedirs(base_output_dir)
@@ -63,8 +74,8 @@ def generate_and_evaluate(
                 table_summary = "" if remove_table_summary else item['table_summary']
 
                 print("Calling LLM for the final answer\n")
-                # Generate the final answer
-                final_answer = CallLLM().generate_final_answer(query_to_answer, table_formatted, terms_explanation, table_summary)
+                # 调用生成函数
+                final_answer = llm_generate_function(query_to_answer, table_formatted, terms_explanation, table_summary)
 
                 print("\nFinal answer is:", final_answer)
                 pred.append(final_answer)
@@ -85,12 +96,12 @@ def generate_and_evaluate(
     # Step 3: Evaluation
     if run_evaluation:
         print("Running evaluation...\n")
-        numbers = Evaluator().run(pred, grd, task_name)
+        numbers = Evaluator().run(pred, grd, dataset_name)
         print("Evaluation results:", numbers, "\n")
         return numbers
 
 if __name__ == "__main__":
-    retrieval_results_save_path = "/home/yuhangwu/Desktop/Projects/TableProcess/pipeline/data/retrieval_results/tabfact_default_docs_references_1_retrieval_results.jsonl"
-    
-    # 调用时根据实验需求设置参数
-    generate_and_evaluate(retrieval_results_save_path, remove_terms_explanation=True, remove_table_summary=True)
+    retrieval_results_save_path = "/home/yuhangwu/Desktop/Projects/TableProcess/pipeline/data/retrieval_results/feverous_default_assemble_retrieval_based_augmentation_1_retrieval_results.jsonl"
+    dataset_name = "feverous"
+    # 调用时根据实验需求设置参数，例如指定数据集名称
+    generate_and_evaluate(dataset_name, retrieval_results_save_path, remove_terms_explanation=True, remove_table_summary=True)

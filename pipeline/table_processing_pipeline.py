@@ -24,18 +24,16 @@ def table_processing_pipeline(
     load_local_dataset: bool = True,
     experiment_name: str = "table_augmentation",
     use_sampled_table_for_augmentation: bool = False,
-    sample_size: Optional[int] = 5,
+    sample_size: Optional[int] = 1,
     overwrite_existing: bool = False,
     table_format: str = "markdown",
     use_table_sampling: bool = True,
 ):
     print("Starting table processing pipeline\n")
     
-    today = datetime.date.today()
-    formatted_today = today.strftime('%y%m%d')
-
-    file_save_path = f"pipeline/data/Exp-{formatted_today}/{experiment_name}/{task_name}_{table_sampling_type}_{table_augmentation_type}_{k_shot}.jsonl"
-    progress_save_path = f"pipeline/data/Exp-{formatted_today}/{experiment_name}/{task_name}_progress.json"
+    # Define the new paths for saving files and progress
+    file_save_path = f"/home/yuhangwu/Desktop/Projects/TableProcess/data/processed/table_outputs/{task_name}_{table_sampling_type}_{table_augmentation_type}_{table_format}.jsonl"
+    progress_save_path = f"/home/yuhangwu/Desktop/Projects/TableProcess/data/progressing/{task_name}_{table_sampling_type}_{table_augmentation_type}_{table_format}.json"
 
     print("File save path: ", file_save_path, "\n")
 
@@ -73,10 +71,13 @@ def table_processing_pipeline(
     print("Number of samples: ", num_samples, "\n")
 
 
-    # if not exist create it
+    # Create directories if they do not exist
     progress_directory = os.path.dirname(progress_save_path)
     if not os.path.exists(progress_directory):
         os.makedirs(progress_directory)
+
+    if not os.path.exists(os.path.dirname(file_save_path)):
+        os.makedirs(os.path.dirname(file_save_path))
 
     # whether the task is already done
     if os.path.exists(file_save_path) and not overwrite_existing:

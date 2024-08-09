@@ -77,6 +77,7 @@ def generate_and_evaluate(
                 table_summary = "" if remove_table_summary else item['table_summary']
 
                 print("Calling LLM for the final answer\n")
+                print("query: \n", query_to_answer)
                 # Call the generation function, passing the new table_context field
                 final_answer = llm_generate_function(query_to_answer, table_formatted, terms_explanation, table_summary, table_context)
 
@@ -104,7 +105,7 @@ def generate_and_evaluate(
         return numbers
 
 if __name__ == "__main__":
-    retrieval_results_save_path = "/home/yuhangwu/Desktop/Projects/TableProcess/pipeline/data/retrieval_results/hybridqa_default_assemble_retrieval_based_augmentation_1_retrieval_results.jsonl"
-    dataset_name = "hybridqa"
+    retrieval_results_save_path = "/home/yuhangwu/Desktop/Projects/TableProcess/pipeline/data/retrieval_results/sqa_default_assemble_retrieval_based_augmentation_1_retrieval_results.jsonl"
+    dataset_name = "sqa"
     # Call the function with appropriate parameters
-    generate_and_evaluate(dataset_name, retrieval_results_save_path, remove_terms_explanation=False, remove_table_summary=True)
+    generate_and_evaluate(dataset_name, retrieval_results_save_path, remove_terms_explanation=True, remove_table_summary=True)

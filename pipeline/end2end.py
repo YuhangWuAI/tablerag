@@ -328,3 +328,33 @@ def end2end(
             pbar.update(remaining_samples)
             print("Finished processing remaining samples\n")
             batches.append(batch_request)
+
+# 主函数，用于控制所有参数
+def main():
+    end2end(
+        task_name="sqa",
+        split="validation",
+        table_sampling_type="default",
+        table_augmentation_type="assemble_retrieval_based_augmentation",
+        embedding_type="text-embedding-3-small",
+        k_shot=1,
+        n_cluster=3,
+        top_k=5,
+        save_jsonl=True,
+        azure_blob=True,
+        load_local_dataset=True,
+        experiment_name="table_augmentation",
+        use_sampled_table_for_augmentation=False,
+        whether_column_grounding=False,
+        sample_size=1,
+        overwrite_existing=False,
+        table_format="markdown",
+        colbert_model_name="colbert-ir/colbertv2.0",
+        index_name="my_index",
+        call_llm=True,
+        run_evaluation=True,
+        use_table_sampling=True
+    )
+
+if __name__ == "__main__":
+    main()

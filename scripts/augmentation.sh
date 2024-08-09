@@ -1,5 +1,5 @@
 # feverous hybridqa sqa and tabfact
-task_name=("hybridqa")
+task_name=("sqa")
 
 # docs_references and term_explanations and assemble_retrieval_based_augmentation
 augmentation_types=("assemble_retrieval_based_augmentation")

@@ -582,7 +582,7 @@ class CallLLM:
             table_context = "[No additional context provided]"
 
         prompt = f"""
-        Example: You will be given a query, a table summary, the full table content, terms explanations, and possibly additional context.
+        Example: You will be given a query, a table summary, the full table content, terms explanations, and additional context.
         The table content may be provided in string format, Markdown format, or HTML format.
         Your task is to determine the answer to the query based on the table, provided information, and any additional context.
         Pay close attention to the specific details and conditions mentioned in the query.

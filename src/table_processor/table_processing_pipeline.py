@@ -8,7 +8,9 @@ from src.data_processing.save_jsonl import load_processed_indices, save_jsonl_fi
 
 import warnings
 
-from src.table_loader.dataframe.table_provider import TableProvider
+from src.table_loader.augmentation_methods.table_main import TableProvider
+
+
 
 
 warnings.filterwarnings("ignore")

@@ -12,20 +12,20 @@ import warnings
 warnings.filterwarnings("ignore")
 
 def generate_and_evaluate(
-    dataset_name: str,  # 新增参数，指定数据集名称
+    dataset_name: str,  
     retrieval_results_save_path: str,
     base_output_dir: str = "/home/yuhangwu/Desktop/Projects/TableProcess/pipeline/data/prediction",
     run_evaluation: bool = True,
     remove_terms_explanation: bool = False,
     remove_table_summary: bool = False
 ):
-    # 根据数据集名称设置数据集路径
+    # Set dataset path based on dataset name
     dataset_path = f"/home/yuhangwu/Desktop/Projects/TableProcess/source/dataset/{dataset_name}.jsonl"
     
-    # 根据数据集名称生成对应的生成函数名称
+    # Generate function name based on the dataset name
     generate_function_name = f"{dataset_name}_generate_final_answer"
     
-    # 获取CallLLM类中的生成函数
+    # Get the generation function from CallLLM class
     llm_generate_function = getattr(CallLLM(), generate_function_name, None)
 
     if llm_generate_function is None:
@@ -69,19 +69,22 @@ def generate_and_evaluate(
                 query_to_answer = item['query_need_to_answer']
                 table_formatted = item['table_formatted']
                 
-                # 根据实验需求移除部分信息
+                # Extract the new field
+                table_context = item.get('table_context', '')
+
+                # Modify based on experiment requirements
                 terms_explanation = "" if remove_terms_explanation else item['terms_explanation']
                 table_summary = "" if remove_table_summary else item['table_summary']
 
                 print("Calling LLM for the final answer\n")
-                # 调用生成函数
-                final_answer = llm_generate_function(query_to_answer, table_formatted, terms_explanation, table_summary)
+                # Call the generation function, passing the new table_context field
+                final_answer = llm_generate_function(query_to_answer, table_formatted, terms_explanation, table_summary, table_context)
 
                 print("\nFinal answer is:", final_answer)
                 pred.append(final_answer)
                 grd.append(grd_value)
 
-                # 每处理一个样本保存一次 `grd` 和 `pred`
+                # Save `grd` and `pred` after processing each sample
                 with open(grd_pred_save_path, "w") as f:
                     f.write(json.dumps({"grd": grd, "pred": pred}) + "\n")
 
@@ -103,5 +106,5 @@ def generate_and_evaluate(
 if __name__ == "__main__":
     retrieval_results_save_path = "/home/yuhangwu/Desktop/Projects/TableProcess/pipeline/data/retrieval_results/feverous_default_assemble_retrieval_based_augmentation_1_retrieval_results.jsonl"
     dataset_name = "feverous"
-    # 调用时根据实验需求设置参数，例如指定数据集名称
+    # Call the function with appropriate parameters
     generate_and_evaluate(dataset_name, retrieval_results_save_path, remove_terms_explanation=True, remove_table_summary=True)

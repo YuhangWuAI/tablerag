@@ -376,24 +376,28 @@ class CallLLM:
         return generated_text
 
     @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
-    def tabfact_generate_final_answer(self, query_need_to_answer: str, table_formatted: str, terms_explanation: str, table_summary: str) -> str:
+    def tabfact_generate_final_answer(self, query_need_to_answer: str, table_formatted: str, terms_explanation: str, table_summary: str, table_context: str) -> str:
         print("\nCalling OpenAI API for generating the final answer !!!\n")
 
-        # 检查术语解释和表格总结是否为空，如果为空，使用一个指示性的占位符
+        # Check if terms explanation, table summary, or table context are empty, and use a placeholder if they are
         if not terms_explanation.strip():
             terms_explanation = "[No terms explanation provided]"
 
         if not table_summary.strip():
             table_summary = "[No table summary provided]"
 
+        if not table_context.strip():
+            table_context = "[No additional context provided]"
+
         prompt = f"""
-        Example: You will be given a statement, a table summary, the full table content, and terms explanations.
-        Your task is to determine whether the statement is true or false based on the table and provided information.
+        Example: You will be given a statement, a table summary, the full table content, terms explanations, and possibly additional context.
+        Your task is to determine whether the statement is true or false based on the table, provided information, and any additional context.
         Return 1 if the statement is true, and 0 if it is false or if you cannot determine the answer based on the provided information.
         Provide only the number '1' or '0' as the answer without any additional text.
 
         User 1:
         Statement: "The scheduled date for the farm with 17 turbines is 2012."
+        Table Context: [No additional context provided]
         Table Summary: "This table is used to answer the query: the scheduled date for the farm with 17 turbines is 2012. The Garracummer wind farm, which has 17 turbines, is indeed scheduled for 2012 as indicated in the table. Wind power is a significant energy source in Ireland, contributing to a high percentage of the country's electricity needs, with the Republic of Ireland boasting a total installed capacity of 4,309 MW as of 2021."
         Table:
         <table border="1" class="dataframe">
@@ -427,6 +431,7 @@ class CallLLM:
 
         User 1:
         Statement: "The most recent locomotive to be manufactured was made more than 10 years after the first was manufactured."
+        Table Context: "This context may provide additional details about the locomotives or their manufacturing process."
         Table Summary: "This table is used to answer the query: the most recent locomotive to be manufacture was made more than 10 years after the first was manufactured. The first locomotives listed in the table were manufactured between 1889 and 1907, while the most recent locomotive was manufactured in 1923. This indicates that the most recent locomotive was made 16 years after the first ones, thus supporting the truth of the statement. The list provides an overview of locomotives from the Palatinate Railway, highlighting the historical context of railway development in the region."
         Table:
         <table border="1" class="dataframe">
@@ -458,6 +463,7 @@ class CallLLM:
         Now, verify the following statement and return only '1' or '0' as the result.
 
         Statement: "{query_need_to_answer}"
+        Table Context: "{table_context}"
         Table Summary: "{table_summary}"
         Table: {table_formatted}
         Terms Explanation: {terms_explanation}

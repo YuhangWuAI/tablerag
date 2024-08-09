@@ -391,6 +391,7 @@ class CallLLM:
 
         prompt = f"""
         Example: You will be given a statement, a table summary, the full table content, terms explanations, and possibly additional context.
+        The table content may be provided in string format, Markdown format, or HTML format.
         Your task is to determine whether the statement is true or false based on the table, provided information, and any additional context.
         Return 1 if the statement is true, and 0 if it is false or if you cannot determine the answer based on the provided information.
         Provide only the number '1' or '0' as the answer without any additional text.
@@ -399,7 +400,7 @@ class CallLLM:
         Statement: "The scheduled date for the farm with 17 turbines is 2012."
         Table Context: [No additional context provided]
         Table Summary: "This table is used to answer the query: the scheduled date for the farm with 17 turbines is 2012. The Garracummer wind farm, which has 17 turbines, is indeed scheduled for 2012 as indicated in the table. Wind power is a significant energy source in Ireland, contributing to a high percentage of the country's electricity needs, with the Republic of Ireland boasting a total installed capacity of 4,309 MW as of 2021."
-        Table:
+        table_formatted:
         <table border="1" class="dataframe">
         <thead>
             <tr style="text-align: right;">
@@ -433,7 +434,7 @@ class CallLLM:
         Statement: "The most recent locomotive to be manufactured was made more than 10 years after the first was manufactured."
         Table Context: "This context may provide additional details about the locomotives or their manufacturing process."
         Table Summary: "This table is used to answer the query: the most recent locomotive to be manufacture was made more than 10 years after the first was manufactured. The first locomotives listed in the table were manufactured between 1889 and 1907, while the most recent locomotive was manufactured in 1923. This indicates that the most recent locomotive was made 16 years after the first ones, thus supporting the truth of the statement. The list provides an overview of locomotives from the Palatinate Railway, highlighting the historical context of railway development in the region."
-        Table:
+        Table_fomatted:
         <table border="1" class="dataframe">
         <thead>
             <tr style="text-align: right;">
@@ -465,7 +466,7 @@ class CallLLM:
         Statement: "{query_need_to_answer}"
         Table Context: "{table_context}"
         Table Summary: "{table_summary}"
-        Table: {table_formatted}
+        Table_formatted: {table_formatted}
         Terms Explanation: {terms_explanation}
 
         If you cannot determine whether the statement is true or false based on the provided information, return '0'. Otherwise, return '1' for true or '0' for false.
@@ -475,6 +476,96 @@ class CallLLM:
         # This is where the LLM is called to generate the answer
         generated_text = self.generate_text(prompt)
         return generated_text.strip()  # Ensure any whitespace is removed, returning only the digit
+
+    @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
+    def feverous_generate_final_answer(self, query_need_to_answer: str, table_formatted: str, terms_explanation: str, table_summary: str, table_context: str) -> str:
+        print("\nCalling OpenAI API for generating the final answer for FEVEROUS dataset!!!\n")
+
+        # Check if terms explanation, table summary, or table context are empty, and use a placeholder if they are
+        if not terms_explanation.strip():
+            terms_explanation = "[No terms explanation provided]"
+
+        if not table_summary.strip():
+            table_summary = "[No table summary provided]"
+
+        if not table_context.strip():
+            table_context = "[No additional context provided]"
+
+        prompt = f"""
+        Example: You will be given a statement, a table summary, the full table content, terms explanations, and possibly additional context.
+        The table content may be provided in string format, Markdown format, or HTML format.
+        Your task is to determine whether the statement is true or false based on the table, provided information, and any additional context.
+        Return 1 if the statement is true, and 0 if it is false or if you cannot determine the answer based on the provided information.
+        Provide only the number '1' or '0' as the answer without any additional text.
+
+        User 1:
+        Statement: "All the ethnic groups in the Urmiri Municipality have the same population."
+        Table Context: [No additional context provided]
+        Table Summary: "This table is used to answer the query: All the ethnic groups in the Urmiri Municipality have the same population. The table presents the population percentages of various ethnic groups in the Urmiri Municipality, indicating that the Quechua and Aymara groups have significant representations at 49.3% and 46.6%, respectively, while other groups have negligible populations. This disparity suggests that not all ethnic groups in the municipality share the same population size. Understanding ethnic composition is important as it reflects cultural diversity and social dynamics within the community."
+        Table_formatted:
+        |    | Ethnic group              |    % |
+        |---:|:--------------------------|-----:|
+        |  0 | Quechua                   | 49.3 |
+        |  1 | Aymara                    | 46.6 |
+        |  2 | Guarani, Chiquitos, Moxos |  0   |
+        |  3 | Not indigenous            |  4.1 |
+        |  4 | Other indigenous groups   |  0.1 |
+        Terms Explanation:
+        {{
+            "%": "The percentage representation of each ethnic group's population compared to the total population of the Urmiri Municipality."
+        }}
+
+        User 2:
+        0
+
+        User 1:
+        Statement: "Grammy Award for Best Immersive Audio Album (open to both classical and non-classical recordings) happened almost every year between 2005 and 2021, one of which was for the title Genius Loves Company."
+        Table Context: "It is one of a few categories which are open to both classical and non-classical recordings, new or re-issued. The Grammy Award for Best Immersive Audio Album (until 2018: Best Surround Sound Album) was first awarded in 2005, as the first category in a new 'Surround Sound' field. On 24 November 2020 during the announcement of the nominations for the 63rd Grammy Awards, to be presented on 31 January 2021, the Recording Academy said there will be no winner or nominees in this category."
+        Table Summary: "This table is used to answer the query: Grammy Award for Best Immersive Audio Album (open to both classical and non-classical recordings) happened almost every year between 2005 and 2021, one of which was for the title Genius Loves Company. The Grammy Award for Best Immersive Audio Album, established in 2005, recognizes excellence in both classical and non-classical recordings. The table lists winners from 2005 to 2021, confirming that 'Genius Loves Company' by Ray Charles & Various Artists won the award in 2005. This category has been significant in the evolution of audio recording standards, reflecting the growing importance of immersive sound in the music industry."
+        Table_formatted:
+        <table border="1" class="dataframe">
+        <thead>
+            <tr style="text-align: right;">
+            <th></th>
+            <th>Year</th>
+            <th>Winner(s)</th>
+            <th>Title</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+            <th>0</th>
+            <td>2005</td>
+            <td>Al Schmitt*, Robert Hadley & Doug Sax**, John Burk, Phil Ramone & Herbert Walf***</td>
+            <td>Genius Loves Company</td>
+            </tr>
+        </tbody>
+        </table>
+        Terms Explanation:
+        {{
+            "Winner(s)": "The individuals or groups who won the Grammy Award for that year.",
+            "Title": "The name of the album or recording that won the award."
+        }}
+
+        User 2:
+        1
+
+        Now, verify the following statement and return only '1' or '0' as the result.
+
+        Statement: "{query_need_to_answer}"
+        Table Context: "{table_context}"
+        Table Summary: "{table_summary}"
+        Table_formatted: {table_formatted}
+        Terms Explanation: {terms_explanation}
+
+        If you cannot determine whether the statement is true or false based on the provided information, return '0'. Otherwise, return '1' for true or '0' for false.
+        Return only '1' or '0'.
+        """
+
+        # This is where the LLM is called to generate the answer
+        generated_text = self.generate_text(prompt)
+        return generated_text.strip()  # Ensure any whitespace is removed, returning only the digit
+
 
 
 

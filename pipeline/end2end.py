@@ -1,18 +1,15 @@
 import json
 import os
 import datetime
-import time
+from typing import Optional
 from tqdm import tqdm
-from pipeline.ColBERT.ColBERT import ColBERT
-from pipeline.compoments.request_serializer import deserialize_retrieved_text, serialize_request
+from pipeline.compoments.request_serializer import serialize_request
 from pipeline.data_processing.save_jsonl import load_processed_indices, save_jsonl_file
-from table_provider import CallLLM, TableProvider
-from .evaluation.evaluator import Evaluator
-from typing import List, Optional
+from table_provider import TableProvider
 import warnings
 warnings.filterwarnings("ignore")
 
-def end2end(
+def table_processing_pipeline(
     task_name: str = "sqa",
     split: str = "validation",
     table_sampling_type: str = "default",
@@ -22,32 +19,23 @@ def end2end(
     n_cluster: int = 3,
     top_k: int = 5,
     save_jsonl: bool = True,
-    azure_blob: bool = True,
     load_local_dataset: bool = True,
     experiment_name: str = "table_augmentation",
     use_sampled_table_for_augmentation: bool = False,
-    whether_column_grounding: bool = False,
     sample_size: Optional[int] = 5,
     overwrite_existing: bool = False,
     table_format: str = "markdown",
-    colbert_model_name: str = "colbert-ir/colbertv2.0",  # Add this parameter for ColBERT model
-    index_name: str = "my_index",  # Add this parameter for the index name
-    call_llm: bool = True,  # Add this parameter to control whether to call LLM or not
-    run_evaluation: bool = True,  # Add this parameter to control whether to run evaluation
-    use_table_sampling: bool = True,  # Add this parameter to control whether to use table sampling
+    use_table_sampling: bool = True,
 ):
-    print("Starting end2end process\n")
+    print("Starting table processing pipeline\n")
     
     today = datetime.date.today()
     formatted_today = today.strftime('%y%m%d')
 
     file_save_path = f"pipeline/data/Exp-{formatted_today}/{experiment_name}/{task_name}_{table_sampling_type}_{table_augmentation_type}_{k_shot}.jsonl"
     progress_save_path = f"pipeline/data/Exp-{formatted_today}/{experiment_name}/{task_name}_progress.json"
-    retrieval_results_save_path = f"pipeline/data/Exp-{formatted_today}/{experiment_name}/{task_name}_retrieval_results.jsonl"
-    grd_pred_save_path = f"pipeline/data/Exp-{formatted_today}/{experiment_name}/{task_name}_grd_pred.jsonl"  # Save grd and pred together
 
     print("File save path: ", file_save_path, "\n")
-
 
     # Initializing TableProvider
     print("Initializing TableProvider\n")
@@ -59,7 +47,7 @@ def end2end(
         n_cluster,
         top_k,
         embedding_type,
-        whether_column_grounding,
+        whether_column_grounding=False,  # Removed the unnecessary parameter from the function signature
     )
 
     # Loading local dataset if required
@@ -331,7 +319,7 @@ def end2end(
 
 # 主函数，用于控制所有参数
 def main():
-    end2end(
+    table_processing_pipeline(
         task_name="sqa",
         split="validation",
         table_sampling_type="default",
@@ -341,18 +329,12 @@ def main():
         n_cluster=3,
         top_k=5,
         save_jsonl=True,
-        azure_blob=True,
         load_local_dataset=True,
         experiment_name="table_augmentation",
         use_sampled_table_for_augmentation=False,
-        whether_column_grounding=False,
         sample_size=1,
         overwrite_existing=False,
         table_format="markdown",
-        colbert_model_name="colbert-ir/colbertv2.0",
-        index_name="my_index",
-        call_llm=True,
-        run_evaluation=True,
         use_table_sampling=True
     )
 

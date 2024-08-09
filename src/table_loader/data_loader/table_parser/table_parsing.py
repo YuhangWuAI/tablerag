@@ -11,7 +11,7 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-class TableLoader:
+class TableParser:
     def __init__(
         self, task_name: str, split: str = "None", use_small_sample_list: bool = False
     ):

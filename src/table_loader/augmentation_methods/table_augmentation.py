@@ -79,8 +79,8 @@ class TableAugmentation:
         # Return the generated text in a dictionary under the 'terms_explanation' key
         return {"terms_explanation": generated_text}
         
-    def get_docs_references(self, parsed_example: dict) -> dict:
-        print("Starting get_docs_references method")
+    def table_summary(self, parsed_example: dict) -> dict:
+        print("Starting table_summary method")
 
         retriever = WikipediaRetriever(lang="en", load_max_docs=2)
         
@@ -133,11 +133,11 @@ class TableAugmentation:
             return {"table_summary": "An unexpected error occurred"}
 
 
-    def assemble_retrieval_based_augmentation(
+    def terms_explanation_and_summary(
         self, parsed_example: dict
     ) -> dict:
         term_explanations = self.get_term_explanations(parsed_example)
-        docs_references = self.get_docs_references(parsed_example)
+        docs_references = self.table_summary(parsed_example)
         
         # Merge the dictionaries and return as a single dictionary
         return {**term_explanations, **docs_references}
@@ -146,6 +146,6 @@ class TableAugmentation:
     def func_set(self) -> dict:
         return {
             TableAugmentationType.external_retrieved_knowledge_info_term_explanations.value: self.get_term_explanations,
-            TableAugmentationType.external_retrieved_knowledge_info_docs_references.value: self.get_docs_references,
-            TableAugmentationType.assemble_retrieval_based_augmentation.value: self.assemble_retrieval_based_augmentation,
+            TableAugmentationType.external_retrieved_knowledge_info_docs_references.value: self.table_summary,
+            TableAugmentationType.terms_explanation_and_summary.value: self.terms_explanation_and_summary,
         }

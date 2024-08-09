@@ -46,5 +46,5 @@ class TableCleansingType(Enum):
 class TableAugmentationType(Enum):
     external_retrieved_knowledge_info_term_explanations = "term_explanations"
     external_retrieved_knowledge_info_docs_references = "docs_references"
-    assemble_retrieval_based_augmentation = "assemble_retrieval_based_augmentation"
+    terms_explanation_and_summary = "terms_explanation_and_summary"
     invalid = "None"

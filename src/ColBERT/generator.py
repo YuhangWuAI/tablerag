@@ -5,8 +5,9 @@ import os
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
 sys.path.append(project_root)
-from pipeline.evaluation.evaluator import Evaluator
-from table_provider import CallLLM
+
+from evaluator.evaluation import Evaluator
+from table_loader import LLM_Generator
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -25,11 +26,11 @@ def generate_and_evaluate(
     # Generate function name based on the dataset name
     generate_function_name = f"{dataset_name}_generate_final_answer"
     
-    # Get the generation function from CallLLM class
-    llm_generate_function = getattr(CallLLM(), generate_function_name, None)
+    # Get the generation function from LLM_Generator class
+    llm_generate_function = getattr(LLM_Generator(), generate_function_name, None)
 
     if llm_generate_function is None:
-        raise ValueError(f"Function {generate_function_name} is not defined in CallLLM.")
+        raise ValueError(f"Function {generate_function_name} is not defined in LLM_Generator.")
 
     # Ensure output directories exist
     if not os.path.exists(base_output_dir):

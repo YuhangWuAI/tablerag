@@ -67,7 +67,7 @@ class TableSampling:
         return self.func_set()[self.table_sampling_type](parsed_example)
 
 
-    def embedding_sampling(self, _example: dict) -> pd.DataFrame:
+    def semetics_based_filter(self, _example: dict) -> pd.DataFrame:
         """
         Semantic method / Column and Row
         Generate embeddings of each rows and the user query, and sample rows based on the user query matching.
@@ -138,7 +138,7 @@ class TableSampling:
         # print("Sampled Tables:\n {}".format(df))
         return df
 
-    def auto_table_sampling(self, _example: dict) -> pd.DataFrame:
+    def llm_based_filter(self, _example: dict) -> pd.DataFrame:
         """
         LLM-Decomposer Method
         Leverage GPT-3 for zero-shot row filtering program generation.
@@ -148,7 +148,7 @@ class TableSampling:
         Return:
             df: pd.DataFrame, filtered table
         """
-        print("Starting auto_table_sampling")
+        print("Starting llm_based_filter")
 
         # Create DataFrame from parsed table example
         df = pd.DataFrame(data=_example["table"]["rows"], columns=_example["table"]["header"])
@@ -190,6 +190,6 @@ class TableSampling:
 
     def func_set(self) -> dict:
         return {
-            TableSamplingType.embedding_sample.value: self.embedding_sampling,
-            TableSamplingType.auto_row_filter.value: self.auto_table_sampling,
+            TableSamplingType.embedding_sample.value: self.semetics_based_filter,
+            TableSamplingType.auto_row_filter.value: self.llm_based_filter,
         }

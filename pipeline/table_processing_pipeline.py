@@ -3,7 +3,7 @@ import os
 import datetime
 from typing import Optional
 from tqdm import tqdm
-from pipeline.compoments.request_serializer import serialize_request
+from src.data_processing.request_serializer import serialize_request
 from src.data_processing.save_jsonl import load_processed_indices, save_jsonl_file
 
 import warnings

@@ -2,8 +2,8 @@
 import pandas as pd
 
 from table_provider.data_loader.enum_type import TableSamplingType
+from utils.nlp_helper import select_top_k_samples
 from ..agents import CallLLM, Embedder
-from utils import select_top_k_samples
 
 class TableSampling:
     def __init__(self) -> None:

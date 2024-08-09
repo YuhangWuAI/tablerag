@@ -52,7 +52,7 @@ def table_processing_pipeline(
     # Loading local dataset if required
     if load_local_dataset:
         print("Loading local dataset\n")
-        with open(f"source/dataset/{task_name}.jsonl", "r") as f:
+        with open(f"data/raw/small_dataset/{task_name}.jsonl", "r") as f:
             print("Loading dataset for ", task_name, "...\n")
             dataset = [json.loads(line) for line in f.readlines()]
     else:

@@ -6,7 +6,7 @@ import os
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
 sys.path.append(project_root)
 from pipeline.ColBERT.ColBERT import ColBERT
-from pipeline.compoments.request_serializer import deserialize_retrieved_text
+from src.data_processing.request_serializer import deserialize_retrieved_text
 
 import warnings
 warnings.filterwarnings("ignore")

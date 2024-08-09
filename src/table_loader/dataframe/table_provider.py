@@ -1,4 +1,4 @@
-from ..data_loader.table_loader import TableLoader
+from src.table_loader.data_loader.table_parser.table_parsing import TableLoader
 from .table_sampling import TableSampling
 from .table_augmentation import TableAugmentation
 

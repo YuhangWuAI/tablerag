@@ -1,8 +1,8 @@
 
 import pandas as pd
 
-from ..data_loader.enum_type import TableSamplingType
 
+from src.table_loader.data_loader.table_parser.enum_type import TableSamplingType
 from utils.nlp_helper import select_top_k_samples
 from ..agents import CallLLM, Embedder
 

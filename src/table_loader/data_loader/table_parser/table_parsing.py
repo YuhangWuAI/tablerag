@@ -1,7 +1,9 @@
 from datasets import load_dataset
+
+from src.table_loader.agents.call_llm.call_llm import CallLLM
 from .table_linearizer import StructuredDataLinearizer
 from .enum_type import TaskName, TableSerializationType
-from ..agents.call_llm import CallLLM
+
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -38,7 +40,7 @@ class TableLoader:
             dict: dataset
         """
         self.dataset = load_dataset(
-            f"src/table_provider/data_downloading/{self.task_name}.py",
+            f"src/table_loader/data_downloader/{self.task_name}.py",
             verification_mode="no_checks",
         )
         if use_small_sample_list and len(self.dataset) >= 100:
@@ -58,7 +60,7 @@ class TableLoader:
         # if self.task_name == "hybridqa":
         #     split = "dev" if split == "validation" else split
         self.dataset = load_dataset(
-            f"src/table_provider/data_loader/data_downloading/{self.task_name}.py",
+            f"src/table_loader/data_loader/data_downloader/{self.task_name}.py",
             split=split,
             verification_mode="no_checks",
         )

@@ -1,9 +1,12 @@
 import requests
 
-from ..data_loader.enum_type import TableAugmentationType
+from src.table_loader.data_loader.table_parser.enum_type import TableAugmentationType
+from src.table_loader.data_loader.table_parser.table_linearizer import StructuredDataLinearizer
+
+
 from ..agents.call_llm import CallLLM
 
-from ..data_loader.table_linearizer import StructuredDataLinearizer
+
 from langchain_community.retrievers import WikipediaRetriever
 import pandas as pd
 import json

@@ -4,7 +4,7 @@ import datetime
 from typing import Optional
 from tqdm import tqdm
 from pipeline.compoments.request_serializer import serialize_request
-from pipeline.data_processing.save_jsonl import load_processed_indices, save_jsonl_file
+from src.data_processing.save_jsonl import load_processed_indices, save_jsonl_file
 
 import warnings
 
@@ -49,7 +49,7 @@ def table_processing_pipeline(
         n_cluster,
         top_k,
         embedding_type,
-        whether_column_grounding=False,  # Removed the unnecessary parameter from the function signature
+        whether_column_grounding=True,  
     )
 
     # Loading local dataset if required

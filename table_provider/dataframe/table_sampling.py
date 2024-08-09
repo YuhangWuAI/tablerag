@@ -41,7 +41,7 @@ class TableSampling:
             raise ValueError(
                 f"Table sampling type {table_sampling_type} is not supported"
             )
-        # set the default sampling type /auto_row_filter/auto_row_filter/embedding_sample
+        # set the default sampling type /auto_row_filter/embedding_sample
         if table_sampling_type == "default":
             table_sampling_type = "auto_row_filter"
         self.table_sampling_type = table_sampling_type
@@ -49,7 +49,7 @@ class TableSampling:
         # Initialize the embedder
         self.embedder = Embedder(
             task_name=task_name,
-            embedding_tag="rows_embeddings",
+            embedding_tag="auto_row_filter",
             embedding_type=embedding_type,
         )
 

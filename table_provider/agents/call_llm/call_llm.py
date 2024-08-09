@@ -160,9 +160,10 @@ class CallLLM:
     def call_llm_code_generation(self, context: str) -> str:
         """Synthesize code snippet from the table context."""
         prompt = f"""
-        Example: Synthesize code snippet from the table context to select the proper rows and columns for verifying a statement.
+        Example: Synthesize code snippet from the table context to select the proper rows and columns for verifying a statement / answering query.
         The generated code must use the exact column names provided, including spaces, capitalization, and punctuation.
         The generated code should treat all data as strings, even if they look like numbers.
+        Only filter out rows and columns that are definitely not needed to verify the statement / answering query.
 
         User 1:
         I need an expert to help me verify the statement by filtering the table to make it smaller. Statement: The scheduled date for the farm with 17 turbines be 2012.
@@ -177,8 +178,8 @@ class CallLLM:
         }})
         User 2:
         To verify the statement 'The scheduled date for the farm with 17 turbines be 2012', we need to filter the rows and columns to focus on relevant information. 
-        Since we are interested in the 'wind farm', 'scheduled', 'capacity (mw)', and 'turbines' columns, the most impactful change will be to filter the rows and columns as follows:
-        filtered_table = df[['wind farm', 'scheduled', 'capacity (mw)', 'turbines']].query("turbines == '17'")
+        Since we are interested in the 'wind farm', 'scheduled', and 'turbines' columns, the most impactful change will be to filter the rows and columns as follows:
+        filtered_table = df[['wind farm', 'scheduled', 'turbines']].query("turbines == '17'")
 
         User 1:
         I need an expert to help me verify the statement by filtering the table to make it smaller. Statement: All 12 club play a total of 22 game for the wru division one east.
@@ -198,8 +199,8 @@ class CallLLM:
         }})
         User 2:
         To verify the statement 'All 12 club play a total of 22 game for the wru division one east', we need to filter the rows and columns to focus on relevant information. 
-        Since we are interested in the 'club', 'played', 'drawn', and 'lost' columns, the most impactful change will be to filter the rows and columns as follows:
-        filtered_table = df[['club', 'played', 'drawn', 'lost']].query("played == '22'")
+        Since we are interested in the 'club' and 'played' columns, the most impactful change will be to filter the rows and columns as follows:
+        filtered_table = df[['club', 'played']].query("played == '22'")
 
         User 1:
         I need an expert to help me verify the statement by filtering the table to make it smaller. Statement: Touchdown Atlantic, in the category of sporting, be established in 2010.
@@ -213,13 +214,14 @@ class CallLLM:
         }})
         User 2:
         To verify the statement 'Touchdown Atlantic, in the category of sporting, be established in 2010', we need to filter the rows and columns to focus on relevant information. 
-        Since we are interested in the 'event name', 'category', and 'established' columns, the most impactful change will be to filter the rows and columns as follows:
-        filtered_table = df[['event name', 'established', 'category']].query("`event name` == 'touchdown atlantic' and category == 'sporting' and established == '2010'")
+        Since we are interested in the 'event name' and 'established' columns, the most impactful change will be to filter the rows and columns as follows:
+        filtered_table = df[['event name', 'established']].query("`event name` == 'touchdown atlantic' and established == '2010'")
 
-        Now, generate a code snippet from the table context to select the proper rows and columns to verify the given statement.
+        Now, generate a code snippet from the table context to select the proper rows and columns to verify the given statement / answering query.
         Use the existing column names from the provided DataFrame.
         The column names in the generated code must match the provided column names exactly, including spaces, capitalization, and punctuation.
-        Only return the code.
+        Only filter out rows and columns that are definitely not needed to verify the statement.
+        Only return the code. 
         {context}
         \n\n:
         """

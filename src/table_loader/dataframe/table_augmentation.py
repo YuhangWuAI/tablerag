@@ -1,10 +1,11 @@
 import requests
 
+
+from src.llm.llm_generator.llm_generating import LLM_Generator
 from src.table_loader.data_loader.table_parser.enum_type import TableAugmentationType
 from src.table_loader.data_loader.table_parser.table_linearizer import StructuredDataLinearizer
 
 
-from ..agents.call_llm import CallLLM
 
 
 from langchain_community.retrievers import WikipediaRetriever
@@ -17,7 +18,7 @@ warnings.filterwarnings("ignore")
 class TableAugmentation:
     def __init__(
         self,
-        call_llm: CallLLM,
+        call_llm: LLM_Generator,
         task_name: str,
         split: str,
         table_augmentation_type: str,

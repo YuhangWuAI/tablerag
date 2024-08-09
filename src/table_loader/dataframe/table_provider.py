@@ -1,8 +1,10 @@
+
+from src.llm.llm_generator.llm_generating import LLM_Generator
 from src.table_loader.data_loader.table_parser.table_parsing import TableLoader
 from .table_sampling import TableSampling
 from .table_augmentation import TableAugmentation
 
-from ..agents import CallLLM
+
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -21,7 +23,7 @@ class TableProvider:
         embedding_type: str = "spacy",
         whether_column_grounding: bool = False,
     ):
-        self.call_llm = CallLLM()
+        self.call_llm = LLM_Generator()
         self.table_loader = TableLoader(
             task_name, split="validation", use_small_sample_list=True
         )

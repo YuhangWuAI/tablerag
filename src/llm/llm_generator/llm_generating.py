@@ -40,7 +40,7 @@ class Config:
             base_url=self.API_BASE
         )
 
-class CallLLM:
+class LLM_Generator:
     """Class for calling the OpenAI Language Model API."""
 
     def __init__(self, config: Config = None):

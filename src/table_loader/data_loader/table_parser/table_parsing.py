@@ -1,6 +1,9 @@
 from datasets import load_dataset
 
-from src.table_loader.agents.call_llm.call_llm import CallLLM
+from src.llm.llm_generator.llm_generating import LLM_Generator
+
+
+
 from .table_linearizer import StructuredDataLinearizer
 from .enum_type import TaskName, TableSerializationType
 
@@ -25,7 +28,7 @@ class TableLoader:
         #     raise ValueError(f"Split {split} is not supported")
         self.split = split
 
-        self.call_llm = CallLLM()
+        self.call_llm = LLM_Generator()
 
         self.dataset = (
             self.load_table(use_small_sample_list)

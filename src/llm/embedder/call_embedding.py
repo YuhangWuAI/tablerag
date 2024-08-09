@@ -10,7 +10,7 @@ from langchain_community.embeddings import (
     HuggingFaceEmbeddings,
     SentenceTransformerEmbeddings,
 )
-from ..call_llm import CallLLM
+
 import warnings
 warnings.filterwarnings("ignore")
 

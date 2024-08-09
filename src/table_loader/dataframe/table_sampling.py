@@ -2,9 +2,12 @@
 import pandas as pd
 
 
+
+from src.llm.llm_generator.llm_generating import LLM_Generator
+from src.llm.embedder.call_embedding import Embedder
 from src.table_loader.data_loader.table_parser.enum_type import TableSamplingType
-from utils.nlp_helper import select_top_k_samples
-from ..agents import CallLLM, Embedder
+from utils.cos_similarity import select_top_k_samples
+
 
 class TableSampling:
     def __init__(self) -> None:
@@ -12,7 +15,7 @@ class TableSampling:
 
     def __init__(
         self,
-        call_llm: CallLLM,
+        call_llm: LLM_Generator,
         task_name: str,
         split: str,
         table_sampling_type: str,

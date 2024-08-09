@@ -34,6 +34,7 @@ def end2end(
     index_name: str = "my_index",  # Add this parameter for the index name
     call_llm: bool = True,  # Add this parameter to control whether to call LLM or not
     run_evaluation: bool = True,  # Add this parameter to control whether to run evaluation
+    use_table_sampling: bool = False,  # Add this parameter to control whether to use table sampling
 ):
     print("Starting end2end process\n")
     
@@ -48,7 +49,7 @@ def end2end(
     print("File save path: ", file_save_path, "\n")
 
 
-    # Initializing tableprovider and get instruction
+    # Initializing TableProvider
     print("Initializing TableProvider\n")
     table_provider = TableProvider(
         task_name,
@@ -153,15 +154,19 @@ def end2end(
                 print("Query: ", query, "\n")
 
                 try: 
-                    try:
-                        filter_table = table_provider.table_sampler.run(query, parsed_sample)
-                        print("Filtered table generated for sample ", i, ":\n", filter_table, "\n")
-                    except Exception as e:
-                        print("Error in table sampling for sample ", i, ": ", e, "\n")
-                        continue
+                    if use_table_sampling:
+                        try:
+                            filter_table = table_provider.table_sampler.run(query, parsed_sample)
+                            print("Filtered table generated for sample ", i, ":\n", filter_table, "\n")
+                        except Exception as e:
+                            print("Error in table sampling for sample ", i, ": ", e, "\n")
+                            continue
+                    else:
+                        print("Bypassing table sampling and using the original table as string\n")
+                        filter_table = parsed_sample["table"]
 
                     augmentation_input = parsed_sample
-                    if use_sampled_table_for_augmentation:
+                    if use_sampled_table_for_augmentation and use_table_sampling:
                         print("Using sampled table for augmentation\n")
                         augmentation_input = {
                             "query": parsed_sample["query"],
@@ -182,19 +187,19 @@ def end2end(
 
                     try:
                         if table_format == "html":
-                            table_formatted = filter_table.to_html()
+                            table_formatted = filter_table.to_html() if use_table_sampling else str(filter_table)
                         elif table_format == "markdown":
                             try:
                                 from tabulate import tabulate
-                                table_formatted = tabulate(filter_table, headers="keys", tablefmt="pipe")
+                                table_formatted = tabulate(filter_table, headers="keys", tablefmt="pipe") if use_table_sampling else str(filter_table)
                             except ImportError:
                                 print("Tabulate module not installed, falling back to string format.")
-                                table_formatted = filter_table.to_string()
+                                table_formatted = filter_table.to_string() if use_table_sampling else str(filter_table)
                         else:
-                            table_formatted = filter_table.to_string()
+                            table_formatted = filter_table.to_string() if use_table_sampling else str(filter_table)
                     except AttributeError as e:
                         print(f"Error in converting table: {e}. Converting table to string instead.\n")
-                        table_formatted = filter_table.to_string()
+                        table_formatted = filter_table.to_string() if use_table_sampling else str(filter_table)
 
                     request = serialize_request(
                         query=query,
@@ -259,10 +264,14 @@ def end2end(
                 print("Query: ", query, "\n")
 
                 try:
-                    filter_table = table_provider.table_sampler.run(
-                        query, parsed_sample
-                    )
-                    print("Filtered table generated for remaining sample ", i, "\n")
+                    if use_table_sampling:
+                        filter_table = table_provider.table_sampler.run(
+                            query, parsed_sample
+                        )
+                        print("Filtered table generated for remaining sample ", i, "\n")
+                    else:
+                        print("Bypassing table sampling and using the original table as string\n")
+                        filter_table = parsed_sample["table"]
                 except Exception as e:
                     print("Error in table sampling for remaining sample ", i, ": ", e, "\n")
                     print("Skipping batch: ", i, "\n")
@@ -277,19 +286,19 @@ def end2end(
 
                 try:
                     if table_format == "html":
-                        table_formatted = filter_table.to_html()
+                        table_formatted = filter_table.to_html() if use_table_sampling else str(filter_table)
                     elif table_format == "markdown":
                         try:
                             from tabulate import tabulate
-                            table_formatted = tabulate(filter_table, headers="keys", tablefmt="pipe")
+                            table_formatted = tabulate(filter_table, headers="keys", tablefmt="pipe") if use_table_sampling else str(filter_table)
                         except ImportError:
                             print("Tabulate module not installed, falling back to string format.")
-                            table_formatted = filter_table.to_string()
+                            table_formatted = filter_table.to_string() if use_table_sampling else str(filter_table)
                     else:
-                        table_formatted = filter_table.to_string()
+                        table_formatted = filter_table.to_string() if use_table_sampling else str(filter_table)
                 except AttributeError as e:
                     print(f"Error in converting table: {e}. Converting table to string instead.\n")
-                    table_formatted = filter_table.to_string()
+                    table_formatted = filter_table.to_string() if use_table_sampling else str(filter_table)
 
                 request = serialize_request(
                     query=query,
@@ -319,60 +328,3 @@ def end2end(
             pbar.update(remaining_samples)
             print("Finished processing remaining samples\n")
             batches.append(batch_request)
-
-    '''
-    # Step 1: Embed and index the JSONL file using ColBERT
-    if azure_blob:
-        print("Embedding and indexing JSONL file using ColBERT\n")
-        colbert = ColBERT(file_save_path, colbert_model_name, index_name)
-        colbert.embed_and_index()
-
-        # Step 2: Retrieve documents using ColBERT and generate responses
-        print("Retrieving documents using ColBERT and generating responses\n")
-
-        print("batch_request: ", batch_request)
-        for batch_request in tqdm(batches, desc=f"Calling ColBERT for retrieval, experiment_name: {experiment_name}", ncols=150):
-            for request in batch_request:
-                # 从request中提取query进行检索
-                query = request.get("query")
-                print("\n Extracted query for retrieval: \n", query)
-
-                retrieved_docs = colbert.retrieve(query, top_k=1, force_fast=False, rerank=False, rerank_top_k=1)
-                
-                print("\n retrieved_docs: \n", retrieved_docs)
-                
-                parsed_content = deserialize_retrieved_text(retrieved_docs)
-
-                # 保存检索结果和对应的查询
-                retrieval_result = {
-                    "query": query,
-                    "retrieved_docs": parsed_content
-                }
-
-                with open(retrieval_results_save_path, "a") as f:
-                    f.write(json.dumps(retrieval_result) + "\n")
-
-                if call_llm:
-                    for item in parsed_content:
-                        query = item['query_need_to_answer']
-                        table_html = item['table_html']
-                        terms_explanation = item['terms_explanation']
-                        table_summary = item['table_summary']
-
-                        print("CallLLM for the final answer \n")
-                        # Generate the final answer
-                        final_answer = CallLLM().generate_final_answer(query, table_html, terms_explanation, table_summary)
-                        
-                        print("\n Final answer is :", final_answer)
-                        pred.append(final_answer)
-
-                        # 每处理一个样本保存一次 `grd` 和 `pred`
-                        with open(grd_pred_save_path, "w") as f:
-                            f.write(json.dumps({"grd": grd, "pred": pred}) + "\n")
-
-        # Step 3: Evaluation
-        if run_evaluation:
-            print("Running evaluation...\n")
-            numbers = Evaluator().run(pred, grd, task_name)
-            print("Evaluation results of ", experiment_name, "_", task_name, ": ", numbers, "\n")
-    '''

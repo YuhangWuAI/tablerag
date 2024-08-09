@@ -494,9 +494,9 @@ class CallLLM:
         prompt = f"""
         Example: You will be given a statement, a table summary, the full table content, terms explanations, and possibly additional context.
         The table content may be provided in string format, Markdown format, or HTML format.
-        Your task is to determine whether the statement is true or false based on the table, provided information, and any additional context.
-        Return 1 if the statement is true, and 0 if it is false or if you cannot determine the answer based on the provided information.
-        Provide only the number '1' or '0' as the answer without any additional text.
+        Your task is to determine whether the statement is true, false, or if the evidence provided is insufficient.
+        Return 1 if the statement is true, 0 if it is false, and 2 if you cannot determine the answer based on the provided information.
+        Provide only the number '1', '0', or '2' as the answer without any additional text.
 
         User 1:
         Statement: "All the ethnic groups in the Urmiri Municipality have the same population."
@@ -550,7 +550,7 @@ class CallLLM:
         User 2:
         1
 
-        Now, verify the following statement and return only '1' or '0' as the result.
+        Now, verify the following statement and return only '1', '0', or '2' as the result.
 
         Statement: "{query_need_to_answer}"
         Table Context: "{table_context}"
@@ -558,8 +558,8 @@ class CallLLM:
         Table_formatted: {table_formatted}
         Terms Explanation: {terms_explanation}
 
-        If you cannot determine whether the statement is true or false based on the provided information, return '0'. Otherwise, return '1' for true or '0' for false.
-        Return only '1' or '0'.
+        If you cannot determine whether the statement is true or false based on the provided information, return '2'. Otherwise, return '1' for true, '0' for false, or '2' for insufficient evidence.
+        Return only '1', '0', or '2'.
         """
 
         # This is where the LLM is called to generate the answer

@@ -107,4 +107,4 @@ if __name__ == "__main__":
     retrieval_results_save_path = "/home/yuhangwu/Desktop/Projects/TableProcess/pipeline/data/retrieval_results/feverous_default_assemble_retrieval_based_augmentation_1_retrieval_results.jsonl"
     dataset_name = "feverous"
     # Call the function with appropriate parameters
-    generate_and_evaluate(dataset_name, retrieval_results_save_path, remove_terms_explanation=True, remove_table_summary=True)
+    generate_and_evaluate(dataset_name, retrieval_results_save_path, remove_terms_explanation=False, remove_table_summary=True)

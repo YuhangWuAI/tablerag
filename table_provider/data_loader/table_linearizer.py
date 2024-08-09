@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
 from tabulate import tabulate
-from ..contract.enum_type import TableSerializationType
+
+from table_provider.data_loader.enum_type import TableSerializationType
 
 
 def to_xml(df):

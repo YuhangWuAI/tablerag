@@ -1,8 +1,9 @@
 
 import pandas as pd
+
+from table_provider.data_loader.enum_type import TableSamplingType
 from ..agents import CallLLM, Embedder
 from utils import select_top_k_samples
-from ..contract.enum_type import TableSamplingType
 
 class TableSampling:
     def __init__(self) -> None:

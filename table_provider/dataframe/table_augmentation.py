@@ -1,6 +1,8 @@
 import requests
+
+from table_provider.data_loader.enum_type import TableAugmentationType
 from ..agents.call_llm import CallLLM
-from ..contract.enum_type import TableAugmentationType
+
 from ..data_loader.table_linearizer import StructuredDataLinearizer
 from langchain_community.retrievers import WikipediaRetriever
 import pandas as pd

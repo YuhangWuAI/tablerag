@@ -5,8 +5,10 @@ from typing import Optional
 from tqdm import tqdm
 from pipeline.compoments.request_serializer import serialize_request
 from pipeline.data_processing.save_jsonl import load_processed_indices, save_jsonl_file
-from table_provider import TableProvider
+
 import warnings
+
+from table_provider.dataframe.table_provider import TableProvider
 warnings.filterwarnings("ignore")
 
 def table_processing_pipeline(

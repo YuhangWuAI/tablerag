@@ -645,6 +645,84 @@ class CallLLM:
         generated_text = self.generate_text(prompt)
         return generated_text.strip()  # Ensure any whitespace is removed, returning only the answer
 
+    @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
+    def sqa_generate_final_answer(self, query_need_to_answer: str, table_formatted: str, terms_explanation: str, table_summary: str, table_context: str) -> str:
+        print("\nCalling OpenAI API for generating the final answer for SQA dataset!!!\n")
+
+        # Check if terms explanation, table summary, or table context are empty, and use a placeholder if they are
+        if not terms_explanation.strip():
+            terms_explanation = "[No terms explanation provided]"
+
+        if not table_summary.strip():
+            table_summary = "[No table summary provided]"
+
+        if not table_context.strip():
+            table_context = "[No additional context provided]"
+
+        prompt = f"""
+        You will be given a query, a table summary, the full table content, terms explanations, and possibly additional context.
+        The table content may be provided in string format, Markdown format, or HTML format.
+        Your task is to determine the answer to the query based on the table, provided information, and any additional context.
+        Pay close attention to the specific details and conditions mentioned in the query.
+        Make sure to match all the given conditions in the query to ensure the answer is accurate.
+        Return the answer as a single string without any additional text.
+
+        Example 1:
+        Query: "who published this game in 2011"
+        Table Context: "[No additional context provided]"
+        Table Summary: "This table is used to answer the query: who published this game in 2011. The game released in 2011 titled 'Alice: Madness Returns' was published by Electronic Arts. The table provides details on various games, their release years, developers, and publishers, highlighting the contributions of Spicy Horse, the developer known for its notable title, Alice: Madness Returns. For more insights into Spicy Horse, which was founded by American McGee, you can refer to the provided Wikipedia link."
+        Table_formatted:
+        |    | Title                  |   Year | Publisher       |
+        |---:|:-----------------------|-------:|:----------------|
+        |  4 | Alice: Madness Returns |   2011 | Electronic Arts |
+        Terms Explanation:
+        {{
+            "Publisher": "The company or organization that publishes the game, making it available for sale or distribution."
+        }}
+
+        User 2:
+        Electronic Arts
+
+        User 1:
+        Query: "and which model costs the most?"
+        Table Context: ""
+        Table Summary: "This table is used to answer the query: and which model costs the most? The table lists various models of vehicles along with their specifications and starting prices. By comparing the starting prices, one can determine which model is the most expensive. The context of the table indicates that it provides a detailed overview of different vehicle models, which helps in evaluating their cost and features."
+        Table_formatted:
+        |    | Model      | Class   | Length   | Fuel   | Starting Price   |
+        |---:|:-----------|:--------|:---------|:-------|:-----------------|
+        |  0 | Tour       | Class A | 42'      | Diesel | $362,285         |
+        |  1 | Journey    | Class A | 35'-43'  | Diesel | $246,736         |
+        |  2 | Adventurer | Class A | 32'-37'  | Gas    | $150,711         |
+        |  3 | Via        | Class A | 25'      | Diesel | $126,476         |
+        |  4 | Sightseer  | Class A | 31'-37'  | Gas    | $126,162         |
+        |  5 | Vista      | Class A | 26'-35'  | Gas    | $107,717         |
+        |  6 | View       | Class C | 24'-25'  | Diesel | $100,955         |
+        |  7 | Aspect     | Class C | 29'-31'  | Gas    | $95,948          |
+        |  8 | Access     | Class C | 25'-31'  | Gas    | $74,704          |
+        Terms Explanation:
+        {{
+            "Model": "The name of the vehicle model.",
+            "Starting Price": "The initial cost of the vehicle model, before any additional options or fees."
+        }}
+
+        User 2:
+        Tour
+
+        Now, answer the following query based on the provided information.
+
+        Query: "{query_need_to_answer}"
+        Table Context: "{table_context}"
+        Table Summary: "{table_summary}"
+        Table_formatted: {table_formatted}
+        Terms Explanation: {terms_explanation}
+
+        Carefully match all specific conditions mentioned in the query.
+        Provide only the answer as a single string without any additional text.
+        """
+
+        # This is where the LLM is called to generate the answer
+        generated_text = self.generate_text(prompt)
+        return generated_text.strip()  # Ensure any whitespace is removed, returning only the answer
 
 
     @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))

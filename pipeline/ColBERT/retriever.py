@@ -25,7 +25,7 @@ def generate_retrieval_results(
     num_queries: int = 1  # 控制提取多少个 query 和 grd
 ):
     # 定义 query 和 grd 的文件路径
-    query_grd_path = "/home/yuhangwu/Desktop/Projects/TableProcess/source/dataset/hybridqa.jsonl"
+    query_grd_path = "/home/yuhangwu/Desktop/Projects/TableProcess/source/dataset/sqa.jsonl"
     
     # Ensure output directories exist
     if not os.path.exists(base_output_dir):
@@ -98,6 +98,6 @@ def generate_retrieval_results(
     print(f"Recall Accuracy: {recall_accuracy * 100:.2f}% ({successful_retrievals}/{total_samples})")
 
 if __name__ == "__main__":
-    dataset_path = "/home/yuhangwu/Desktop/Projects/TableProcess/pipeline/data/Exp-240809/table_augmentation/hybridqa_default_assemble_retrieval_based_augmentation_1.jsonl"
+    dataset_path = "/home/yuhangwu/Desktop/Projects/TableProcess/pipeline/data/Exp-240809/table_augmentation/sqa_default_assemble_retrieval_based_augmentation_1.jsonl"
     index_name = "my_index"
     generate_retrieval_results(dataset_path, index_name, num_queries=5)  # 这里可以控制提取多少个 query 和 grd

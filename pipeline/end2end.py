@@ -34,7 +34,7 @@ def end2end(
     index_name: str = "my_index",  # Add this parameter for the index name
     call_llm: bool = True,  # Add this parameter to control whether to call LLM or not
     run_evaluation: bool = True,  # Add this parameter to control whether to run evaluation
-    use_table_sampling: bool = False,  # Add this parameter to control whether to use table sampling
+    use_table_sampling: bool = True,  # Add this parameter to control whether to use table sampling
 ):
     print("Starting end2end process\n")
     

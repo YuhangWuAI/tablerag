@@ -567,6 +567,83 @@ class CallLLM:
         return generated_text.strip()  # Ensure any whitespace is removed, returning only the digit
 
 
+    @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
+    def hybridqa_generate_final_answer(self, query_need_to_answer: str, table_formatted: str, terms_explanation: str, table_summary: str, table_context: str) -> str:
+        print("\nCalling OpenAI API for generating the final answer for HybridQA dataset!!!\n")
+
+        # Check if terms explanation, table summary, or table context are empty, and use a placeholder if they are
+        if not terms_explanation.strip():
+            terms_explanation = "[No terms explanation provided]"
+
+        if not table_summary.strip():
+            table_summary = "[No table summary provided]"
+
+        if not table_context.strip():
+            table_context = "[No additional context provided]"
+
+        prompt = f"""
+        Example: You will be given a query, a table summary, the full table content, terms explanations, and possibly additional context.
+        The table content may be provided in string format, Markdown format, or HTML format.
+        Your task is to determine the answer to the query based on the table, provided information, and any additional context.
+        Pay close attention to the specific details and conditions mentioned in the query.
+        Make sure to match all the given conditions in the query to ensure the answer is accurate.
+        Return the answer as a single string without any additional text.
+
+        Example 1:
+        Query: "How many years did constructor AGS compete in Formula One?"
+        Table Context: "1991 Portuguese Grand Prix | Classification -- Pre-Qualifying |  | The 1991 Portuguese Grand Prix was a Formula One motor race held at the Autódromo do Estoril on 22 September 1991. It was the thirteenth race of the 1991 FIA Formula One World Championship."
+        Table Summary: "This table is used to answer the query: How many years did constructor AGS compete in Formula One? The table provides results from a specific Formula One event, showcasing drivers and their constructors, including AGS - Ford. While the table does not directly state the duration of AGS's participation in Formula One, it highlights their presence in the competitive landscape of the sport. For further context, AGS was one of several constructors that participated in Formula One during the late 1980s and early 1990s, contributing to the diversity of teams in the championship."
+        Table_formatted:
+        |    |   Pos | Driver            | Constructor   |
+        |---:|------:|:------------------|:--------------|
+        |  2 |     3 | Gabriele Tarquini | AGS - Ford    |
+        |  4 |     5 | Fabrizio Barbazza | AGS - Ford    |
+        Terms Explanation:
+        {{
+            "Constructor": "The team that builds and enters the car in Formula One races.",
+            "Time": "The time taken by the driver to complete the race or qualifying session.",
+            "Gap": "The time difference between the driver and the driver ahead of them in the race or qualifying session."
+        }}
+
+        User 2:
+        5 years
+
+        Example 2:
+        Query: "What year did the team with 4,499 officially registered fan clubs lose 2-0 to lose out on the title?"
+        Table Context: "DFL-Supercup | Performances -- Performance by team |  | The DFL-Supercup or German Super Cup is a one-off football match in Germany that features the winners of the Bundesliga championship and the DFB-Pokal."
+        Table Summary: "This table is used to answer the query: What year did the team with 4,499 officially registered fan clubs lose 2-0 to lose out on the title? The table provides details about various football teams, their titles won, and years they lost in competitions. While it does not specify a team with 4,499 fan clubs, it indicates that Bayern Munich and Borussia Dortmund have been prominent teams in the DFL-Supercup, with Bayern Munich losing in specific years. The context surrounding the DFL-Supercup highlights the competitive nature of these matches, which feature top teams in German football, thus providing a backdrop for understanding the significance of the losses mentioned in the query."
+        Table_formatted:
+        |    | Team                     | Winners   | Runners-up   | Years won                                      | Years lost                              |
+        |---:|:-------------------------|:----------|:-------------|:-----------------------------------------------|:----------------------------------------|
+        |  0 | Bayern Munich            | 7         | 6            | 1987 , 1990 , 2010 , 2012 , 2016 , 2017 , 2018 | 1989 , 1994 , 2013 , 2014 , 2015 , 2019 |
+        |  1 | Borussia Dortmund        | 6         | 4            | 1989 , 1995 , 1996 , 2013 , 2014 , 2019        | 2011 , 2012 , 2016 , 2017               |
+        |  2 | Werder Bremen            | 3         | 1            | 1988 , 1993 , 1994                             | 1991                                    |
+        Terms Explanation:
+        {{
+            "Winners": "The number of times the team has won the title.",
+            "Runners-up": "The number of times the team has finished in second place.",
+            "Years won": "The specific years in which the team won the title.",
+            "Years lost": "The specific years in which the team lost the title."
+        }}
+
+        User 2:
+        2014
+
+        Now, answer the following query based on the provided information.
+
+        Query: "{query_need_to_answer}"
+        Table Context: "{table_context}"
+        Table Summary: "{table_summary}"
+        Table_formatted: {table_formatted}
+        Terms Explanation: {terms_explanation}
+
+        Carefully match all specific conditions mentioned in the query.
+        Provide only the answer as a single string without any additional text.
+        """
+
+        # This is where the LLM is called to generate the answer
+        generated_text = self.generate_text(prompt)
+        return generated_text.strip()  # Ensure any whitespace is removed, returning only the answer
 
 
 

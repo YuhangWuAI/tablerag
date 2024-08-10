@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from tabulate import tabulate
 
-from src.table_loader.data_loader.table_parser.enum_type import TableSerializationType
+from src.table_loader.data_loader.table_parser.type_sets import TableSerializationType
 
 
 

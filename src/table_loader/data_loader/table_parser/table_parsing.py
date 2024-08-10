@@ -1,11 +1,12 @@
 from datasets import load_dataset
 
 from src.llm.llm_generator.llm_generating import LLM_Generator
+from src.table_loader.data_loader.table_parser.type_sets import TableSerializationType, TaskName
 
 
 
 from .table_linearizer import StructuredDataLinearizer
-from .enum_type import TaskName, TableSerializationType
+
 
 import warnings
 

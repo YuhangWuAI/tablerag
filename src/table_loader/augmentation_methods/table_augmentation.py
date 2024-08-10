@@ -2,7 +2,7 @@ import requests
 
 
 from src.llm.llm_generator.llm_generating import LLM_Generator
-from src.table_loader.data_loader.table_parser.enum_type import TableAugmentationType
+from src.table_loader.data_loader.table_parser.type_sets import TableAugmentationType
 from src.table_loader.data_loader.table_parser.table_linearizer import StructuredDataLinearizer
 
 

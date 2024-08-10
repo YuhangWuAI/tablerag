@@ -3,9 +3,10 @@ import pandas as pd
 
 
 
+from src.llm.llm_embedder.llm_embedding import Embedder
 from src.llm.llm_generator.llm_generating import LLM_Generator
-from src.llm.embedder.call_embedding import Embedder
-from src.table_loader.data_loader.table_parser.enum_type import TableSamplingType
+
+from src.table_loader.data_loader.table_parser.type_sets import TableSamplingType
 from utils.cos_similarity import select_top_k_samples
 
 
@@ -20,7 +21,6 @@ class TableSampling:
         split: str,
         table_sampling_type: str,
         embedding_type: str,
-        n_cluster: int = 5,
         top_k: int = 3,
         whether_column_grounding: bool = False,
     ):
@@ -33,7 +33,6 @@ class TableSampling:
         self.task_name = task_name
         self.split = split
         self.call_llm = call_llm  # index of the loop for embedding generation/saving
-        self.n_cluster = n_cluster
         self.top_k = top_k
         self.loop_index = 0
         self.whether_column_grounding = whether_column_grounding
@@ -45,15 +44,15 @@ class TableSampling:
             raise ValueError(
                 f"Table sampling type {table_sampling_type} is not supported"
             )
-        # set the default sampling type /auto_row_filter/embedding_sample
+        # set the default sampling type /llm_based_filter/semetics_based_filter
         if table_sampling_type == "default":
-            table_sampling_type = "auto_row_filter"
+            table_sampling_type = "llm_based_filter"
         self.table_sampling_type = table_sampling_type
 
         # Initialize the embedder
         self.embedder = Embedder(
             task_name=task_name,
-            embedding_tag="auto_row_filter",
+            embedding_tag="llm_based_filter",
             embedding_type=embedding_type,
         )
 
@@ -190,6 +189,6 @@ class TableSampling:
 
     def func_set(self) -> dict:
         return {
-            TableSamplingType.embedding_sample.value: self.semetics_based_filter,
-            TableSamplingType.auto_row_filter.value: self.llm_based_filter,
+            TableSamplingType.semetics_based_filter.value: self.semetics_based_filter,
+            TableSamplingType.llm_based_filter.value: self.llm_based_filter,
         }

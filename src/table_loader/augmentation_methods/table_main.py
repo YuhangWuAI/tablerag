@@ -18,7 +18,6 @@ class TableProvider:
         split: str,
         table_sampling_type: str,
         table_augmentation_type: str,
-        n_cluster: int,
         top_k: int,
         embedding_type: str = "spacy",
         whether_column_grounding: bool = False,
@@ -33,7 +32,6 @@ class TableProvider:
             split=split,
             table_sampling_type=table_sampling_type,
             embedding_type=embedding_type,
-            n_cluster=n_cluster,
             top_k=top_k,
             whether_column_grounding=whether_column_grounding,
         )

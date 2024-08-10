@@ -3,6 +3,10 @@ import sys
 from tqdm import tqdm
 import os
 
+
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+sys.path.append(project_root)
+
 from src.llm.llm_generator.llm_generating import LLM_Generator
 from src.evaluator.evaluation import Evaluator
 
@@ -104,7 +108,7 @@ def generate_and_evaluate(
         return numbers
 
 if __name__ == "__main__":
-    retrieval_results_save_path = "/home/yuhangwu/Desktop/Projects/TableProcess/pipeline/data/retrieval_results/sqa_default_assemble_retrieval_based_augmentation_1_retrieval_results.jsonl"
+    retrieval_results_save_path = "/home/yuhangwu/Desktop/Projects/TableProcess/data/processed/retrieval_results/sqa_default_terms_explanation_and_summary_markdown_retrieval_results.jsonl"
     dataset_name = "sqa"
     # Call the function with appropriate parameters
     generate_and_evaluate(dataset_name, retrieval_results_save_path, remove_terms_explanation=True, remove_table_summary=True)

@@ -17,10 +17,18 @@ import torch
 
 torch.cuda.empty_cache()
 
-# 加载配置文件
-config_file_path = os.path.join(project_root, 'config.json')
-with open(config_file_path, 'r') as f:
-    config = json.load(f)
+# 默认配置参数部分
+config = {
+    "dataset_path": "/home/yuhangwu/Desktop/Projects/TableProcess/data/processed/table_outputs/sqa_default_terms_explanation_and_summary_markdown.jsonl",
+    "index_name": "my_index",
+    "colbert_model_name": "colbert-ir/colbertv2.0",
+    "base_output_dir": "/home/yuhangwu/Desktop/Projects/TableProcess/data/processed/retrieval_results",
+    "use_rerank": False,
+    "top_k": 1,
+    "rerank_top_k": 1,
+    "num_queries": 15,
+    "query_grd_path": "/home/yuhangwu/Desktop/Projects/TableProcess/data/raw/small_dataset/sqa.jsonl"
+}
 
 def generate_retrieval_results(
     dataset_path: str,  # 用于嵌入和检索的文档路径

@@ -21,9 +21,9 @@ from .table_filter import TableFilter
 import warnings
 warnings.filterwarnings("ignore")
 
-class TableProvider:
+class TableClarifier:
     """
-    The TableProvider class is responsible for managing the process of table parsing, filtering, 
+    The TableClarifier class is responsible for managing the process of table parsing, filtering, 
     and clarification using various components such as LLMs (Large Language Models).
     """
 
@@ -38,7 +38,7 @@ class TableProvider:
         whether_column_grounding: bool = False,
     ):
         """
-        Initialize the TableProvider class.
+        Initialize the TableClarifier class.
 
         :param task_name: The name of the task for which the table processing is being conducted.
         :param split: The dataset split being used (e.g., train, validation, test).

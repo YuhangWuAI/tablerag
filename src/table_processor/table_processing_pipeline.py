@@ -16,7 +16,7 @@ from src.data_processing.save_jsonl import load_processed_indices, save_jsonl_fi
 
 import warnings
 
-from src.table_master.table_main import TableProvider
+from src.table_master.table_main import TableClarifier
 
 warnings.filterwarnings("ignore")
 
@@ -62,9 +62,9 @@ def table_processing_pipeline(
 
     print("File save path: ", file_save_path, "\n")
 
-    # Initialize the TableProvider, which will manage the table parsing, filtering, and clarification
-    print("Initializing TableProvider\n")
-    table_master = TableProvider(
+    # Initialize the TableClarifier, which will manage the table parsing, filtering, and clarification
+    print("Initializing TableClarifier\n")
+    table_master = TableClarifier(
         task_name,
         split,
         table_filter_name,
@@ -81,7 +81,7 @@ def table_processing_pipeline(
             print("Loading dataset for ", task_name, "...\n")
             dataset = [json.loads(line) for line in f.readlines()]
     else:
-        print("Loading examples from TableProvider\n")
+        print("Loading examples from TableClarifier\n")
 
     # Initialize variables for progress tracking
     grd, pred = [], []

@@ -25,7 +25,7 @@ import torch
 
 torch.cuda.empty_cache()
 
-# 默认配置参数部分
+# Default configuration settings
 config = {
     "dataset_path": "/home/yuhangwu/Desktop/Projects/TableProcess/data/processed/table_outputs/sqa_default_terms_explanation_and_summary_markdown.jsonl",
     "index_name": "my_index",
@@ -39,21 +39,34 @@ config = {
 }
 
 def generate_retrieval_results(
-    dataset_path: str,  # 用于嵌入和检索的文档路径
+    dataset_path: str, 
     index_name: str,
     colbert_model_name: str = "colbert-ir/colbertv2.0",
     base_output_dir: str = "/home/yuhangwu/Desktop/Projects/TableProcess/data/processed/retrieval_results",
     use_rerank: bool = False,
     top_k: int = 1,
     rerank_top_k: int = 1,
-    num_queries: int = 1,  # 控制提取多少个 query 和 grd
+    num_queries: int = 1,  
     query_grd_path: str = "/home/yuhangwu/Desktop/Projects/TableProcess/data/raw/small_dataset/sqa.jsonl"
 ):
+    """
+    Generate retrieval results using the ColBERT model.
+
+    :param dataset_path: Path to the dataset used for embedding and retrieval.
+    :param index_name: Name of the index to be created and used.
+    :param colbert_model_name: Name of the ColBERT model to be used.
+    :param base_output_dir: Directory to save the retrieval results.
+    :param use_rerank: Whether to rerank the retrieved documents.
+    :param top_k: Number of top documents to retrieve.
+    :param rerank_top_k: Number of top documents to rerank.
+    :param num_queries: Number of queries to process.
+    :param query_grd_path: Path to the query and ground truth file.
+    """
     # Ensure output directories exist
     if not os.path.exists(base_output_dir):
         os.makedirs(base_output_dir)
     
-    # Define the output file paths
+    # Define output file paths
     retrieval_results_save_path = os.path.join(base_output_dir, os.path.basename(dataset_path).replace(".jsonl", "_retrieval_results.jsonl"))
     progress_save_path = os.path.join(base_output_dir, os.path.basename(dataset_path).replace(".jsonl", "_progress.json"))
     
@@ -62,11 +75,11 @@ def generate_retrieval_results(
     colbert = ColBERT(dataset_path, colbert_model_name, index_name)
     colbert.embed_and_index()
 
-    # Step 2: Load queries and ground truths (grd) from the provided query_grd_path
+    # Step 2: Load queries and ground truths (grd) from the provided path
     with open(query_grd_path, 'r') as f:
         queries_grds = [json.loads(line) for line in f]
 
-    # 如果 num_queries 被设置，则提取指定数量的 query 和 grd，否则提取所有数据
+    # If num_queries is set, limit the number of queries processed
     if num_queries is not None:
         queries_grds = queries_grds[:num_queries]
 
@@ -88,25 +101,26 @@ def generate_retrieval_results(
                 query = item["query"]
                 print("Query:", query, "\n")
 
+                # Retrieve documents for the query
                 retrieved_docs = colbert.retrieve(query, top_k=top_k, force_fast=False, rerank=use_rerank, rerank_top_k=rerank_top_k)
                 print("\nretrieved_docs:\n", retrieved_docs)
 
                 parsed_content = deserialize_retrieved_text(retrieved_docs)
 
-                # 保存检索结果和对应的查询
+                # Save retrieval result with the query
                 retrieval_result = {
                     "query": query,
                     "retrieved_docs": parsed_content
                 }
 
-                # 逐条保存检索结果
+                # Save retrieval results incrementally
                 f.write(json.dumps(retrieval_result) + "\n")
 
                 # Check if the retrieval was successful
                 if parsed_content and parsed_content[0]["query_need_to_answer"] == query:
                     successful_retrievals += 1
 
-                # Update progress
+                # Update progress after each iteration
                 progress_file.seek(0)
                 progress_file.write(str(i + 1))
                 progress_file.truncate()
@@ -121,10 +135,10 @@ def generate_retrieval_results(
 
 
 def main():
-    # 使用 argparse 来解析命令行参数
+    # Use argparse to parse command-line arguments
     parser = argparse.ArgumentParser(description="Generate retrieval results using ColBERT")
 
-    # 添加参数
+    # Add arguments to the parser
     parser.add_argument('--dataset_path', type=str, default=config["dataset_path"], help="Path to the dataset JSONL file")
     parser.add_argument('--index_name', type=str, default=config["index_name"], help="Name of the index to create")
     parser.add_argument('--colbert_model_name', type=str, default=config["colbert_model_name"], help="Name of the ColBERT model to use")
@@ -135,10 +149,10 @@ def main():
     parser.add_argument('--num_queries', type=int, default=config["num_queries"], help="Number of queries to process")
     parser.add_argument('--query_grd_path', type=str, default=config["query_grd_path"], help="Path to the queries and ground truth file")
 
-    # 解析参数
+    # Parse the arguments
     args = parser.parse_args()
 
-    # 调用生成检索结果的函数，并将解析的参数传递进去
+    # Call the function to generate retrieval results with parsed arguments
     generate_retrieval_results(
         dataset_path=args.dataset_path,
         index_name=args.index_name,

@@ -36,15 +36,33 @@ def table_processing_pipeline(
     table_format: str = "markdown",
     use_table_filter: bool = True,
 ):
+    """
+    Main pipeline function for processing tables using specified filters and clarifiers.
+    
+    :param task_name: The name of the task to be processed (e.g., "sqa").
+    :param split: The dataset split to be used (e.g., "validation").
+    :param table_filter_name: The name of the table filtering method (e.g., "default").
+    :param table_clarifier_name: The name of the table clarification method (e.g., "terms_explanation_and_summary").
+    :param embedding_type: The type of embedding used in processing (e.g., "text-embedding-3-large").
+    :param top_k: The number of top rows or columns to select based on relevance.
+    :param save_jsonl: Whether to save the output in JSONL format (default is True).
+    :param load_local_dataset: Whether to load a local dataset (default is True).
+    :param experiment_name: The name of the experiment being conducted.
+    :param use_sampled_table_for_augmentation: Whether to use sampled tables for augmentation (default is False).
+    :param sample_size: The number of samples to process (default is 1).
+    :param overwrite_existing: Whether to overwrite existing results (default is False).
+    :param table_format: The format to use for the tables (e.g., "markdown").
+    :param use_table_filter: Whether to use table filtering (default is True).
+    """
     print("Starting table processing pipeline\n")
     
-    # Define the new paths for saving files and progress
+    # Define paths for saving files and progress
     file_save_path = f"/home/yuhangwu/Desktop/Projects/TableProcess/data/processed/table_outputs/{task_name}_{table_filter_name}_{table_clarifier_name}_{table_format}.jsonl"
     progress_save_path = f"/home/yuhangwu/Desktop/Projects/TableProcess/data/progressing/{task_name}_{table_filter_name}_{table_clarifier_name}_{table_format}.json"
 
     print("File save path: ", file_save_path, "\n")
 
-    # Initializing TableProvider
+    # Initialize the TableProvider, which will manage the table parsing, filtering, and clarification
     print("Initializing TableProvider\n")
     table_master = TableProvider(
         task_name,
@@ -56,7 +74,7 @@ def table_processing_pipeline(
         whether_column_grounding=True,  
     )
 
-    # Loading local dataset if required
+    # Load dataset locally if required
     if load_local_dataset:
         print("Loading local dataset\n")
         with open(f"data/raw/small_dataset/{task_name}.jsonl", "r") as f:
@@ -65,17 +83,16 @@ def table_processing_pipeline(
     else:
         print("Loading examples from TableProvider\n")
 
-    # Initialising variance and progressing
+    # Initialize variables for progress tracking
     grd, pred = [], []
 
-    # for LLM calling
+    # For managing batches in LLM calls
     batch_size = table_master.call_llm.BATCH_SIZE
     print("Batch size: ", batch_size, "\n")
     num_samples = (
         sample_size if sample_size is not None else (len(dataset) if load_local_dataset else len(table_master.table_loader.dataset))
     )
     print("Number of samples: ", num_samples, "\n")
-
 
     # Create directories if they do not exist
     progress_directory = os.path.dirname(progress_save_path)
@@ -85,7 +102,7 @@ def table_processing_pipeline(
     if not os.path.exists(os.path.dirname(file_save_path)):
         os.makedirs(os.path.dirname(file_save_path))
 
-    # whether the task is already done
+    # Check if the task has already been completed
     if os.path.exists(file_save_path) and not overwrite_existing:
         processed_indices = load_processed_indices(file_save_path)
         if len(processed_indices) >= num_samples:
@@ -94,18 +111,17 @@ def table_processing_pipeline(
     else:
         processed_indices = set()
 
-    # Load progress
+    # Load progress from previous runs if available
     if os.path.exists(progress_save_path):
         with open(progress_save_path, "r") as progress_file:
             processed_indices.update(set(json.load(progress_file)))
-
 
     num_batches = num_samples // batch_size
     remaining_samples = num_samples % batch_size
     batches = []
     print("Number of batches: ", num_batches, ", Remaining samples: ", remaining_samples, "\n")
 
-    # Progress bar initialization
+    # Initialize progress bar
     print("Initializing progress bar\n")
     with tqdm(
         total=num_samples,
@@ -115,7 +131,7 @@ def table_processing_pipeline(
     ) as pbar:
         print("Progress bar initialized\n")
 
-        # Processing batches (storing all the information)
+        # Process batches of data
         for batch_num in range(num_batches):
             print("Processing batch number: ", batch_num, "\n")
             batch_request = []
@@ -183,6 +199,7 @@ def table_processing_pipeline(
 
 
                     try:
+                        # Convert the filtered table to the specified format
                         if table_format == "html":
                             table_formatted = filter_table.to_html() if use_table_filter else str(filter_table)
                         elif table_format == "markdown":
@@ -229,6 +246,7 @@ def table_processing_pipeline(
             print("Finished processing batch number: ", batch_num, "\n")
             batches.append(batch_request)
 
+        # Process any remaining samples that didn't fit into a full batch
         if remaining_samples > 0:
             print("Processing remaining samples\n")
             batch_request = []
@@ -282,6 +300,7 @@ def table_processing_pipeline(
 
 
                 try:
+                    # Convert the filtered table to the specified format
                     if table_format == "html":
                         table_formatted = filter_table.to_html() if use_table_filter else str(filter_table)
                     elif table_format == "markdown":
@@ -328,6 +347,9 @@ def table_processing_pipeline(
 
 
 def main():
+    """
+    Main function to start the table processing pipeline with predefined parameters.
+    """
     table_processing_pipeline(
         task_name="sqa",
         split="validation",

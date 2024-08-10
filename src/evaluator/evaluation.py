@@ -1,7 +1,7 @@
 """
 This code file contains functions that borrow certain logic from an anonymous repository associated with the paper:
 "TAP4LLM: Table Provider on Sampling, Augmenting, and Packing Semi-structured Data for Large Language Model Reasoning" (arXiv:2312.09039).
-Original source: https://anonymous.4open.science/r/TableProvider-4CC3/README.md (MIT License).
+Original source: https://anonymous.4open.science/r/TableProvider-4CC3/README.md.
 The repository does not list an author, but it is linked to the above paper.
 
 Specifically, portions of the code related to data loading, data packing, and evaluation logic have been borrowed and integrated into this project.
@@ -20,13 +20,19 @@ import collections
 import string
 from recognizers_suite import Culture
 
-
 def str_normalize(user_input, recognition_types=None):
-    """A string normalizer which recognize and normalize value based on recognizers_suite"""
+    """
+    Normalize a string by recognizing and standardizing values using the recognizers_suite.
+
+    :param user_input: The input string to be normalized.
+    :param recognition_types: A list of types to recognize and normalize (e.g., datetime, number).
+    :return: A normalized string.
+    """
     user_input = str(user_input)
     user_input = user_input.replace("\\n", "; ")
 
     def replace_by_idx_pairs(orig_str, strs_to_replace, idx_pairs):
+        # Helper function to replace parts of the string based on index pairs
         assert len(strs_to_replace) == len(idx_pairs)
         last_end = 0
         to_concat = []
@@ -51,30 +57,28 @@ def str_normalize(user_input, recognition_types=None):
     culture = Culture.English
     for recognition_type in recognition_types:
         if re.match("\d+/\d+", user_input):
-            # avoid calculating str as 1991/92
+            # Avoid calculating strings like '1991/92' as fractions
             continue
         recognized_list = getattr(
             recognizers_suite, "recognize_{}".format(recognition_type)
-        )(
-            user_input, culture
-        )  # may match multiple parts
+        )(user_input, culture)
         strs_to_replace = []
         idx_pairs = []
         for recognized in recognized_list:
             if not recognition_type == 'datetime':
                 recognized_value = recognized.resolution['value']
                 if str(recognized_value).startswith("P"):
-                    # if the datetime is a period:
+                    # Skip datetime periods
                     continue
                 else:
                     strs_to_replace.append(recognized_value)
                     idx_pairs.append((recognized.start, recognized.end + 1))
             else:
-                if recognized.resolution:  # in some cases, this variable could be none.
+                if recognized.resolution:  # Ensure resolution is not None
                     if len(recognized.resolution['values']) == 1:
                         strs_to_replace.append(
                             recognized.resolution['values'][0]['timex']
-                        )  # We use timex as normalization
+                        )
                         idx_pairs.append((recognized.start, recognized.end + 1))
 
         if len(strs_to_replace) > 0:
@@ -82,23 +86,20 @@ def str_normalize(user_input, recognition_types=None):
 
     if re.match("(.*)-(.*)-(.*) 00:00:00", user_input):
         user_input = user_input[: -len("00:00:00") - 1]
-        # '2008-04-13 00:00:00' -> '2008-04-13'
+        # Normalize datetime strings like '2008-04-13 00:00:00' to '2008-04-13'
     return user_input
 
 
 def check_denotation(target_values, predicted_values):
-    """Return True if the predicted denotation is correct.
-
-    Args:
-        target_values (list[Value])
-        predicted_values (list[Value])
-    Returns:
-        bool
     """
-    # Check size
+    Check if the predicted denotation matches the target values.
+
+    :param target_values: List of target values.
+    :param predicted_values: List of predicted values.
+    :return: True if the predicted values match the target values, False otherwise.
+    """
     if len(target_values) != len(predicted_values):
         return False
-    # Check items
     for target in target_values:
         if not any(target.match(pred) for pred in predicted_values):
             return False
@@ -106,32 +107,31 @@ def check_denotation(target_values, predicted_values):
 
 
 def extract_yes_no_and_map(text):
-    # Convert the input text to lowercase for case-insensitive matching
+    """
+    Extract yes/no from text and map to '1' for yes/true and '0' for no/false.
+
+    :param text: Input text to analyze.
+    :return: '1' for yes/true, '0' for no/false, '2' if neither is found.
+    """
     text = text.lower()
 
-    # Define regular expressions for yes/no matching
     yes_patterns = [r'\byes\b', r'\btrue\b']
     no_patterns = [r'\bno\b', r'\bfalse\b']
 
-    # Check for "0"
     if text == "0":
         return "0"
 
-    # Check for "1"
     if text == "1":
         return "1"
 
-    # Check for yes
     for pattern in yes_patterns:
         if re.search(pattern, text):
             return "1"
 
-    # Check for no
     for pattern in no_patterns:
         if re.search(pattern, text):
             return "0"
 
-    # Return 2 if neither yes nor no is found
     return "2"
 
 
@@ -142,6 +142,9 @@ class Evaluator:
     def flatten_iterative(self, lst):
         """
         Flatten a list of lists iteratively.
+        
+        :param lst: List of lists to be flattened.
+        :return: Flattened list.
         """
         stack = lst[::-1]
         result = []
@@ -161,6 +164,16 @@ class Evaluator:
         allow_semantic=False,
         question=str,
     ):
+        """
+        Run evaluation based on the dataset type.
+
+        :param pred_answer: List of predicted answers.
+        :param gold_answer: List of ground truth answers.
+        :param dataset: Name of the dataset being evaluated.
+        :param allow_semantic: Whether to allow semantic matching.
+        :param question: The question being evaluated, required if allow_semantic is True.
+        :return: Evaluation score.
+        """
         pred_answer = (
             self.flatten_iterative(pred_answer)
             if isinstance(pred_answer, list)
@@ -184,7 +197,18 @@ class Evaluator:
         task_name=None,
         question=None,
     ):
+        """
+        Evaluate exact match (and optionally F1 score) between predictions and ground truth.
+
+        :param pred_list: List of predicted answers.
+        :param gold_list: List of ground truth answers.
+        :param allow_semantic: Whether to allow semantic matching.
+        :param task_name: The task being evaluated, e.g., 'hybridqa'.
+        :param question: The question being evaluated, required if allow_semantic is True.
+        :return: Exact match score (and optionally F1 score).
+        """
         def normalize_answer(s):
+            # Normalize answer strings by removing articles, punctuation, and extra whitespace
             def remove_articles(text):
                 return re.sub(re.compile(r"\b(a|an|the)\b", re.UNICODE), " ", text)
 
@@ -201,20 +225,22 @@ class Evaluator:
             return whilt_space_fix(remove_articles(remove_punc(lower(s))))
 
         def get_tokens(s):
+            # Tokenize the normalized answer string
             if not s:
                 return []
             return normalize_answer(s).split()
 
         def compute_exact(a_gold, a_pred):
+            # Compute exact match score
             return int(normalize_answer(a_gold) == normalize_answer(a_pred))
 
         def compute_f1(a_gold, a_pred):
+            # Compute F1 score
             gold_toks = get_tokens(a_gold)
             pred_toks = get_tokens(a_pred)
             common = collections.Counter(gold_toks) & collections.Counter(pred_toks)
             num_same = sum(common.values())
             if len(gold_toks) == 0 or len(pred_toks) == 0:
-                # If either is no-answer, then F1 is 1 if they agree, 0 otherwise
                 return int(gold_toks == pred_toks)
             if num_same == 0:
                 return 0
@@ -247,7 +273,6 @@ class Evaluator:
             gold_list = [str_normalize(span) for span in gold_list]
             pred_list = sorted(list(set(pred_list)))
             gold_list = sorted(list(set(gold_list)))
-            # (1) 0 matches 'no', 1 matches 'yes'; 0 matches 'more', 1 matches 'less', etc.
             if len(pred_list) == 1 and len(gold_list) == 1:
                 if (pred_list[0] == '0' and gold_list[0] == 'no') or (
                     pred_list[0] == '1' and gold_list[0] == 'yes'
@@ -266,7 +291,6 @@ class Evaluator:
                         return True
                 except Exception as e:
                     pass
-            # (2) Number value (allow units) and Date substring match
             if len(pred_list) == 1 and len(gold_list) == 1:
                 NUMBER_UNITS_PATTERN = re.compile(
                     '^\$*[+-]?([0-9]*[.])?[0-9]+(\s*%*|\s+\w+)$'
@@ -276,21 +300,16 @@ class Evaluator:
                 )
                 DURATION_PATTERN = re.compile('(P|PT)(\d+)(Y|M|D|H|S)')
                 p, g = pred_list[0], gold_list[0]
-                # Restore `duration` type, e.g., from 'P3Y' -> '3'
                 if re.match(DURATION_PATTERN, p):
                     p = re.match(DURATION_PATTERN, p).group(2)
                 if re.match(DURATION_PATTERN, g):
                     g = re.match(DURATION_PATTERN, g).group(2)
                 match = False
                 num_flag, date_flag = False, False
-                # Number w. unit match after string normalization.
-                # Either pred or gold being number w. units suffices it.
                 if re.match(NUMBER_UNITS_PATTERN, p) or re.match(
                     NUMBER_UNITS_PATTERN, g
                 ):
                     num_flag = True
-                # Date match after string normalization.
-                # Either pred or gold being date suffices it.
                 if re.match(DATE_PATTERN, p) or re.match(DATE_PATTERN, g):
                     date_flag = True
                 if num_flag:
@@ -308,6 +327,13 @@ class Evaluator:
             return check_denotation(pred_list, gold_list)
 
     def eval_fv_match(self, pred_list, gold_list):
+        """
+        Evaluate accuracy based on yes/no or true/false answers.
+
+        :param pred_list: List of predicted answers.
+        :param gold_list: List of ground truth answers.
+        :return: Accuracy score.
+        """
         acc = 0.0
         for pred, gold in zip(pred_list, gold_list):
             pred, gold = extract_yes_no_and_map(pred), extract_yes_no_and_map(gold)

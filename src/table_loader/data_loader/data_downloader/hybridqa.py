@@ -1,7 +1,7 @@
 """
 This code file contains functions that borrow certain logic from an anonymous repository associated with the paper:
 "TAP4LLM: Table Provider on Sampling, Augmenting, and Packing Semi-structured Data for Large Language Model Reasoning" (arXiv:2312.09039).
-Original source: https://anonymous.4open.science/r/TableProvider-4CC3/README.md (MIT License).
+Original source: https://anonymous.4open.science/r/TableProvider-4CC3/README.md.
 The repository does not list an author, but it is linked to the above paper.
 
 Specifically, portions of the code related to data loading, data packing, and evaluation logic have been borrowed and integrated into this project.

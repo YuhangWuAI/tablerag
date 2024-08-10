@@ -1,7 +1,7 @@
 """
 This code file contains functions that borrow certain logic from an anonymous repository associated with the paper:
 "TAP4LLM: Table Provider on Sampling, Augmenting, and Packing Semi-structured Data for Large Language Model Reasoning" (arXiv:2312.09039).
-Original source: https://anonymous.4open.science/r/TableProvider-4CC3/README.md (MIT License).
+Original source: https://anonymous.4open.science/r/TableProvider-4CC3/README.md.
 The repository does not list an author, but it is linked to the above paper.
 
 Specifically, portions of the code related to data loading, data packing, and evaluation logic have been borrowed and integrated into this project.
@@ -15,38 +15,36 @@ please contact me at the email address above.
 """
 
 from datasets import load_dataset
-
 from src.llm.llm_generator.llm_generating import LLM_Generator
 from src.table_loader.data_loader.table_parser.type_sets import TableSerializationType, TaskName
-
-
-
 from .table_linearizer import StructuredDataLinearizer
-
-
 import warnings
 
 warnings.filterwarnings("ignore")
 
 class TableParser:
+    """
+    A class to parse tables from different datasets based on the task type.
+    It supports tasks such as 'feverous', 'hybridqa', 'sqa', 'tabfact', 'totto', and 'spider'.
+    """
+
     def __init__(
         self, task_name: str, split: str = "None", use_small_sample_list: bool = False
     ):
         """
-        Load table from dataset
-        Args:
-            task_name (str): valid task name should be selected from ["feverous", "hybridqa", "sqa", "tabfact", "totto"]
-            split (str): train, validation, or test
+        Initialize the TableParser class by loading the dataset for a specific task.
+
+        :param task_name: The task name, selected from ["feverous", "hybridqa", "sqa", "tabfact", "totto"].
+        :param split: The dataset split to load ('train', 'validation', or 'test').
+        :param use_small_sample_list: Whether to load only a small subset of the data (for testing purposes).
         """
         if task_name not in [task.value for task in TaskName]:
             raise ValueError(f"Task name {task_name} is not supported")
         self.task_name = task_name
-        # if split not in ["train", "validation", "test", "validation[:30%]"]:
-        #     raise ValueError(f"Split {split} is not supported")
         self.split = split
-
         self.call_llm = LLM_Generator()
 
+        # Load the dataset, optionally with a small sample list
         self.dataset = (
             self.load_table(use_small_sample_list)
             if split == "None"
@@ -55,9 +53,10 @@ class TableParser:
 
     def load_table(self, use_small_sample_list: bool):
         """
-        Load table from full dataset
-        Returns:
-            dict: dataset
+        Load the full dataset table.
+
+        :param use_small_sample_list: Whether to load a small subset of the dataset.
+        :return: The loaded dataset.
         """
         self.dataset = load_dataset(
             f"src/table_loader/data_downloader/{self.task_name}.py",
@@ -71,14 +70,12 @@ class TableParser:
 
     def load_table(self, split: str, use_small_sample_list: bool):
         """
-        Load table from dataset with split
-        Args:
-            split (str): train, validation, or test
-        Returns:
-            dict: dataset
+        Load the dataset table with a specific split (train, validation, or test).
+
+        :param split: The dataset split to load ('train', 'validation', or 'test').
+        :param use_small_sample_list: Whether to load a small subset of the dataset.
+        :return: The loaded dataset.
         """
-        # if self.task_name == "hybridqa":
-        #     split = "dev" if split == "validation" else split
         self.dataset = load_dataset(
             f"src/table_loader/data_loader/data_downloader/{self.task_name}.py",
             split=split,
@@ -92,19 +89,13 @@ class TableParser:
 
     def parse_table(self, _example: dict) -> dict:
         """
-        Parse table to the format of each task
-        Args:
-            _example (dict): table example
-            Returns:
-                dict: parsed table
+        Parse a table example to the specific format required by the task.
+
+        :param _example: The table example to parse.
+        :return: A dictionary representing the parsed table.
         """
         if self.task_name == "feverous":
-            if str(_example["label"]) == "NOT ENOUGH INFO":
-                label = "2"
-            elif str(_example["label"]) == "REFUTES":
-                label = "0"
-            else:
-                label = "1"
+            label = self._map_feverous_label(_example["label"])
             return {
                 "title": "",
                 "context": _example["context"],
@@ -141,12 +132,7 @@ class TableParser:
                 "label": _example["answer_text"],
             }
         elif self.task_name == "tabfact":
-            if str(_example["label"]) == "0":
-                label = "0"
-            elif str(_example["label"]) == "1":
-                label = "1"
-            else:
-                label = "2"
+            label = self._map_tabfact_label(_example["label"])
             return {
                 "title": "",
                 "context": "",
@@ -190,14 +176,42 @@ class TableParser:
 
     def linearization(self, _example: dict, func=TableSerializationType.html):
         """
-        Linearize table
-        Args:
-            _example (dict): table example
-            Returns:
-                dict: linearized table
+        Linearize the parsed table into a specific format.
+
+        :param _example: The parsed table example.
+        :param func: The desired format for linearization (e.g., HTML, JSON).
+        :return: The linearized table as a string.
         """
         linearizer = StructuredDataLinearizer()
         linearized_data = linearizer.retrieve_linear_function(
             func, structured_data_dict=_example
         )
         return linearized_data
+
+    def _map_feverous_label(self, label: str) -> str:
+        """
+        Map FEVEROUS dataset labels to specific string values.
+
+        :param label: The original label from the dataset.
+        :return: Mapped label value.
+        """
+        if str(label) == "NOT ENOUGH INFO":
+            return "2"
+        elif str(label) == "REFUTES":
+            return "0"
+        else:
+            return "1"
+
+    def _map_tabfact_label(self, label: str) -> str:
+        """
+        Map TabFact dataset labels to specific string values.
+
+        :param label: The original label from the dataset.
+        :return: Mapped label value.
+        """
+        if str(label) == "0":
+            return "0"
+        elif str(label) == "1":
+            return "1"
+        else:
+            return "2"

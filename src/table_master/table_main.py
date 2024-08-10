@@ -1,7 +1,7 @@
 
 from src.llm.llm_generator.llm_generating import LLM_Generator
 from src.table_loader.data_loader.table_parser.table_parsing import TableParser
-from src.table_loader.augmentation_methods.table_clarifier import TableAugmentation
+from src.table_master.table_clarifier import TableAugmentation
 
 from .table_filter import TableFilter
 

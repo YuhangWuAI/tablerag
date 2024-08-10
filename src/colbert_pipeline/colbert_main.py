@@ -48,7 +48,7 @@ def colbert_pipeline(jsonl_path: str, model_name: str, index_name: str, queries:
 
 if __name__ == "__main__":
     # Example usage:
-    jsonl_path = "/home/yuhangwu/Desktop/Projects/TableProcess/pipeline/data/Exp-240808/table_augmentation/feverous_default_assemble_retrieval_based_augmentation_1.jsonl"
+    jsonl_path = "/home/yuhangwu/Desktop/Projects/TableProcess/pipeline/data/Exp-240808/table_clarification/feverous_default_assemble_retrieval_based_augmentation_1.jsonl"
     model_name = "colbert-ir/colbertv2.0"
     index_name = "my_index"
     queries = ["the scheduled date for the farm with 17 turbine be 2012"]

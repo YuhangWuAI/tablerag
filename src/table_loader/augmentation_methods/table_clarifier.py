@@ -21,25 +21,25 @@ class TableAugmentation:
         call_llm: LLM_Generator,
         task_name: str,
         split: str,
-        table_augmentation_type: str,
+        table_clarifier_name: str,
     ):
         self.call_llm = call_llm
         self.task_name = task_name
         self.split = split
         self.linearizer = StructuredDataLinearizer()
 
-        # check if the table augmentation type is supported
-        if table_augmentation_type not in [
-            augmentation_type.value for augmentation_type in TableAugmentationType
+        # check if the table clarifier_name type is supported
+        if table_clarifier_name not in [
+            clarifier_name.value for clarifier_name in TableAugmentationType
         ]:
             raise ValueError(
-                f"Table Augmentation Type {table_augmentation_type} is not supported"
+                f"Table Augmentation Type {table_clarifier_name} is not supported"
             )
-        self.table_augmentation_type = table_augmentation_type
+        self.table_clarifier_name = table_clarifier_name
 
     def run(self, parsed_example: dict) -> dict:
         """
-        Run the table augmentation.
+        Run the table clarifier_name.
         Args:
             query: the query
             table: the table
@@ -49,18 +49,18 @@ class TableAugmentation:
         assert parsed_example is not None, "Table is None"
         assert len(parsed_example["table"]["rows"]) > 0, "Table has no rows"
         assert len(parsed_example["table"]["header"]) > 0, "Table has no header"
-        # Run the augmentation
-        if self.table_augmentation_type == "header_field_categories":
-            augmentation_info = self.func_set()["metadata"](
+        # Run the clarifier_name
+        if self.table_clarifier_name == "header_field_categories":
+            clarification_text = self.func_set()["metadata"](
                 parsed_example, only_return_categories=True
             )
         else:
-            augmentation_info = self.func_set()[self.table_augmentation_type](
+            clarification_text = self.func_set()[self.table_clarifier_name](
                 parsed_example
             )
         
-        # Return the augmentation info as a dictionary
-        return augmentation_info
+        # Return the clarifier_name info as a dictionary
+        return clarification_text
 
     def get_term_explanations(self, parsed_example: dict) -> dict:
         print("Starting get_term_explanations method")

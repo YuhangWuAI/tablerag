@@ -6,11 +6,11 @@ import pandas as pd
 from src.llm.llm_embedder.llm_embedding import Embedder
 from src.llm.llm_generator.llm_generating import LLM_Generator
 
-from src.table_loader.data_loader.table_parser.type_sets import TableSamplingType
+from src.table_loader.data_loader.table_parser.type_sets import TableFilterType
 from utils.cos_similarity import select_top_k_samples
 
 
-class TableSampling:
+class TableFilter:
     def __init__(self) -> None:
         pass
 
@@ -19,7 +19,7 @@ class TableSampling:
         call_llm: LLM_Generator,
         task_name: str,
         split: str,
-        table_sampling_type: str,
+        table_filter_name: str,
         embedding_type: str,
         top_k: int = 3,
         whether_column_grounding: bool = False,
@@ -28,7 +28,7 @@ class TableSampling:
         args:
             task_name: str, task name
             split: str, train, dev, or test
-            table_sampling_type: str, row filter type
+            table_filter_name: str, row filter type
         """
         self.task_name = task_name
         self.split = split
@@ -38,16 +38,16 @@ class TableSampling:
         self.whether_column_grounding = whether_column_grounding
 
         # Check row filter type
-        if table_sampling_type not in [
-            sampling_type.value for sampling_type in TableSamplingType
+        if table_filter_name not in [
+            filter_type.value for filter_type in TableFilterType
         ] + ["default"]:
             raise ValueError(
-                f"Table sampling type {table_sampling_type} is not supported"
+                f"Table filter type {table_filter_name} is not supported"
             )
-        # set the default sampling type /llm_based_filter/semetics_based_filter
-        if table_sampling_type == "default":
-            table_sampling_type = "llm_based_filter"
-        self.table_sampling_type = table_sampling_type
+        # set the default filter type /llm_based_filter/semetics_based_filter
+        if table_filter_name == "default":
+            table_filter_name = "llm_based_filter"
+        self.table_filter_name = table_filter_name
 
         # Initialize the embedder
         self.embedder = Embedder(
@@ -63,7 +63,7 @@ class TableSampling:
         self.user_query = query
         self.loop_index += 1  # Increment the loop index for embedding generation/saving
         # Run the row filter    
-        return self.func_set()[self.table_sampling_type](parsed_example)
+        return self.func_set()[self.table_filter_name](parsed_example)
 
 
     def semetics_based_filter(self, _example: dict) -> pd.DataFrame:
@@ -189,6 +189,6 @@ class TableSampling:
 
     def func_set(self) -> dict:
         return {
-            TableSamplingType.semetics_based_filter.value: self.semetics_based_filter,
-            TableSamplingType.llm_based_filter.value: self.llm_based_filter,
+            TableFilterType.semetics_based_filter.value: self.semetics_based_filter,
+            TableFilterType.llm_based_filter.value: self.llm_based_filter,
         }

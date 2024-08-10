@@ -1,11 +1,11 @@
 import json
 
 
-def serialize_request(query: str, table_formatted: str, augmentation_info: dict, context: str) -> dict:
+def serialize_request(query: str, table_formatted: str, clarification_text: dict, context: str) -> dict:
     try:
-        # 从 augmentation_info 中提取 terms_explanation 和 table_summary，如果不存在则为空字符串
-        terms_explanation = augmentation_info.get("terms_explanation", "")
-        table_summary = augmentation_info.get("table_summary", "")
+        # 从 clarification_text 中提取 terms_explanation 和 table_summary，如果不存在则为空字符串
+        terms_explanation = clarification_text.get("terms_explanation", "")
+        table_summary = clarification_text.get("table_summary", "")
 
         # 构建请求字典并返回，添加 table_context 字段
         request_dict = {

@@ -1,4 +1,4 @@
-name: table_provider
+name: table_master
 channels:
   - conda-forge
   - defaults

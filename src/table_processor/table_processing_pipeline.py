@@ -10,42 +10,39 @@ import warnings
 
 from src.table_loader.augmentation_methods.table_main import TableProvider
 
-
-
-
 warnings.filterwarnings("ignore")
 
 def table_processing_pipeline(
     task_name: str = "sqa",
     split: str = "validation",
-    table_sampling_type: str = "default",
-    table_augmentation_type: str = "terms_explanation_and_summary",
+    table_filter_name: str = "default",
+    table_clarifier_name: str = "terms_explanation_and_summary",
     embedding_type: str = "text-embedding-3-large",
     top_k: int = 5,
     save_jsonl: bool = True,
     load_local_dataset: bool = True,
-    experiment_name: str = "table_augmentation",
+    experiment_name: str = "table_clarification",
     use_sampled_table_for_augmentation: bool = False,
     sample_size: Optional[int] = 1,
     overwrite_existing: bool = False,
     table_format: str = "markdown",
-    use_table_sampling: bool = True,
+    use_table_filter: bool = True,
 ):
     print("Starting table processing pipeline\n")
     
     # Define the new paths for saving files and progress
-    file_save_path = f"/home/yuhangwu/Desktop/Projects/TableProcess/data/processed/table_outputs/{task_name}_{table_sampling_type}_{table_augmentation_type}_{table_format}.jsonl"
-    progress_save_path = f"/home/yuhangwu/Desktop/Projects/TableProcess/data/progressing/{task_name}_{table_sampling_type}_{table_augmentation_type}_{table_format}.json"
+    file_save_path = f"/home/yuhangwu/Desktop/Projects/TableProcess/data/processed/table_outputs/{task_name}_{table_filter_name}_{table_clarifier_name}_{table_format}.jsonl"
+    progress_save_path = f"/home/yuhangwu/Desktop/Projects/TableProcess/data/progressing/{task_name}_{table_filter_name}_{table_clarifier_name}_{table_format}.json"
 
     print("File save path: ", file_save_path, "\n")
 
     # Initializing TableProvider
     print("Initializing TableProvider\n")
-    table_provider = TableProvider(
+    table_master = TableProvider(
         task_name,
         split,
-        table_sampling_type,
-        table_augmentation_type,
+        table_filter_name,
+        table_clarifier_name,
         top_k,
         embedding_type,
         whether_column_grounding=True,  
@@ -64,10 +61,10 @@ def table_processing_pipeline(
     grd, pred = [], []
 
     # for LLM calling
-    batch_size = table_provider.call_llm.BATCH_SIZE
+    batch_size = table_master.call_llm.BATCH_SIZE
     print("Batch size: ", batch_size, "\n")
     num_samples = (
-        sample_size if sample_size is not None else (len(dataset) if load_local_dataset else len(table_provider.table_loader.dataset))
+        sample_size if sample_size is not None else (len(dataset) if load_local_dataset else len(table_master.table_loader.dataset))
     )
     print("Number of samples: ", num_samples, "\n")
 
@@ -119,7 +116,7 @@ def table_processing_pipeline(
             batch = (
                 dataset[start_index:end_index]
                 if load_local_dataset
-                else table_provider.table_loader.dataset[start_index:end_index]
+                else table_master.table_loader.dataset[start_index:end_index]
             )
             print("Processing samples from index ", start_index, " to ", end_index, "\n")
             for i in range(batch_size):
@@ -132,7 +129,7 @@ def table_processing_pipeline(
                 parsed_sample = (
                     batch[i]
                     if load_local_dataset
-                    else table_provider.table_loader.parse_table(
+                    else table_master.table_loader.parse_table(
                         {key: value[i] for key, value in batch.items()}
                     )
                 )
@@ -146,9 +143,9 @@ def table_processing_pipeline(
                 print("Query: ", query, "\n")
 
                 try: 
-                    if use_table_sampling:
+                    if use_table_filter:
                         try:
-                            filter_table = table_provider.table_sampler.run(query, parsed_sample)
+                            filter_table = table_master.table_filter.run(query, parsed_sample)
                             print("Filtered table generated for sample ", i, ":\n", filter_table, "\n")
                         except Exception as e:
                             print("Error in table sampling for sample ", i, ": ", e, "\n")
@@ -158,7 +155,7 @@ def table_processing_pipeline(
                         filter_table = parsed_sample["table"]
 
                     augmentation_input = parsed_sample
-                    if use_sampled_table_for_augmentation and use_table_sampling:
+                    if use_sampled_table_for_augmentation and use_table_filter:
                         print("Using sampled table for augmentation\n")
                         augmentation_input = {
                             "query": parsed_sample["query"],
@@ -169,34 +166,34 @@ def table_processing_pipeline(
                             }
                         }
                     print("Augmentation input: ", augmentation_input, "\n")
-                    augmentation_info = (
-                        table_provider.table_augmentation.run(augmentation_input)
-                        if table_augmentation_type != "None"
+                    clarification_text = (
+                        table_master.table_clarification.run(augmentation_input)
+                        if table_clarifier_name != "None"
                         else ""
                     )
-                    print("Augmentation info for sample ", i, ": ", augmentation_info, "\n")
+                    print("Augmentation info for sample ", i, ": ", clarification_text, "\n")
 
 
                     try:
                         if table_format == "html":
-                            table_formatted = filter_table.to_html() if use_table_sampling else str(filter_table)
+                            table_formatted = filter_table.to_html() if use_table_filter else str(filter_table)
                         elif table_format == "markdown":
                             try:
                                 from tabulate import tabulate
-                                table_formatted = tabulate(filter_table, headers="keys", tablefmt="pipe") if use_table_sampling else str(filter_table)
+                                table_formatted = tabulate(filter_table, headers="keys", tablefmt="pipe") if use_table_filter else str(filter_table)
                             except ImportError:
                                 print("Tabulate module not installed, falling back to string format.")
-                                table_formatted = filter_table.to_string() if use_table_sampling else str(filter_table)
+                                table_formatted = filter_table.to_string() if use_table_filter else str(filter_table)
                         else:
-                            table_formatted = filter_table.to_string() if use_table_sampling else str(filter_table)
+                            table_formatted = filter_table.to_string() if use_table_filter else str(filter_table)
                     except AttributeError as e:
                         print(f"Error in converting table: {e}. Converting table to string instead.\n")
-                        table_formatted = filter_table.to_string() if use_table_sampling else str(filter_table)
+                        table_formatted = filter_table.to_string() if use_table_filter else str(filter_table)
 
                     request = serialize_request(
                         query=query,
                         table_formatted=table_formatted,
-                        augmentation_info=augmentation_info,
+                        clarification_text=clarification_text,
                         context=context  # Include the context in the request serialization
                     )
 
@@ -232,7 +229,7 @@ def table_processing_pipeline(
             batch = (
                 dataset[start_index:end_index]
                 if load_local_dataset
-                else table_provider.table_loader.dataset[start_index:end_index]
+                else table_master.table_loader.dataset[start_index:end_index]
             )
             print("Processing samples from index ", start_index, " to ", end_index, "\n")
             for i in range(remaining_samples):
@@ -245,7 +242,7 @@ def table_processing_pipeline(
                 parsed_sample = (
                     batch[i]
                     if load_local_dataset
-                    else table_provider.table_loader.parse_table(
+                    else table_master.table_loader.parse_table(
                         {key: value[i] for key, value in batch.items()}
                     )
                 )
@@ -256,8 +253,8 @@ def table_processing_pipeline(
                 print("Query: ", query, "\n")
 
                 try:
-                    if use_table_sampling:
-                        filter_table = table_provider.table_sampler.run(
+                    if use_table_filter:
+                        filter_table = table_master.table_filter.run(
                             query, parsed_sample
                         )
                         print("Filtered table generated for remaining sample ", i, "\n")
@@ -268,34 +265,34 @@ def table_processing_pipeline(
                     print("Error in table sampling for remaining sample ", i, ": ", e, "\n")
                     print("Skipping batch: ", i, "\n")
                     continue
-                augmentation_info = (
-                    table_provider.table_augmentation.run(parsed_sample)
-                    if table_augmentation_type != "None"
+                clarification_text = (
+                    table_master.table_clarification.run(parsed_sample)
+                    if table_clarifier_name != "None"
                     else ""
                 )
-                print("Augmentation info for remaining sample ", i, ": ", augmentation_info, "\n")
+                print("Augmentation info for remaining sample ", i, ": ", clarification_text, "\n")
 
 
                 try:
                     if table_format == "html":
-                        table_formatted = filter_table.to_html() if use_table_sampling else str(filter_table)
+                        table_formatted = filter_table.to_html() if use_table_filter else str(filter_table)
                     elif table_format == "markdown":
                         try:
                             from tabulate import tabulate
-                            table_formatted = tabulate(filter_table, headers="keys", tablefmt="pipe") if use_table_sampling else str(filter_table)
+                            table_formatted = tabulate(filter_table, headers="keys", tablefmt="pipe") if use_table_filter else str(filter_table)
                         except ImportError:
                             print("Tabulate module not installed, falling back to string format.")
-                            table_formatted = filter_table.to_string() if use_table_sampling else str(filter_table)
+                            table_formatted = filter_table.to_string() if use_table_filter else str(filter_table)
                     else:
-                        table_formatted = filter_table.to_string() if use_table_sampling else str(filter_table)
+                        table_formatted = filter_table.to_string() if use_table_filter else str(filter_table)
                 except AttributeError as e:
                     print(f"Error in converting table: {e}. Converting table to string instead.\n")
-                    table_formatted = filter_table.to_string() if use_table_sampling else str(filter_table)
+                    table_formatted = filter_table.to_string() if use_table_filter else str(filter_table)
 
                 request = serialize_request(
                     query=query,
                     table_formatted=table_formatted,
-                    augmentation_info=augmentation_info,
+                    clarification_text=clarification_text,
                     context=context  # Include the context in the request serialization
                 )
 
@@ -326,18 +323,18 @@ def main():
     table_processing_pipeline(
         task_name="sqa",
         split="validation",
-        table_sampling_type="default",
-        table_augmentation_type="terms_explanation_and_summary",
+        table_filter_name="default",
+        table_clarifier_name="terms_explanation_and_summary",
         embedding_type="text-embedding-3-large",
         top_k=5,
         save_jsonl=True,
         load_local_dataset=True,
-        experiment_name="table_augmentation",
+        experiment_name="table_clarification",
         use_sampled_table_for_augmentation=False,
         sample_size=1,
         overwrite_existing=False,
         table_format="markdown",
-        use_table_sampling=True
+        use_table_filter=True
     )
 
 if __name__ == "__main__":

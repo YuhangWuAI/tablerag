@@ -21,7 +21,7 @@ class TableSerializationType(Enum):
 
 
 @unique
-class TableSamplingType(Enum):
+class TableFilterType(Enum):
     semetics_based_filter = "semetics_based_filter"
     llm_based_filter = "llm_based_filter"
 

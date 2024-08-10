@@ -1,3 +1,11 @@
+"""
+Author: Yuhang Wu
+Contact: yuhang.wu-4 [at] postgrad.manchester.ac.uk
+GitHub: https://github.com/YuhangWuAI/
+
+For any questions or further information, please feel free to reach out via the email address above.
+"""
+
 import ast  # for converting embeddings saved as strings back to arrays
 from collections import Counter
 import json

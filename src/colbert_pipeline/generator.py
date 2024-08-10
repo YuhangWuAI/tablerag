@@ -1,3 +1,11 @@
+"""
+Author: Yuhang Wu
+Contact: yuhang.wu-4 [at] postgrad.manchester.ac.uk
+GitHub: https://github.com/YuhangWuAI/
+
+For any questions or further information, please feel free to reach out via the email address above.
+"""
+
 import json
 import sys
 from tqdm import tqdm

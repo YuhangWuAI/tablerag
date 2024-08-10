@@ -1,8 +1,16 @@
+"""
+Author: Yuhang Wu
+Contact: yuhang.wu-4 [at] postgrad.manchester.ac.uk
+GitHub: https://github.com/YuhangWuAI/
+
+For any questions or further information, please feel free to reach out via the email address above.
+"""
+
 import requests
 
 
 from src.llm.llm_generator.llm_generating import LLM_Generator
-from src.table_loader.data_loader.table_parser.type_sets import TableAugmentationType
+from src.table_loader.data_loader.table_parser.type_sets import TableClarificationType
 from src.table_loader.data_loader.table_parser.table_linearizer import StructuredDataLinearizer
 
 
@@ -15,7 +23,7 @@ import time
 import warnings
 warnings.filterwarnings("ignore")
 
-class TableAugmentation:
+class TableClarification:
     def __init__(
         self,
         call_llm: LLM_Generator,
@@ -30,7 +38,7 @@ class TableAugmentation:
 
         # check if the table clarifier_name type is supported
         if table_clarifier_name not in [
-            clarifier_name.value for clarifier_name in TableAugmentationType
+            clarifier_name.value for clarifier_name in TableClarificationType
         ]:
             raise ValueError(
                 f"Table Augmentation Type {table_clarifier_name} is not supported"
@@ -145,7 +153,7 @@ class TableAugmentation:
     # Ablation experiments
     def func_set(self) -> dict:
         return {
-            TableAugmentationType.external_retrieved_knowledge_info_term_explanations.value: self.get_term_explanations,
-            TableAugmentationType.external_retrieved_knowledge_info_docs_references.value: self.table_summary,
-            TableAugmentationType.terms_explanation_and_summary.value: self.terms_explanation_and_summary,
+            TableClarificationType.external_retrieved_knowledge_info_term_explanations.value: self.get_term_explanations,
+            TableClarificationType.external_retrieved_knowledge_info_docs_references.value: self.table_summary,
+            TableClarificationType.terms_explanation_and_summary.value: self.terms_explanation_and_summary,
         }

@@ -1,3 +1,11 @@
+"""
+Author: Yuhang Wu
+Contact: yuhang.wu-4 [at] postgrad.manchester.ac.uk
+GitHub: https://github.com/YuhangWuAI/
+
+For any questions or further information, please feel free to reach out via the email address above.
+"""
+
 import json
 import os
 import datetime
@@ -154,10 +162,10 @@ def table_processing_pipeline(
                         print("Bypassing table sampling and using the original table as string\n")
                         filter_table = parsed_sample["table"]
 
-                    augmentation_input = parsed_sample
+                    clarifier_inputs = parsed_sample
                     if use_sampled_table_for_augmentation and use_table_filter:
                         print("Using sampled table for augmentation\n")
-                        augmentation_input = {
+                        clarifier_inputs = {
                             "query": parsed_sample["query"],
                             "table": {
                                 "header": filter_table.columns.tolist(),
@@ -165,9 +173,9 @@ def table_processing_pipeline(
                                 "caption": parsed_sample["table"].get("caption", "")
                             }
                         }
-                    print("Augmentation input: ", augmentation_input, "\n")
+                    print("Augmentation input: ", clarifier_inputs, "\n")
                     clarification_text = (
-                        table_master.table_clarification.run(augmentation_input)
+                        table_master.table_clarification.run(clarifier_inputs)
                         if table_clarifier_name != "None"
                         else ""
                     )

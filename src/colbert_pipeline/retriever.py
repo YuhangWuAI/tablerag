@@ -2,10 +2,13 @@ import json
 import sys
 from tqdm import tqdm
 import os
+import argparse
 
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
+# Automatically determine the project root based on the current file's location
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 sys.path.append(project_root)
-from pipeline.ColBERT.ColBERT import ColBERT
+
+from src.colbert_pipeline.colbert_main import ColBERT
 from src.data_processing.request_serializer import deserialize_retrieved_text
 
 import warnings
@@ -14,19 +17,22 @@ import torch
 
 torch.cuda.empty_cache()
 
+# 加载配置文件
+config_file_path = os.path.join(project_root, 'config.json')
+with open(config_file_path, 'r') as f:
+    config = json.load(f)
+
 def generate_retrieval_results(
     dataset_path: str,  # 用于嵌入和检索的文档路径
     index_name: str,
     colbert_model_name: str = "colbert-ir/colbertv2.0",
-    base_output_dir: str = "/home/yuhangwu/Desktop/Projects/TableProcess/pipeline/data/retrieval_results",
+    base_output_dir: str = "/home/yuhangwu/Desktop/Projects/TableProcess/data/processed/retrieval_results",
     use_rerank: bool = False,
     top_k: int = 1,
     rerank_top_k: int = 1,
-    num_queries: int = 1  # 控制提取多少个 query 和 grd
+    num_queries: int = 1,  # 控制提取多少个 query 和 grd
+    query_grd_path: str = "/home/yuhangwu/Desktop/Projects/TableProcess/data/raw/small_dataset/sqa.jsonl"
 ):
-    # 定义 query 和 grd 的文件路径
-    query_grd_path = "/home/yuhangwu/Desktop/Projects/TableProcess/source/dataset/sqa.jsonl"
-    
     # Ensure output directories exist
     if not os.path.exists(base_output_dir):
         os.makedirs(base_output_dir)
@@ -97,7 +103,37 @@ def generate_retrieval_results(
     recall_accuracy = successful_retrievals / total_samples if total_samples > 0 else 0
     print(f"Recall Accuracy: {recall_accuracy * 100:.2f}% ({successful_retrievals}/{total_samples})")
 
+
+def main():
+    # 使用 argparse 来解析命令行参数
+    parser = argparse.ArgumentParser(description="Generate retrieval results using ColBERT")
+
+    # 添加参数
+    parser.add_argument('--dataset_path', type=str, default=config["dataset_path"], help="Path to the dataset JSONL file")
+    parser.add_argument('--index_name', type=str, default=config["index_name"], help="Name of the index to create")
+    parser.add_argument('--colbert_model_name', type=str, default=config["colbert_model_name"], help="Name of the ColBERT model to use")
+    parser.add_argument('--base_output_dir', type=str, default=config["base_output_dir"], help="Base directory for output files")
+    parser.add_argument('--use_rerank', action='store_true', default=config["use_rerank"], help="Flag to indicate if reranking should be used")
+    parser.add_argument('--top_k', type=int, default=config["top_k"], help="Number of top documents to retrieve")
+    parser.add_argument('--rerank_top_k', type=int, default=config["rerank_top_k"], help="Number of top documents to rerank")
+    parser.add_argument('--num_queries', type=int, default=config["num_queries"], help="Number of queries to process")
+    parser.add_argument('--query_grd_path', type=str, default=config["query_grd_path"], help="Path to the queries and ground truth file")
+
+    # 解析参数
+    args = parser.parse_args()
+
+    # 调用生成检索结果的函数，并将解析的参数传递进去
+    generate_retrieval_results(
+        dataset_path=args.dataset_path,
+        index_name=args.index_name,
+        colbert_model_name=args.colbert_model_name,
+        base_output_dir=args.base_output_dir,
+        use_rerank=args.use_rerank,
+        top_k=args.top_k,
+        rerank_top_k=args.rerank_top_k,
+        num_queries=args.num_queries,
+        query_grd_path=args.query_grd_path
+    )
+
 if __name__ == "__main__":
-    dataset_path = "pipeline/data/Exp-240809/table_augmentation/sqa_default_assemble_retrieval_based_augmentation_1.jsonl"
-    index_name = "my_index"
-    generate_retrieval_results(dataset_path, index_name, num_queries=15)  # 这里可以控制提取多少个 query 和 grd
+    main()

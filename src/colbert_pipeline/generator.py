@@ -3,11 +3,9 @@ import sys
 from tqdm import tqdm
 import os
 
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
-sys.path.append(project_root)
+from src.llm.llm_generator.llm_generating import LLM_Generator
+from src.evaluator.evaluation import Evaluator
 
-from evaluator.evaluation import Evaluator
-from table_loader import LLM_Generator
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -15,13 +13,13 @@ warnings.filterwarnings("ignore")
 def generate_and_evaluate(
     dataset_name: str,  
     retrieval_results_save_path: str,
-    base_output_dir: str = "/home/yuhangwu/Desktop/Projects/TableProcess/pipeline/data/prediction",
+    base_output_dir: str = "/home/yuhangwu/Desktop/Projects/TableProcess/data/processed/prediction",
     run_evaluation: bool = True,
     remove_terms_explanation: bool = False,
     remove_table_summary: bool = False
 ):
     # Set dataset path based on dataset name
-    dataset_path = f"/home/yuhangwu/Desktop/Projects/TableProcess/source/dataset/{dataset_name}.jsonl"
+    dataset_path = f"/home/yuhangwu/Desktop/Projects/TableProcess/data/raw/small_dataset/{dataset_name}.jsonl"
     
     # Generate function name based on the dataset name
     generate_function_name = f"{dataset_name}_generate_final_answer"

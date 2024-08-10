@@ -36,21 +36,21 @@ class Embedder:
         row_column_list: List[str],
         file_dir_name: str,
     ):
-        if self.embedding_type == "text-embedding-ada-002":
+        if self.embedding_type == "text-embedding-3-small":
             # generate column embeddings
             try:
                 self.embedder = OpenAIEmbeddings(
-                    model="text-embedding-ada-002", 
+                    model="text-embedding-3-large", 
                     openai_api_base= "https://aigc.x-see.cn/v1"
                     )
                 print("Successfully initialized OpenAIEmbeddings")
             except Exception as e:
                 print(f"Error initializing OpenAIEmbeddings: {e}")
                 raise
-        elif self.embedding_type == "text-embedding-3-small":
+        elif self.embedding_type == "text-embedding-3-large":
             try:    
                 self.embedder = OpenAIEmbeddings(
-                    model="text-embedding-3-small", 
+                    model="text-embedding-3-large", 
                     openai_api_base= "https://aigc.x-see.cn/v1"
                     )
                 print("Successfully initialized OpenAIEmbeddings")

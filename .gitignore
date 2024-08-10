@@ -9,5 +9,5 @@ dataloader/__pycache__/
 .VSCodeCounter/
 pipeline/data/
 /.DS_Store
-table_provider/agents/embedder/*
 ./ragatouille/
+src/llm/llm_embedder/*

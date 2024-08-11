@@ -126,8 +126,8 @@ def generate_and_evaluate(
         return numbers
 
 if __name__ == "__main__":
-    retrieval_results_save_path = "/home/yuhangwu/Desktop/Projects/TableProcess/data/processed/retrieval_results/tabfact_default_terms_explanation_and_summary_default_retrieval_results.jsonl"
+    retrieval_results_save_path = "/home/yuhangwu/Desktop/Projects/TableProcess/data/processed/retrieval_results/tabfact_default_term_explanations_default_retrieval_results.jsonl"
     dataset_name = "tabfact"
     
     # Call the function with specific parameters
-    generate_and_evaluate(dataset_name, retrieval_results_save_path, remove_terms_explanation=False, remove_table_summary=False)
+    generate_and_evaluate(dataset_name, retrieval_results_save_path, remove_terms_explanation=True, remove_table_summary=True)

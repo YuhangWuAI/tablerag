@@ -193,7 +193,7 @@ def table_processing_pipeline(
                     clarification_text = (
                         table_master.table_clarification.run(clarifier_inputs)
                         if table_clarifier_name != "None"
-                        else ""
+                        else {}
                     )
                     print("Augmentation info for sample ", i, ": ", clarification_text, "\n")
 
@@ -294,7 +294,7 @@ def table_processing_pipeline(
                 clarification_text = (
                     table_master.table_clarification.run(parsed_sample)
                     if table_clarifier_name != "None"
-                    else ""
+                    else {}
                 )
                 print("Augmentation info for remaining sample ", i, ": ", clarification_text, "\n")
 
@@ -354,7 +354,7 @@ def main():
         task_name="tabfact",
         split="validation",
         table_filter_name="default",
-        table_clarifier_name="terms_explanation_and_summary",
+        table_clarifier_name="None",
         embedding_type="text-embedding-3-large",
         top_k=5,
         save_jsonl=True,
@@ -363,7 +363,7 @@ def main():
         use_sampled_table_for_augmentation=False,
         sample_size=1000,
         overwrite_existing=False,
-        table_format="default",
+        table_format="html",
         use_table_filter=False
     )
 

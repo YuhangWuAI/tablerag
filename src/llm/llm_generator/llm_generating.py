@@ -2,7 +2,7 @@
 Author: Yuhang Wu
 Contact: yuhang.wu-4 [at] postgrad.manchester.ac.uk
 GitHub: https://github.com/YuhangWuAI/
-
+Copyright (C) 2024 Wu Yuhang. All rights reserved.
 For any questions or further information, please feel free to reach out via the email address above.
 """
 
@@ -75,29 +75,79 @@ class LLM_Generator:
 
     @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
     def call_llm_code_generation(self, context: str) -> str:
-        """
-        Synthesize a code snippet from the provided table context.
-
-        :param context: Contextual information to guide code generation.
-        :return: Generated code as a string.
-        """
+        """Synthesize code snippet from the table context."""
         prompt = f"""
         Example: Synthesize code snippet from the table context to select the proper rows and columns for verifying a statement / answering query.
         The generated code must use the exact column names provided, including spaces, capitalization, and punctuation.
         The generated code should treat all data as strings, even if they look like numbers.
         Only filter out rows and columns that are definitely not needed to verify the statement / answering query.
+
+        User 1:
+        I need an expert to help me verify the statement by filtering the table to make it smaller. Statement: The scheduled date for the farm with 17 turbines be 2012.
+        Columns: ['wind farm', 'scheduled', 'capacity (mw)', 'turbines', 'type', 'location']
+        df = pd.DataFrame({{
+            'wind farm': ['codling', 'carrowleagh', 'dublin array', 'glenmore', 'glenough', 'gortahile', 'grouse lodge', 'moneypoint', 'mount callan', 'oriel', 'skerd rocks', 'shragh', 'garracummer', 'knockacummer', 'monaincha', 'gibbet hill', 'glenough extension'],
+            'scheduled': ['unknown', '2012', '2015', '2009 summer', '2010 winter', '2010 autumn', '2011 summer', 'unknown', 'unknown', '2013', 'unknown', 'planning submitted oct 2011', '2012', '2013', '2013', '2013', '2013'],
+            'capacity (mw)': [1100, 36.8, 364, 30, 32.5, 20, 20, 22.5, 90, 330, 100, 135, 42.5, 87.5, 36, 15, 2.5],
+            'turbines': [220, 16, 145, 10, 13, 8, 8, 9, 30, 55, 20, 45, 17, 35, 15, 6, 1],
+            'type': ['unknown', 'enercon e - 70 2.3', 'unknown', 'vestas v90', 'nordex n80 / n90', 'nordex n90', 'nordex n90', 'unknown', '3 mw', 'unknown', '5 mw', 'enercon e82 3.0 mw', 'nordex n90 2.5 mw', 'nordex n90 2.5 mw', 'nordex n117 2.4 mw', 'nordex n90 2.5 mw', 'nordex n90 2.5 mw'],
+            'location': ['county wicklow', 'county cork', 'county dublin', 'county clare', 'county tipperary', 'county laois', 'county tipperary', 'county clare', 'county clare', 'county louth', 'county galway', 'county clare', 'county tipperary', 'county cork', 'county tipperary', 'county wexford', 'county tipperary']
+        }})
+        User 2:
+        To verify the statement 'The scheduled date for the farm with 17 turbines be 2012', we need to filter the rows and columns to focus on relevant information. 
+        Since we are interested in the 'wind farm', 'scheduled', and 'turbines' columns, the most impactful change will be to filter the rows and columns as follows:
+        filtered_table = df[['wind farm', 'scheduled', 'turbines']].query("turbines == '17'")
+
+        User 1:
+        I need an expert to help me verify the statement by filtering the table to make it smaller. Statement: All 12 club play a total of 22 game for the wru division one east.
+        Columns: ['club', 'played', 'drawn', 'lost', 'points for', 'points against', 'tries for', 'tries against', 'try bonus', 'losing bonus', 'points']
+        df = pd.DataFrame({{
+            'club': ['pontypool rfc', 'caerphilly rfc', 'blackwood rfc', 'bargoed rfc', 'uwic rfc', 'llanharan rfc', 'newbridge rfc', 'rumney rfc', 'newport saracens rfc', 'beddau rfc', 'fleur de lys rfc', 'llantrisant rfc'],
+            'played': [22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22],
+            'drawn': [2, 2, 2, 0, 2, 1, 2, 2, 0, 0, 1, 0],
+            'lost': [2, 4, 6, 8, 7, 12, 11, 12, 14, 15, 16, 18],
+            'points for': [648, 482, 512, 538, 554, 436, 355, 435, 344, 310, 300, 402],
+            'points against': [274, 316, 378, 449, 408, 442, 400, 446, 499, 483, 617, 592],
+            'tries for': [81, 56, 60, 72, 71, 44, 36, 56, 45, 32, 34, 55],
+            'tries against': [32, 37, 42, 52, 50, 51, 47, 52, 64, 61, 77, 77],
+            'try bonus': [12, 7, 8, 10, 6, 1, 2, 5, 2, 2, 2, 4],
+            'losing bonus': [1, 3, 3, 4, 2, 7, 3, 3, 3, 4, 4, 6],
+            'points': [89, 78, 71, 70, 64, 46, 45, 44, 37, 34, 28, 26]
+        }})
+        User 2:
+        To verify the statement 'All 12 club play a total of 22 game for the wru division one east', we need to filter the rows and columns to focus on relevant information. 
+        Since we are interested in the 'club' and 'played' columns, the most impactful change will be to filter the rows and columns as follows:
+        filtered_table = df[['club', 'played']].query("played == '22'")
+
+        User 1:
+        I need an expert to help me verify the statement by filtering the table to make it smaller. Statement: Touchdown Atlantic, in the category of sporting, be established in 2010.
+        Columns: ['event name', 'established', 'category', 'sub category', 'main venue']
+        df = pd.DataFrame({{
+            'event name': ['dieppe kite international', 'the frye festival', 'hubcap comedy festival', 'touchdown atlantic', 'atlantic nationals automotive extravaganza', 'world wine & food expo', 'shediac lobster festival', 'mosaïq multicultural festival'],
+            'established': [2001, 2000, 2000, 2010, 2000, 1990, 1950, 2004],
+            'category': ['sporting', 'arts', 'arts', 'sporting', 'transportation', 'arts', 'arts', 'festival'],
+            'sub category': ['kite flying', 'literary', 'comedy', 'football', 'automotive', 'food & drink', 'food & drink', 'multicultural'],
+            'main venue': ['dover park', 'university of moncton', 'various', 'moncton stadium', 'moncton coliseum', 'moncton coliseum', 'shediac festival grounds', 'moncton city hall plaza']
+        }})
+        User 2:
+        To verify the statement 'Touchdown Atlantic, in the category of sporting, be established in 2010', we need to filter the rows and columns to focus on relevant information. 
+        Since we are interested in the 'event name' and 'established' columns, the most impactful change will be to filter the rows and columns as follows:
+        filtered_table = df[['event name', 'established']].query("`event name` == 'touchdown atlantic' and established == '2010'")
+
         Now, generate a code snippet from the table context to select the proper rows and columns to verify the given statement / answering query.
         Use the existing column names from the provided DataFrame.
         The column names in the generated code must match the provided column names exactly, including spaces, capitalization, and punctuation.
         Only filter out rows and columns that are definitely not needed to verify the statement.
-        Only return the code.
+        Only return the code. 
         {context}
         \n\n:
         """
 
         if self.USE_SELF_CONSISTENCY:
-            # Generate multiple code snippets and choose the most common one
             generated_codes = [self.generate_text(prompt) for _ in range(5)]
+            print("Generated codes:", generated_codes)
+            
+            # Find the most common code
             code_counter = Counter(generated_codes)
             most_common_code, count = code_counter.most_common(1)[0]
             

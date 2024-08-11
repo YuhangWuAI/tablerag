@@ -10,6 +10,7 @@ import json
 import os
 import datetime
 from typing import Optional
+import pandas as pd
 from tqdm import tqdm
 from src.data_processing.request_serializer import serialize_request
 from src.data_processing.save_jsonl import load_processed_indices, save_jsonl_file
@@ -177,6 +178,14 @@ def table_processing_pipeline(
                     else:
                         print("Bypassing table sampling and using the original table as string\n")
                         filter_table = parsed_sample["table"]
+                        
+                        if isinstance(filter_table, dict) and "header" in filter_table and "rows" in filter_table:
+                            try:
+                                df = pd.DataFrame(data=filter_table["rows"], columns=filter_table["header"])
+                                filter_table = df
+                            except Exception as e:
+                                print(f"Error converting table to DataFrame: {e}. Skipping this sample.\n")
+                                continue
 
                     clarifier_inputs = parsed_sample
                     if use_sampled_table_for_augmentation and use_table_filter:
@@ -201,19 +210,19 @@ def table_processing_pipeline(
                     try:
                         # Convert the filtered table to the specified format
                         if table_format == "html":
-                            table_formatted = filter_table.to_html() if use_table_filter else str(filter_table)
+                            table_formatted = filter_table.to_html()
                         elif table_format == "markdown":
                             try:
                                 from tabulate import tabulate
-                                table_formatted = tabulate(filter_table, headers="keys", tablefmt="pipe") if use_table_filter else str(filter_table)
+                                table_formatted = tabulate(filter_table, headers="keys", tablefmt="pipe")
                             except ImportError:
                                 print("Tabulate module not installed, falling back to string format.")
-                                table_formatted = filter_table.to_string() if use_table_filter else str(filter_table)
+                                table_formatted = filter_table.to_string()
                         else:
-                            table_formatted = filter_table.to_string() if use_table_filter else str(filter_table)
+                            table_formatted = filter_table.to_string()
                     except AttributeError as e:
                         print(f"Error in converting table: {e}. Converting table to string instead.\n")
-                        table_formatted = filter_table.to_string() if use_table_filter else str(filter_table)
+                        table_formatted = filter_table.to_string()
 
                     request = serialize_request(
                         query=query,
@@ -287,6 +296,15 @@ def table_processing_pipeline(
                     else:
                         print("Bypassing table sampling and using the original table as string\n")
                         filter_table = parsed_sample["table"]
+
+                        if isinstance(filter_table, dict) and "header" in filter_table and "rows" in filter_table:
+                            try:
+                                df = pd.DataFrame(data=filter_table["rows"], columns=filter_table["header"])
+                                filter_table = df
+                            except Exception as e:
+                                print(f"Error converting table to DataFrame: {e}. Skipping this sample.\n")
+                                continue
+
                 except Exception as e:
                     print("Error in table sampling for remaining sample ", i, ": ", e, "\n")
                     print("Skipping batch: ", i, "\n")
@@ -302,19 +320,19 @@ def table_processing_pipeline(
                 try:
                     # Convert the filtered table to the specified format
                     if table_format == "html":
-                        table_formatted = filter_table.to_html() if use_table_filter else str(filter_table)
+                        table_formatted = filter_table.to_html()
                     elif table_format == "markdown":
                         try:
                             from tabulate import tabulate
-                            table_formatted = tabulate(filter_table, headers="keys", tablefmt="pipe") if use_table_filter else str(filter_table)
+                            table_formatted = tabulate(filter_table, headers="keys", tablefmt="pipe")
                         except ImportError:
                             print("Tabulate module not installed, falling back to string format.")
-                            table_formatted = filter_table.to_string() if use_table_filter else str(filter_table)
+                            table_formatted = filter_table.to_string()
                     else:
-                        table_formatted = filter_table.to_string() if use_table_filter else str(filter_table)
+                        table_formatted = filter_table.to_string()
                 except AttributeError as e:
                     print(f"Error in converting table: {e}. Converting table to string instead.\n")
-                    table_formatted = filter_table.to_string() if use_table_filter else str(filter_table)
+                    table_formatted = filter_table.to_string()
 
                 request = serialize_request(
                     query=query,

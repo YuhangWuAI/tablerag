@@ -27,15 +27,15 @@ torch.cuda.empty_cache()
 
 # Default configuration settings
 config = {
-    "dataset_path": "/home/yuhangwu/Desktop/Projects/TableProcess/data/processed/table_outputs/sqa_default_terms_explanation_and_summary_markdown.jsonl",
+    "dataset_path": "/home/yuhangwu/Desktop/Projects/TableProcess/data/processed/table_outputs/tabfact_default_terms_explanation_and_summary_default.jsonl",
     "index_name": "my_index",
     "colbert_model_name": "colbert-ir/colbertv2.0",
     "base_output_dir": "/home/yuhangwu/Desktop/Projects/TableProcess/data/processed/retrieval_results",
     "use_rerank": False,
     "top_k": 1,
     "rerank_top_k": 1,
-    "num_queries": 15,
-    "query_grd_path": "/home/yuhangwu/Desktop/Projects/TableProcess/data/raw/small_dataset/sqa.jsonl"
+    "num_queries": 1000,
+    "query_grd_path": "/home/yuhangwu/Desktop/Projects/TableProcess/data/raw/small_dataset/tabfact.jsonl"
 }
 
 def generate_retrieval_results(
@@ -47,7 +47,7 @@ def generate_retrieval_results(
     top_k: int = 1,
     rerank_top_k: int = 1,
     num_queries: int = 1,  
-    query_grd_path: str = "/home/yuhangwu/Desktop/Projects/TableProcess/data/raw/small_dataset/sqa.jsonl"
+    query_grd_path: str = "/home/yuhangwu/Desktop/Projects/TableProcess/data/raw/small_dataset/tabfact.jsonl"
 ):
     """
     Generate retrieval results using the ColBERT model.

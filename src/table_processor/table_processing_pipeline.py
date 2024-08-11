@@ -21,7 +21,7 @@ from src.table_master.table_main import TableClarifier
 warnings.filterwarnings("ignore")
 
 def table_processing_pipeline(
-    task_name: str = "sqa",
+    task_name: str = "tabfact",
     split: str = "validation",
     table_filter_name: str = "default",
     table_clarifier_name: str = "terms_explanation_and_summary",
@@ -33,8 +33,8 @@ def table_processing_pipeline(
     use_sampled_table_for_augmentation: bool = False,
     sample_size: Optional[int] = 1,
     overwrite_existing: bool = False,
-    table_format: str = "markdown",
-    use_table_filter: bool = True,
+    table_format: str = "default",
+    use_table_filter: bool = False,
 ):
     """
     Main pipeline function for processing tables using specified filters and clarifiers.
@@ -351,7 +351,7 @@ def main():
     Main function to start the table processing pipeline with predefined parameters.
     """
     table_processing_pipeline(
-        task_name="sqa",
+        task_name="tabfact",
         split="validation",
         table_filter_name="default",
         table_clarifier_name="terms_explanation_and_summary",
@@ -361,10 +361,10 @@ def main():
         load_local_dataset=True,
         experiment_name="table_clarification",
         use_sampled_table_for_augmentation=False,
-        sample_size=1,
+        sample_size=1000,
         overwrite_existing=False,
-        table_format="markdown",
-        use_table_filter=True
+        table_format="default",
+        use_table_filter=False
     )
 
 if __name__ == "__main__":

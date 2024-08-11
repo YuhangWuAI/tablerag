@@ -238,13 +238,13 @@ class LLM_Generator:
         generated_text = self.generate_text(prompt)
         return generated_text
 
+
+
     @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
     def tabfact_generate_final_answer(self, query_need_to_answer: str, table_formatted: str, terms_explanation: str, table_summary: str, table_context: str) -> str:
-        """
-        Generate the final answer for the TabFact dataset based on a query and table content.
-        """
-        print("\nCalling OpenAI API for generating the final answer!!!\n")
+        print("\nCalling OpenAI API for generating the final answer !!!\n")
 
+        # Check if terms explanation, table summary, or table context are empty, and use a placeholder if they are
         if not terms_explanation.strip():
             terms_explanation = "[No terms explanation provided]"
 
@@ -256,9 +256,75 @@ class LLM_Generator:
 
         prompt = f"""
         Example: You will be given a statement, a table summary, the full table content, terms explanations, and possibly additional context.
+        The table content may be provided in string format, Markdown format, or HTML format.
         Your task is to determine whether the statement is true or false based on the table, provided information, and any additional context.
         Return 1 if the statement is true, and 0 if it is false or if you cannot determine the answer based on the provided information.
         Provide only the number '1' or '0' as the answer without any additional text.
+
+        User 1:
+        Statement: "The scheduled date for the farm with 17 turbines is 2012."
+        Table Context: [No additional context provided]
+        Table Summary: "This table is used to answer the query: the scheduled date for the farm with 17 turbines is 2012. The Garracummer wind farm, which has 17 turbines, is indeed scheduled for 2012 as indicated in the table. Wind power is a significant energy source in Ireland, contributing to a high percentage of the country's electricity needs, with the Republic of Ireland boasting a total installed capacity of 4,309 MW as of 2021."
+        table_formatted:
+        <table border="1" class="dataframe">
+        <thead>
+            <tr style="text-align: right;">
+            <th></th>
+            <th>wind farm</th>
+            <th>scheduled</th>
+            <th>capacity (mw)</th>
+            <th>turbines</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+            <th>12</th>
+            <td>garracummer</td>
+            <td>2012</td>
+            <td>42.5</td>
+            <td>17</td>
+            </tr>
+        </tbody>
+        </table>
+        Terms Explanation:
+        {{
+            "scheduled": "The planned date for the wind farm to be operational.",
+            "turbines": "The number of wind turbines in the wind farm."
+        }}
+
+        User 2:
+        1
+
+        User 1:
+        Statement: "The most recent locomotive to be manufactured was made more than 10 years after the first was manufactured."
+        Table Context: "This context may provide additional details about the locomotives or their manufacturing process."
+        Table Summary: "This table is used to answer the query: the most recent locomotive to be manufacture was made more than 10 years after the first was manufactured. The first locomotives listed in the table were manufactured between 1889 and 1907, while the most recent locomotive was manufactured in 1923. This indicates that the most recent locomotive was made 16 years after the first ones, thus supporting the truth of the statement. The list provides an overview of locomotives from the Palatinate Railway, highlighting the historical context of railway development in the region."
+        Table_fomatted:
+        <table border="1" class="dataframe">
+        <thead>
+            <tr style="text-align: right;">
+            <th></th>
+            <th>class</th>
+            <th>year (s) of manufacture</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+            <th>1</th>
+            <td>l 2</td>
+            <td>1903 - 1905</td>
+            </tr>
+            <!-- more rows -->
+        </tbody>
+        </table>
+        Terms Explanation:
+        {{
+            "year (s) of manufacture": "The years when the locomotives or railbuses were built.",
+            "axle arrangement ( uic ) bauart": "The configuration of the wheels on the locomotive or railbus, as defined by the UIC (International Union of Railways) classification system."
+        }}
+
+        User 2:
+        0
 
         Now, verify the following statement and return only '1' or '0' as the result.
 
@@ -273,28 +339,25 @@ class LLM_Generator:
         """
 
         if self.USE_SELF_CONSISTENCY:
-            generated_answers = [self.generate_text(prompt).strip() for _ in range(5)]
-            print("Generated answers:", generated_answers)
+            generated_texts = [self.generate_text(prompt) for _ in range(5)]
+            print("Generated texts:", generated_texts)
             
-            # Find the most common answer
-            answer_counter = Counter(generated_answers)
-            most_common_answer, count = answer_counter.most_common(1)[0]
+            # Find the most common generated text
+            text_counter = Counter(generated_texts)
+            most_common_text, count = text_counter.most_common(1)[0]
             
             if count > 1:
-                return most_common_answer
+                return most_common_text
             else:
-                return generated_answers[0]
+                return generated_texts[0]
         else:
-            return self.generate_text(prompt).strip()
-
+            return self.generate_text(prompt).strip()  # Ensure any whitespace is removed, returning only the digit
 
     @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
     def feverous_generate_final_answer(self, query_need_to_answer: str, table_formatted: str, terms_explanation: str, table_summary: str, table_context: str) -> str:
-        """
-        Generate the final answer for the FEVEROUS dataset based on a query and table content.
-        """
         print("\nCalling OpenAI API for generating the final answer for FEVEROUS dataset!!!\n")
 
+        # Check if terms explanation, table summary, or table context are empty, and use a placeholder if they are
         if not terms_explanation.strip():
             terms_explanation = "[No terms explanation provided]"
 
@@ -306,9 +369,62 @@ class LLM_Generator:
 
         prompt = f"""
         Example: You will be given a statement, a table summary, the full table content, terms explanations, and possibly additional context.
+        The table content may be provided in string format, Markdown format, or HTML format.
         Your task is to determine whether the statement is true, false, or if the evidence provided is insufficient.
         Return 1 if the statement is true, 0 if it is false, and 2 if you cannot determine the answer based on the provided information.
         Provide only the number '1', '0', or '2' as the answer without any additional text.
+
+        User 1:
+        Statement: "All the ethnic groups in the Urmiri Municipality have the same population."
+        Table Context: [No additional context provided]
+        Table Summary: "This table is used to answer the query: All the ethnic groups in the Urmiri Municipality have the same population. The table presents the population percentages of various ethnic groups in the Urmiri Municipality, indicating that the Quechua and Aymara groups have significant representations at 49.3% and 46.6%, respectively, while other groups have negligible populations. This disparity suggests that not all ethnic groups in the municipality share the same population size. Understanding ethnic composition is important as it reflects cultural diversity and social dynamics within the community."
+        Table_formatted:
+        |    | Ethnic group              |    % |
+        |---:|:--------------------------|-----:|
+        |  0 | Quechua                   | 49.3 |
+        |  1 | Aymara                    | 46.6 |
+        |  2 | Guarani, Chiquitos, Moxos |  0   |
+        |  3 | Not indigenous            |  4.1 |
+        |  4 | Other indigenous groups   |  0.1 |
+        Terms Explanation:
+        {{
+            "%": "The percentage representation of each ethnic group's population compared to the total population of the Urmiri Municipality."
+        }}
+
+        User 2:
+        0
+
+        User 1:
+        Statement: "Grammy Award for Best Immersive Audio Album (open to both classical and non-classical recordings) happened almost every year between 2005 and 2021, one of which was for the title Genius Loves Company."
+        Table Context: "It is one of a few categories which are open to both classical and non-classical recordings, new or re-issued. The Grammy Award for Best Immersive Audio Album (until 2018: Best Surround Sound Album) was first awarded in 2005, as the first category in a new 'Surround Sound' field. On 24 November 2020 during the announcement of the nominations for the 63rd Grammy Awards, to be presented on 31 January 2021, the Recording Academy said there will be no winner or nominees in this category."
+        Table Summary: "This table is used to answer the query: Grammy Award for Best Immersive Audio Album (open to both classical and non-classical recordings) happened almost every year between 2005 and 2021, one of which was for the title Genius Loves Company. The Grammy Award for Best Immersive Audio Album, established in 2005, recognizes excellence in both classical and non-classical recordings. The table lists winners from 2005 to 2021, confirming that 'Genius Loves Company' by Ray Charles & Various Artists won the award in 2005. This category has been significant in the evolution of audio recording standards, reflecting the growing importance of immersive sound in the music industry."
+        Table_formatted:
+        <table border="1" class="dataframe">
+        <thead>
+            <tr style="text-align: right;">
+            <th></th>
+            <th>Year</th>
+            <th>Winner(s)</th>
+            <th>Title</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+            <th>0</th>
+            <td>2005</td>
+            <td>Al Schmitt*, Robert Hadley & Doug Sax**, John Burk, Phil Ramone & Herbert Walf***</td>
+            <td>Genius Loves Company</td>
+            </tr>
+        </tbody>
+        </table>
+        Terms Explanation:
+        {{
+            "Winner(s)": "The individuals or groups who won the Grammy Award for that year.",
+            "Title": "The name of the album or recording that won the award."
+        }}
+
+        User 2:
+        1
 
         Now, verify the following statement and return only '1', '0', or '2' as the result.
 
@@ -323,28 +439,25 @@ class LLM_Generator:
         """
 
         if self.USE_SELF_CONSISTENCY:
-            generated_answers = [self.generate_text(prompt).strip() for _ in range(5)]
-            print("Generated answers:", generated_answers)
+            generated_texts = [self.generate_text(prompt) for _ in range(5)]
+            print("Generated texts:", generated_texts)
             
-            # Find the most common answer
-            answer_counter = Counter(generated_answers)
-            most_common_answer, count = answer_counter.most_common(1)[0]
+            # Find the most common generated text
+            text_counter = Counter(generated_texts)
+            most_common_text, count = text_counter.most_common(1)[0]
             
             if count > 1:
-                return most_common_answer
+                return most_common_text
             else:
-                return generated_answers[0]
+                return generated_texts[0]
         else:
-            return self.generate_text(prompt).strip()
-
+            return self.generate_text(prompt).strip()  # Ensure any whitespace is removed, returning only the digit
 
     @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
     def hybridqa_generate_final_answer(self, query_need_to_answer: str, table_formatted: str, terms_explanation: str, table_summary: str, table_context: str) -> str:
-        """
-        Generate the final answer for the HybridQA dataset based on a query and table content.
-        """
         print("\nCalling OpenAI API for generating the final answer for HybridQA dataset!!!\n")
 
+        # Check if terms explanation, table summary, or table context are empty, and use a placeholder if they are
         if not terms_explanation.strip():
             terms_explanation = "[No terms explanation provided]"
 
@@ -356,10 +469,51 @@ class LLM_Generator:
 
         prompt = f"""
         Example: You will be given a query, a table summary, the full table content, terms explanations, and additional context.
+        The table content may be provided in string format, Markdown format, or HTML format.
         Your task is to determine the answer to the query based on the table, provided information, and any additional context.
         Pay close attention to the specific details and conditions mentioned in the query.
         Make sure to match all the given conditions in the query to ensure the answer is accurate.
         Return the answer as a single string without any additional text.
+
+        Example 1:
+        Query: "How many years did constructor AGS compete in Formula One?"
+        Table Context: "1991 Portuguese Grand Prix | Classification -- Pre-Qualifying |  | The 1991 Portuguese Grand Prix was a Formula One motor race held at the Autódromo do Estoril on 22 September 1991. It was the thirteenth race of the 1991 FIA Formula One World Championship."
+        Table Summary: "This table is used to answer the query: How many years did constructor AGS compete in Formula One? The table provides results from a specific Formula One event, showcasing drivers and their constructors, including AGS - Ford. While the table does not directly state the duration of AGS's participation in Formula One, it highlights their presence in the competitive landscape of the sport. For further context, AGS was one of several constructors that participated in Formula One during the late 1980s and early 1990s, contributing to the diversity of teams in the championship."
+        Table_formatted:
+        |    |   Pos | Driver            | Constructor   |
+        |---:|------:|:------------------|:--------------|
+        |  2 |     3 | Gabriele Tarquini | AGS - Ford    |
+        |  4 |     5 | Fabrizio Barbazza | AGS - Ford    |
+        Terms Explanation:
+        {{
+            "Constructor": "The team that builds and enters the car in Formula One races.",
+            "Time": "The time taken by the driver to complete the race or qualifying session.",
+            "Gap": "The time difference between the driver and the driver ahead of them in the race or qualifying session."
+        }}
+
+        User 2:
+        5 years
+
+        Example 2:
+        Query: "What year did the team with 4,499 officially registered fan clubs lose 2-0 to lose out on the title?"
+        Table Context: "DFL-Supercup | Performances -- Performance by team |  | The DFL-Supercup or German Super Cup is a one-off football match in Germany that features the winners of the Bundesliga championship and the DFB-Pokal."
+        Table Summary: "This table is used to answer the query: What year did the team with 4,499 officially registered fan clubs lose 2-0 to lose out on the title? The table provides details about various football teams, their titles won, and years they lost in competitions. While it does not specify a team with 4,499 fan clubs, it indicates that Bayern Munich and Borussia Dortmund have been prominent teams in the DFL-Supercup, with Bayern Munich losing in specific years. The context surrounding the DFL-Supercup highlights the competitive nature of these matches, which feature top teams in German football, thus providing a backdrop for understanding the significance of the losses mentioned in the query."
+        Table_formatted:
+        |    | Team                     | Winners   | Runners-up   | Years won                                      | Years lost                              |
+        |---:|:-------------------------|:----------|:-------------|:-----------------------------------------------|:----------------------------------------|
+        |  0 | Bayern Munich            | 7         | 6            | 1987 , 1990 , 2010 , 2012 , 2016 , 2017 , 2018 | 1989 , 1994 , 2013 , 2014 , 2015 , 2019 |
+        |  1 | Borussia Dortmund        | 6         | 4            | 1989 , 1995 , 1996 , 2013 , 2014 , 2019        | 2011 , 2012 , 2016 , 2017               |
+        |  2 | Werder Bremen            | 3         | 1            | 1988 , 1993 , 1994                             | 1991                                    |
+        Terms Explanation:
+        {{
+            "Winners": "The number of times the team has won the title.",
+            "Runners-up": "The number of times the team has finished in second place.",
+            "Years won": "The specific years in which the team won the title.",
+            "Years lost": "The specific years in which the team lost the title."
+        }}
+
+        User 2:
+        2014
 
         Now, answer the following query based on the provided information.
 
@@ -374,28 +528,26 @@ class LLM_Generator:
         """
 
         if self.USE_SELF_CONSISTENCY:
-            generated_answers = [self.generate_text(prompt).strip() for _ in range(5)]
-            print("Generated answers:", generated_answers)
+            generated_texts = [self.generate_text(prompt) for _ in range(5)]
+            print("Generated texts:", generated_texts)
             
-            # Find the most common answer
-            answer_counter = Counter(generated_answers)
-            most_common_answer, count = answer_counter.most_common(1)[0]
+            # Find the most common generated text
+            text_counter = Counter(generated_texts)
+            most_common_text, count = text_counter.most_common(1)[0]
             
             if count > 1:
-                return most_common_answer
+                return most_common_text
             else:
-                return generated_answers[0]
+                return generated_texts[0]
         else:
-            return self.generate_text(prompt).strip()
+            return self.generate_text(prompt).strip()  # Ensure any whitespace is removed, returning only the answer
 
 
     @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
     def sqa_generate_final_answer(self, query_need_to_answer: str, table_formatted: str, terms_explanation: str, table_summary: str, table_context: str) -> str:
-        """
-        Generate the final answer for the SQA dataset based on a query and table content.
-        """
         print("\nCalling OpenAI API for generating the final answer for SQA dataset!!!\n")
 
+        # Check if terms explanation, table summary, or table context are empty, and use a placeholder if they are
         if not terms_explanation.strip():
             terms_explanation = "[No terms explanation provided]"
 
@@ -407,10 +559,52 @@ class LLM_Generator:
 
         prompt = f"""
         You will be given a query, a table summary, the full table content, terms explanations, and possibly additional context.
+        The table content may be provided in string format, Markdown format, or HTML format.
         Your task is to determine the answer to the query based on the table, provided information, and any additional context.
         Pay close attention to the specific details and conditions mentioned in the query.
         Make sure to match all the given conditions in the query to ensure the answer is accurate.
         Return the answer as a single string without any additional text.
+
+        Example 1:
+        Query: "who published this game in 2011"
+        Table Context: "[No additional context provided]"
+        Table Summary: "This table is used to answer the query: who published this game in 2011. The game released in 2011 titled 'Alice: Madness Returns' was published by Electronic Arts. The table provides details on various games, their release years, developers, and publishers, highlighting the contributions of Spicy Horse, the developer known for its notable title, Alice: Madness Returns. For more insights into Spicy Horse, which was founded by American McGee, you can refer to the provided Wikipedia link."
+        Table_formatted:
+        |    | Title                  |   Year | Publisher       |
+        |---:|:-----------------------|-------:|:----------------|
+        |  4 | Alice: Madness Returns |   2011 | Electronic Arts |
+        Terms Explanation:
+        {{
+            "Publisher": "The company or organization that publishes the game, making it available for sale or distribution."
+        }}
+
+        User 2:
+        Electronic Arts
+
+        Example 2:
+        Query: "and which model costs the most?"
+        Table Context: ""
+        Table Summary: "This table is used to answer the query: and which model costs the most? The table lists various models of vehicles along with their specifications and starting prices. By comparing the starting prices, one can determine which model is the most expensive. The context of the table indicates that it provides a detailed overview of different vehicle models, which helps in evaluating their cost and features."
+        Table_formatted:
+        |    | Model      | Class   | Length   | Fuel   | Starting Price   |
+        |---:|:-----------|:--------|:---------|:-------|:-----------------|
+        |  0 | Tour       | Class A | 42'      | Diesel | $362,285         |
+        |  1 | Journey    | Class A | 35'-43'  | Diesel | $246,736         |
+        |  2 | Adventurer | Class A | 32'-37'  | Gas    | $150,711         |
+        |  3 | Via        | Class A | 25'      | Diesel | $126,476         |
+        |  4 | Sightseer  | Class A | 31'-37'  | Gas    | $126,162         |
+        |  5 | Vista      | Class A | 26'-35'  | Gas    | $107,717         |
+        |  6 | View       | Class C | 24'-25'  | Diesel | $100,955         |
+        |  7 | Aspect     | Class C | 29'-31'  | Gas    | $95,948          |
+        |  8 | Access     | Class C | 25'-31'  | Gas    | $74,704          |
+        Terms Explanation:
+        {{
+            "Model": "The name of the vehicle model.",
+            "Starting Price": "The initial cost of the vehicle model, before any additional options or fees."
+        }}
+
+        User 2:
+        Tour
 
         Now, answer the following query based on the provided information.
 
@@ -425,21 +619,19 @@ class LLM_Generator:
         """
 
         if self.USE_SELF_CONSISTENCY:
-            generated_answers = [self.generate_text(prompt).strip() for _ in range(5)]
-            print("Generated answers:", generated_answers)
+            generated_texts = [self.generate_text(prompt) for _ in range(5)]
+            print("Generated texts:", generated_texts)
             
-            # Find the most common answer
-            answer_counter = Counter(generated_answers)
-            most_common_answer, count = answer_counter.most_common(1)[0]
+            # Find the most common generated text
+            text_counter = Counter(generated_texts)
+            most_common_text, count = text_counter.most_common(1)[0]
             
             if count > 1:
-                return most_common_answer
+                return most_common_text
             else:
-                return generated_answers[0]
+                return generated_texts[0]
         else:
-            return self.generate_text(prompt).strip()
-
-
+            return self.generate_text(prompt).strip()  # Ensure any whitespace is removed, returning only the answer
 
 
 

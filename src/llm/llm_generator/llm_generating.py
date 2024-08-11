@@ -242,17 +242,9 @@ class LLM_Generator:
     def tabfact_generate_final_answer(self, query_need_to_answer: str, table_formatted: str, terms_explanation: str, table_summary: str, table_context: str) -> str:
         """
         Generate the final answer for the TabFact dataset based on a query and table content.
-
-        :param query_need_to_answer: The query that needs to be answered.
-        :param table_formatted: The formatted table content.
-        :param terms_explanation: Explanation of terms in the table.
-        :param table_summary: Summary of the table.
-        :param table_context: Additional context for the table.
-        :return: The generated final answer as '1' for true, '0' for false.
         """
-        print("\nCalling OpenAI API for generating the final answer !!!\n")
+        print("\nCalling OpenAI API for generating the final answer!!!\n")
 
-        # Use placeholders if terms explanation, table summary, or table context are empty
         if not terms_explanation.strip():
             terms_explanation = "[No terms explanation provided]"
 
@@ -280,24 +272,29 @@ class LLM_Generator:
         Return only '1' or '0'.
         """
 
-        generated_text = self.generate_text(prompt)
-        return generated_text.strip()
+        if self.USE_SELF_CONSISTENCY:
+            generated_answers = [self.generate_text(prompt).strip() for _ in range(5)]
+            print("Generated answers:", generated_answers)
+            
+            # Find the most common answer
+            answer_counter = Counter(generated_answers)
+            most_common_answer, count = answer_counter.most_common(1)[0]
+            
+            if count > 1:
+                return most_common_answer
+            else:
+                return generated_answers[0]
+        else:
+            return self.generate_text(prompt).strip()
+
 
     @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
     def feverous_generate_final_answer(self, query_need_to_answer: str, table_formatted: str, terms_explanation: str, table_summary: str, table_context: str) -> str:
         """
         Generate the final answer for the FEVEROUS dataset based on a query and table content.
-
-        :param query_need_to_answer: The query that needs to be answered.
-        :param table_formatted: The formatted table content.
-        :param terms_explanation: Explanation of terms in the table.
-        :param table_summary: Summary of the table.
-        :param table_context: Additional context for the table.
-        :return: The generated final answer as '1' for true, '0' for false, or '2' for insufficient information.
         """
         print("\nCalling OpenAI API for generating the final answer for FEVEROUS dataset!!!\n")
 
-        # Use placeholders if terms explanation, table summary, or table context are empty
         if not terms_explanation.strip():
             terms_explanation = "[No terms explanation provided]"
 
@@ -325,24 +322,29 @@ class LLM_Generator:
         Return only '1', '0', or '2'.
         """
 
-        generated_text = self.generate_text(prompt)
-        return generated_text.strip()
+        if self.USE_SELF_CONSISTENCY:
+            generated_answers = [self.generate_text(prompt).strip() for _ in range(5)]
+            print("Generated answers:", generated_answers)
+            
+            # Find the most common answer
+            answer_counter = Counter(generated_answers)
+            most_common_answer, count = answer_counter.most_common(1)[0]
+            
+            if count > 1:
+                return most_common_answer
+            else:
+                return generated_answers[0]
+        else:
+            return self.generate_text(prompt).strip()
+
 
     @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
     def hybridqa_generate_final_answer(self, query_need_to_answer: str, table_formatted: str, terms_explanation: str, table_summary: str, table_context: str) -> str:
         """
         Generate the final answer for the HybridQA dataset based on a query and table content.
-
-        :param query_need_to_answer: The query that needs to be answered.
-        :param table_formatted: The formatted table content.
-        :param terms_explanation: Explanation of terms in the table.
-        :param table_summary: Summary of the table.
-        :param table_context: Additional context for the table.
-        :return: The generated final answer as a single string.
         """
         print("\nCalling OpenAI API for generating the final answer for HybridQA dataset!!!\n")
 
-        # Use placeholders if terms explanation, table summary, or table context are empty
         if not terms_explanation.strip():
             terms_explanation = "[No terms explanation provided]"
 
@@ -371,24 +373,29 @@ class LLM_Generator:
         Provide only the answer as a single string without any additional text.
         """
 
-        generated_text = self.generate_text(prompt)
-        return generated_text.strip()
+        if self.USE_SELF_CONSISTENCY:
+            generated_answers = [self.generate_text(prompt).strip() for _ in range(5)]
+            print("Generated answers:", generated_answers)
+            
+            # Find the most common answer
+            answer_counter = Counter(generated_answers)
+            most_common_answer, count = answer_counter.most_common(1)[0]
+            
+            if count > 1:
+                return most_common_answer
+            else:
+                return generated_answers[0]
+        else:
+            return self.generate_text(prompt).strip()
+
 
     @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
     def sqa_generate_final_answer(self, query_need_to_answer: str, table_formatted: str, terms_explanation: str, table_summary: str, table_context: str) -> str:
         """
         Generate the final answer for the SQA dataset based on a query and table content.
-
-        :param query_need_to_answer: The query that needs to be answered.
-        :param table_formatted: The formatted table content.
-        :param terms_explanation: Explanation of terms in the table.
-        :param table_summary: Summary of the table.
-        :param table_context: Additional context for the table.
-        :return: The generated final answer as a single string.
         """
         print("\nCalling OpenAI API for generating the final answer for SQA dataset!!!\n")
 
-        # Use placeholders if terms explanation, table summary, or table context are empty
         if not terms_explanation.strip():
             terms_explanation = "[No terms explanation provided]"
 
@@ -417,8 +424,24 @@ class LLM_Generator:
         Provide only the answer as a single string without any additional text.
         """
 
-        generated_text = self.generate_text(prompt)
-        return generated_text.strip()
+        if self.USE_SELF_CONSISTENCY:
+            generated_answers = [self.generate_text(prompt).strip() for _ in range(5)]
+            print("Generated answers:", generated_answers)
+            
+            # Find the most common answer
+            answer_counter = Counter(generated_answers)
+            most_common_answer, count = answer_counter.most_common(1)[0]
+            
+            if count > 1:
+                return most_common_answer
+            else:
+                return generated_answers[0]
+        else:
+            return self.generate_text(prompt).strip()
+
+
+
+
 
     @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
     def generate_text(self, prompt: str) -> str:

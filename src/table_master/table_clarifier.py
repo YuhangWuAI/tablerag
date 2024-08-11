@@ -155,7 +155,7 @@ class TableClarification:
             print(f"An unexpected error occurred: {e}")
             return {"table_summary": "An unexpected error occurred"}
 
-    def terms_explanation_and_summary(self, parsed_example: dict) -> dict:
+    def term_explanations_and_table_summary(self, parsed_example: dict) -> dict:
         """
         Generate both term explanations and table summary.
 
@@ -175,7 +175,7 @@ class TableClarification:
         :return: A dictionary mapping TableClarificationType values to methods.
         """
         return {
-            TableClarificationType.external_retrieved_knowledge_info_term_explanations.value: self.get_term_explanations,
-            TableClarificationType.external_retrieved_knowledge_info_docs_references.value: self.table_summary,
-            TableClarificationType.terms_explanation_and_summary.value: self.terms_explanation_and_summary,
+            TableClarificationType.term_explanations.value: self.get_term_explanations,
+            TableClarificationType.table_summary.value: self.table_summary,
+            TableClarificationType.term_explanations_and_table_summary.value: self.term_explanations_and_table_summary,
         }

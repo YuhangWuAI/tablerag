@@ -25,7 +25,7 @@ def table_processing_pipeline(
     task_name: str = "tabfact",
     split: str = "validation",
     table_filter_name: str = "default",
-    table_clarifier_name: str = "terms_explanation_and_summary",
+    table_clarifier_name: str = "term_explanations_and_table_summary",
     embedding_type: str = "text-embedding-3-large",
     top_k: int = 5,
     save_jsonl: bool = True,
@@ -43,7 +43,7 @@ def table_processing_pipeline(
     :param task_name: The name of the task to be processed (e.g., "sqa").
     :param split: The dataset split to be used (e.g., "validation").
     :param table_filter_name: The name of the table filtering method (e.g., "default").
-    :param table_clarifier_name: The name of the table clarification method (e.g., "terms_explanation_and_summary").
+    :param table_clarifier_name: The name of the table clarification method (e.g., "term_explanations_and_table_summary").
     :param embedding_type: The type of embedding used in processing (e.g., "text-embedding-3-large").
     :param top_k: The number of top rows or columns to select based on relevance.
     :param save_jsonl: Whether to save the output in JSONL format (default is True).
@@ -179,6 +179,7 @@ def table_processing_pipeline(
                         print("Bypassing table sampling and using the original table as string\n")
                         filter_table = parsed_sample["table"]
                         
+                        # if not use filter, transfer table to df type for using markdown or html
                         if isinstance(filter_table, dict) and "header" in filter_table and "rows" in filter_table:
                             try:
                                 df = pd.DataFrame(data=filter_table["rows"], columns=filter_table["header"])
@@ -371,8 +372,8 @@ def main():
     table_processing_pipeline(
         task_name="tabfact",
         split="validation",
-        table_filter_name="default",
-        table_clarifier_name="None",
+        table_filter_name="llm_based_filter", # llm_based_filter
+        table_clarifier_name="term_explanations_and_table_summary", # None, term_explanations_and_table_summary
         embedding_type="text-embedding-3-large",
         top_k=5,
         save_jsonl=True,
@@ -382,7 +383,7 @@ def main():
         sample_size=1000,
         overwrite_existing=False,
         table_format="html",
-        use_table_filter=False
+        use_table_filter=True
     )
 
 if __name__ == "__main__":

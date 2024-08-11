@@ -72,12 +72,12 @@ class TableClarificationType(Enum):
     Enum representing different types of clarifications that can be applied to tables.
 
     Attributes:
-        external_retrieved_knowledge_info_term_explanations (str): Clarifications based on external knowledge, focusing on term explanations.
-        external_retrieved_knowledge_info_docs_references (str): Clarifications based on external knowledge, referencing documents.
-        terms_explanation_and_summary (str): Clarifications that include both term explanations and a summary.
+        term_explanations (str): Clarifications based on external knowledge, focusing on term explanations.
+        table_summary (str): Clarifications based on external knowledge, referencing documents.
+        term_explanations_and_table_summary (str): Clarifications that include both term explanations and a summary.
         invalid (str): Represents an invalid or undefined clarification type.
     """
-    external_retrieved_knowledge_info_term_explanations = "term_explanations"
-    external_retrieved_knowledge_info_docs_references = "docs_references"
-    terms_explanation_and_summary = "terms_explanation_and_summary"
+    term_explanations = "term_explanations"
+    table_summary = "docs_references"
+    term_explanations_and_table_summary = "term_explanations_and_table_summary"
     invalid = "None"

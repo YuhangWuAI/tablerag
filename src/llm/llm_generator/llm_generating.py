@@ -208,14 +208,17 @@ class LLM_Generator:
         :return: JSON string containing the generated summary.
         """
         prompt = f"""
-        Example: You will be given a table, a query, the table's caption, metadata from related Wikipedia documents, and the context of the table. Your task is to generate a concise summary for the table that directly addresses the query, using the Wikipedia metadata and the context to enhance understanding. Ensure the summary starts with the phrase 'This table is used to answer the query: [query]' and includes only content related to the query. Do not directly reveal the answer, but guide the reader to make an informed decision based on the provided information.
+        Example: You will be given a table, a query, the table's caption, metadata from related Wikipedia documents, and the context of the table. 
+        Your task is to generate a concise summary for the table that directly addresses the query, using the Wikipedia metadata and the context to enhance understanding. 
+        Ensure the summary begins by rephrasing or summarizing the query in a way that naturally introduces the purpose of the table. 
+        Do not directly reveal the answer, but guide the reader to make an informed decision based on the provided information.
 
-        Now, generate a summary for the given table, addressing the query and using the Wikipedia metadata and the context provided for enhanced understanding. Ensure the summary starts with the phrase 'This table is used to answer the query: [query]' and includes only content related to the query. Please avoid directly revealing the answer.
+        Now, generate a summary for the given table, addressing the query and using the Wikipedia metadata and the context provided for enhanced understanding. 
+        Ensure the summary starts by rephrasing or summarizing the query to introduce the table's purpose and includes only content related to the query. 
+        Please avoid directly revealing the answer.
 
         Query:
         {query}
-
-        This table is used to answer the query: {query}
 
         Table caption:
         {caption}
@@ -231,8 +234,9 @@ class LLM_Generator:
 
         Please return the result in the following format:
         {{
-            "summary": "The summary that includes the query, context from the caption, and relevant Wikipedia information."
+            "summary": "The summary that rephrases the query, includes context from the caption, and incorporates relevant Wikipedia information."
         }}
+
         """
 
         generated_text = self.generate_text(prompt)

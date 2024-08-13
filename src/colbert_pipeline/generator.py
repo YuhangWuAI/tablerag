@@ -126,7 +126,7 @@ def generate_and_evaluate(
         return numbers
 
 if __name__ == "__main__":
-    retrieval_results_save_path = "/home/yuhangwu/Desktop/Projects/TableProcess/data/processed/retrieval_results/feverous_llm_based_filter_None_html_retrieval_results.jsonl"
+    retrieval_results_save_path = "/home/yuhangwu/Desktop/Projects/TableProcess/data/processed/retrieval_results/feverous_llm_based_filter_term_explanations_and_table_summary_html_retrieval_results.jsonl"
     dataset_name = "feverous"
     
     # Call the function with specific parameters

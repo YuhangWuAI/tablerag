@@ -115,6 +115,63 @@ To further enhance the robustness and reliability of the generated outputs, we i
 - **Multiple Code Generations**: For each filtering and clarifying task, the system generates multiple code snippets or outputs.
 - **Majority Voting**: The most frequently generated output is selected as the final result. This approach helps mitigate errors and inconsistencies that might arise from a single model run.
 
+
+## **Installation**
+
+To install and set up the TableRAG system, follow these steps:
+
+### **1. Set Up a Virtual Environment**
+
+You can set up a virtual environment using either `conda` (Anaconda) or `venv` (Python's built-in tool).
+
+#### **Using Conda (Recommended):**
+
+1. **Create a Conda Environment**:
+   ```bash
+   conda create -n tablerag python=3.10.14
+   conda activate tablerag
+   ```
+
+2. **Install Dependencies from `environment.yml`**:
+   ```bash
+   conda env update --file environment.yml
+   ```
+
+#### **Using venv**:
+
+1. **Create a Virtual Environment**:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+2. **Install Dependencies from `requirements.txt`**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+### **2. Clone the Repository**
+
+```bash
+git clone https://github.com/yourusername/TableRAG.git
+cd TableRAG
+```
+
+### **3. Set Up Environment Variables**
+
+Configure any necessary API keys and environment variables as required. This may include API keys for OpenAI, if you are using their models for filtering or generation tasks.
+
+### **4. Version Information**
+
+Ensure that your environment meets the following version requirements:
+
+- **Python**: 3.10.14
+- **LangChain**: 0.1.0
+- **OpenAI**: 1.14.0
+- **PyTorch**: 2.3.1 (with CUDA 12.1 support, if using GPU acceleration)
+- **CUDA**: 12.1 (if applicable)
+
+
 ## **Installation**
 
 To install and set up the TableRAG system:
@@ -238,4 +295,6 @@ We conducted control experiments to evaluate the impact of each enhancement modu
 ### **Ablation Experiments**
 
 Ablation experiments were performed to assess the contribution of each module by selectively removing them from the system and observing the impact on performance.
-
+# Acknowledgments
+I would like to express my sincere gratitude to the authors of the paper “Tap4llm: Table provider on sampling, augmenting, and packing semi-structured data for large language model reasoning” for providing valuable insights that influenced some of the ideas presented in this article. 
+Additionally, I would like to thank PeiMa from the University of Leeds for her significant contributions to this project. Her expertise and support were instrumental in shaping the outcome of this work.

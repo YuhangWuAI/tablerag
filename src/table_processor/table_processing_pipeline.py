@@ -22,7 +22,7 @@ from src.table_master.table_main import TableClarifier
 warnings.filterwarnings("ignore")
 
 def table_processing_pipeline(
-    task_name: str = "tabfact",
+    task_name: str = "sqa",
     split: str = "validation",
     table_filter_name: str = "default",
     table_clarifier_name: str = "term_explanations_and_table_summary",
@@ -370,10 +370,10 @@ def main():
     Main function to start the table processing pipeline with predefined parameters.
     """
     table_processing_pipeline(
-        task_name="feverous",
+        task_name="sqa",
         split="validation",
         table_filter_name="llm_based_filter", # llm_based_filter
-        table_clarifier_name="term_explanations_and_table_summary", # None, term_explanations_and_table_summary
+        table_clarifier_name="None", # None, term_explanations_and_table_summary
         embedding_type="text-embedding-3-large",
         top_k=5,
         save_jsonl=True,
@@ -382,8 +382,8 @@ def main():
         use_sampled_table_for_augmentation=False,
         sample_size=1000,
         overwrite_existing=False,
-        table_format="html",
-        use_table_filter=True
+        table_format="string",
+        use_table_filter=False
     )
 
 if __name__ == "__main__":

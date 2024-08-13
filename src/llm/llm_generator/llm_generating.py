@@ -652,7 +652,7 @@ class LLM_Generator:
             response = self.client.chat.completions.create(
                 model=self.GPT_MODEL,
                 messages=[{"role": "user", "content": prompt}],
-                temperature=0.5,
+                temperature=0.8,
                 max_tokens=500,
                 top_p=1.0,
                 frequency_penalty=0.0,

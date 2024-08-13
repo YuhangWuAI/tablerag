@@ -21,8 +21,6 @@ from langchain_community.document_loaders import TextLoader
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import (
-    SpacyEmbeddings,
-    GPT4AllEmbeddings,
     HuggingFaceEmbeddings,
     SentenceTransformerEmbeddings,
 )

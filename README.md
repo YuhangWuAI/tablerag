@@ -1,3 +1,6 @@
+Here's the revised README file with the corrected version information and the updated acknowledgments section:
+
+---
 
 # **TableRAG**
 
@@ -104,7 +107,13 @@ To further enhance the robustness and reliability of the generated outputs, we i
 
 To install and set up the TableRAG system, follow these steps:
 
-### **1. Set Up a Virtual Environment**
+### **1. Clone the Repository**
+
+```bash
+git clone https://github.com/yourusername/TableRAG.git
+cd TableRAG
+```
+### **2. Set Up a Virtual Environment**
 
 You can set up a virtual environment using either `conda` (Anaconda) or `venv` (Python's built-in tool).
 
@@ -138,13 +147,6 @@ You can set up a virtual environment using either `conda` (Anaconda) or `venv` (
        pip install -r requirements.txt
        ```
 
-### **2. Clone the Repository**
-
-```bash
-git clone https://github.com/yourusername/TableRAG.git
-cd TableRAG
-```
-
 ### **3. Set Up Environment Variables**
 
 Configure any necessary API keys and environment variables as required. This may include API keys for OpenAI, if you are using their models for filtering or generation tasks.
@@ -177,13 +179,14 @@ After setting up the environment, create a `config.json` file in the root direct
 
 Ensure that your environment meets the following version requirements:
 
-- **
-
-Python**: 3.8 or later
-- **PyTorch**: 1.7 or later
+- **Python**: 3.10.14
+- **PyTorch**: 2.3.1
 - **Transformers**: 4.5.1 or later
 - **FAISS**: 1.7.0 or later
 - **ColBERT**: 0.3.0 or later
+- **LangChain**: 0.1.0
+- **OpenAI**: 1.14.0
+- **CUDA**: 12.1
 
 ## **Dataflow Diagram**
 ![Data Flow Diagram](./images/dataflow.png)  <!-- Data Flow Diagram -->
@@ -193,7 +196,9 @@ Python**: 3.8 or later
 
 ## **Usage**
 
-Once the system is installed, you can run the pipelines to process tables, retrieve relevant data, and generate answers to queries.
+Once the system is
+
+ installed, you can run the pipelines to process tables, retrieve relevant data, and generate answers to queries.
 
 ## **Pipeline Execution**
 
@@ -225,8 +230,6 @@ python -m src.generator.generation \
   --config ./config/generator.yaml
 ```
 
-
-
 ## **Evaluation Experiments**
 
 ### **Control Experiments**
@@ -253,5 +256,7 @@ python -m src.evaluation.evaluate \
 ## **Acknowledgments**
 
 I would like to express my sincere gratitude to the authors of the paper [“Tap4llm: Table provider on sampling, augmenting, and packing semi-structured data for large language model reasoning”](https://arxiv.org/abs/2312.09039) for providing valuable insights that influenced some of the ideas presented in this article. I have also borrowed some of the code from this paper for data loading and other tasks, as noted at the beginning of the relevant scripts.
+
+I would also like to thank the developers of [RAGatouille](https://github.com/AnswerDotAI/RAGatouille), as the ColBERT implementation used in this project was built upon their work.
 
 Additionally, I would like to thank PeiMa from the University of Leeds for her significant contributions to this project. Her expertise and support were instrumental in shaping the outcome of this work.

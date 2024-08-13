@@ -12,25 +12,11 @@ TableRAG is an advanced system designed for handling complex table-based questio
   - [RAG-based Multi-Table QA System](#rag-based-multi-table-qa-system)
   - [Enhancement Mechanisms](#enhancement-mechanisms)
 - [Datasets](#datasets)
-  - [TableFact](#tablefact)
-  - [FEVEROUS](#feverous)
-  - [SQA](#sqa)
-  - [HybridQA](#hybridqa)
 - [Implementation Details](#implementation-details)
-  - [Table Filtering](#table-filtering)
-  - [Table Clarifier](#table-clarifier)
-  - [Retrieval Process Enhancement](#retrieval-process-enhancement)
-  - [Input Format Optimization](#input-format-optimization)
-  - [Self-Consistency](#self-consistency)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Pipeline Execution](#pipeline-execution)
-  - [Table Processing Pipeline](#table-processing-pipeline)
-  - [Retrieval Pipeline](#retrieval-pipeline)
-  - [Generation and Evaluation](#generation-and-evaluation)
 - [Evaluation Experiments](#evaluation-experiments)
-  - [Control Experiments](#control-experiments)
-  - [Ablation Experiments](#ablation-experiments)
 - [Acknowledgments](#acknowledgments)
 
 ## **Background**
@@ -124,20 +110,7 @@ You can set up a virtual environment using either `conda` (Anaconda) or `venv` (
 
 #### **Linux and macOS:**
 
-1. **Using Conda (Recommended):**
-
-    1. **Create a Conda Environment**:
-       ```bash
-       conda create -n tablerag python=3.10.14
-       conda activate tablerag
-       ```
-
-    2. **Install Dependencies from `environment.yml`**:
-       ```bash
-       conda env update --file environment.yml
-       ```
-
-2. **Using venv**:
+1. **Using venv**:
 
     1. **Create a Virtual Environment**:
        ```bash
@@ -152,20 +125,7 @@ You can set up a virtual environment using either `conda` (Anaconda) or `venv` (
 
 #### **Windows:**
 
-1. **Using Conda (Recommended):**
-
-    1. **Create a Conda Environment**:
-       ```bash
-       conda create -n tablerag python=3.10.14
-       conda activate tablerag
-       ```
-
-    2. **Install Dependencies from `environment.yml`**:
-       ```bash
-       conda env update --file environment.yml
-       ```
-
-2. **Using venv**:
+1. **Using venv**:
 
     1. **Create a Virtual Environment**:
        ```bash
@@ -189,14 +149,47 @@ cd TableRAG
 
 Configure any necessary API keys and environment variables as required. This may include API keys for OpenAI, if you are using their models for filtering or generation tasks.
 
-### **4. Version Information**
+### **4. Create `config.json` in the Root Directory**
+
+After setting up the environment, create a `config.json` file in the root directory with the following structure:
+
+```json
+{
+    "model": {
+        "EMBEDDING_MODEL": "text-embedding-3-large",
+        "GPT_MODEL": "gpt-4o-mini"
+    },
+    "api_key": "your-api-key-here",
+    "api_base": "https://your-api-base-url-here",
+    "batch_size": 1,
+    "use_self_consistency": false
+}
+```
+
+- **EMBEDDING_MODEL**: The model name for embedding generation.
+- **GPT_MODEL**: The model name for GPT-based text generation.
+- **api_key**: Your API key for accessing the models.
+- **api_base**: The base URL for the API you are using.
+- **batch_size**: Number of queries or requests processed in a single batch.
+- **use_self_consistency**: Boolean flag to determine if the self-consistency mechanism should be used.
+
+### **5. Version Information**
 
 Ensure that your environment meets the following version requirements:
 
-- **Python**: 3.10.14
-- **LangChain**: 0.1
+- **
 
-.118
+Python**: 3.8 or later
+- **PyTorch**: 1.7 or later
+- **Transformers**: 4.5.1 or later
+- **FAISS**: 1.7.0 or later
+- **ColBERT**: 0.3.0 or later
+
+## **Dataflow Diagram**
+![Data Flow Diagram](./images/dataflow.png)  <!-- Data Flow Diagram -->
+
+## **Class Diagram**
+![Class Diagram](./images/class.png)  <!-- Class Diagram -->
 
 ## **Usage**
 
@@ -231,6 +224,8 @@ python -m src.generator.generation \
   --output_dir ./data/final_output \
   --config ./config/generator.yaml
 ```
+
+
 
 ## **Evaluation Experiments**
 

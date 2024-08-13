@@ -1,7 +1,3 @@
-Here's the revised README file with the corrected version information and the updated acknowledgments section:
-
----
-
 # **TableRAG**
 
 ## **Overview**
@@ -181,9 +177,8 @@ Ensure that your environment meets the following version requirements:
 
 - **Python**: 3.10.14
 - **PyTorch**: 2.3.1
-- **Transformers**: 4.5.1 or later
-- **FAISS**: 1.7.0 or later
-- **ColBERT**: 0.3.0 or later
+- **Transformers**: 4.36.2
+- **FAISS-gpu**: 1.7.2
 - **LangChain**: 0.1.0
 - **OpenAI**: 1.14.0
 - **CUDA**: 12.1

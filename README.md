@@ -1,5 +1,3 @@
-
-
 # **TableRAG**
 
 ## **Overview**
@@ -32,7 +30,6 @@ TableRAG is an advanced system designed for handling complex table-based questio
   - [Ablation Experiments](#ablation-experiments)
 - [Installation](#installation)
 - [Usage](#usage)
-
 
 ## **Background**
 
@@ -115,7 +112,6 @@ To further enhance the robustness and reliability of the generated outputs, we i
 - **Multiple Code Generations**: For each filtering and clarifying task, the system generates multiple code snippets or outputs.
 - **Majority Voting**: The most frequently generated output is selected as the final result. This approach helps mitigate errors and inconsistencies that might arise from a single model run.
 
-
 ## **Installation**
 
 To install and set up the TableRAG system, follow these steps:
@@ -171,31 +167,6 @@ Ensure that your environment meets the following version requirements:
 - **PyTorch**: 2.3.1 (with CUDA 12.1 support, if using GPU acceleration)
 - **CUDA**: 12.1 (if applicable)
 
-
-## **Installation**
-
-To install and set up the TableRAG system:
-
-1. **Clone the Repository**:
-   ```bash
-   git clone https://github.com/yourusername/TableRAG.git
-   cd TableRAG
-   ```
-
-2. **Create a Virtual Environment**:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate
-   ```
-
-3. **Install Dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Set Up Environment Variables**:
-   - Configure any necessary API keys and environment variables as required.
-
 ## **Usage**
 
 To use the TableRAG system:
@@ -213,7 +184,6 @@ To use the TableRAG system:
 3. **View Results**:
    - The generated answers and relevant table fragments will be stored in the output directory.
 
-
 ## **Pipeline Execution**
 
 ### **Table Processing Pipeline**
@@ -221,80 +191,52 @@ To use the TableRAG system:
 To process tables, execute the following pipeline:
 
 ```bash
-python -m src.table_processor.table_processing_pipeline
+python -m src.table_processor.table_processing
+
+ \
+  --input_dir ./data/input \
+  --output_dir ./data/output \
+  --config ./config/table_processor.yaml
 ```
-
-This pipeline supports several parameters:
-
-- `task_name`: The name of the task to be processed (e.g., "tabfact").
-- `split`: The dataset split to be used (e.g., "validation").
-- `table_filter_name`: The name of the table filtering method (e.g., "default").
-- `table_clarifier_name`: The name of the table clarification method (e.g., "term_explanations_and_table_summary").
-- `embedding_type`: The type of embedding used in processing (e.g., "text-embedding-3-large").
-- `top_k`: The number of top rows or columns to select based on relevance.
-- `save_jsonl`: Whether to save the output in JSONL format (default is True).
-- `load_local_dataset`: Whether to load a local dataset (default is True).
-- `experiment_name`: The name of the experiment being conducted.
-- `use_sampled_table_for_augmentation`: Whether to use sampled tables for augmentation (default is False).
-- `sample_size`: The number of samples to process (default is 1).
-- `overwrite_existing`: Whether to overwrite existing results (default is False).
-- `table_format`: The format to use for the tables (e.g., "markdown").
-- `use_table_filter`: Whether to use table filtering (default is True).
-
-Processed files will be saved in `data/processed/table_outputs`. If the process is interrupted, progress is saved in `data/progressing`, allowing you to resume from where it left off.
 
 ### **Retrieval Pipeline**
 
-After table processing, execute the retrieval pipeline:
-
 ```bash
-python src/colbert_pipeline/retriever.py
+python -m src.retriever.retrieval \
+  --input_dir ./data/output \
+  --query "Your question here" \
+  --output_dir ./data/retrieval_output \
+  --config ./config/retriever.yaml
 ```
-
-Modify the following parameters as needed:
-
-- `dataset_path`: Path to the dataset used for embedding and retrieval.
-- `index_name`: Name of the index to be created and used.
-- `colbert_model_name`: Name of the ColBERT model to be used.
-- `base_output_dir`: Directory to save the retrieval results (e.g., `data/processed/retrieval_results`).
-- `use_rerank`: Whether to rerank the retrieved documents.
-- `top
-
-_k`: Number of top documents to retrieve.
-- `rerank_top_k`: Number of top documents to rerank.
-- `num_queries`: Number of queries to process.
-- `query_grd_path`: Path to the query and ground truth file.
-
-Retrieval results will be stored in the `data/processed/retrieval_results` directory. The system also supports saving progress, enabling you to resume the process from where it was last interrupted.
 
 ### **Generation and Evaluation**
 
-Finally, run the generation and evaluation process:
-
 ```bash
-python src/colbert_pipeline/generator.py
+python -m src.generator.generation \
+  --input_dir ./data/retrieval_output \
+  --output_dir ./data/final_output \
+  --config ./config/generator.yaml
 ```
-
-Parameters include:
-
-- `dataset_name`: Name of the dataset being processed.
-- `retrieval_results_save_path`: Path to the retrieval results JSONL file (e.g., `data/processed/retrieval_results`).
-- `base_output_dir`: Base directory where output files will be saved (e.g., `data/processed/prediction`).
-- `run_evaluation`: Whether to run evaluation after generation.
-- `remove_terms_explanation`: Whether to remove terms explanation from input.
-- `remove_table_summary`: Whether to remove table summary from input.
-
-Generated predictions and evaluations will be stored in the `data/processed/prediction` directory. Like the previous steps, this process also saves progress and can be resumed if interrupted.
 
 ## **Evaluation Experiments**
 
 ### **Control Experiments**
 
-We conducted control experiments to evaluate the impact of each enhancement module. We compared the performance of various configurations, including different filtering methods, clarifiers, formatters, and retrievers.
+We conducted extensive control experiments to validate the effectiveness of our enhancements. For each dataset, we compared the performance of the following system configurations:
+
+1. **Baseline**: A standard RAG implementation without any enhancements.
+2. **Enhanced System**: Our complete system with all proposed enhancements.
 
 ### **Ablation Experiments**
 
-Ablation experiments were performed to assess the contribution of each module by selectively removing them from the system and observing the impact on performance.
-# Acknowledgments
-I would like to express my sincere gratitude to the authors of the paper “Tap4llm: Table provider on sampling, augmenting, and packing semi-structured data for large language model reasoning” for providing valuable insights that influenced some of the ideas presented in this article. 
-Additionally, I would like to thank PeiMa from the University of Leeds for her significant contributions to this project. Her expertise and support were instrumental in shaping the outcome of this work.
+Ablation experiments were performed to assess the contribution of each component:
+
+1. **Without Table Filtering**: Evaluates the system's performance without the table filtering module.
+2. **Without LLM-Based Clarifier**: Measures the impact of removing the LLM-based clarifier.
+3. **Without Retrieval Enhancement**: Tests the system's efficiency without the ColBERT integration.
+
+```bash
+python -m src.evaluation.evaluate \
+  --input_dir ./data/final_output \
+  --config ./config/evaluation.yaml
+```

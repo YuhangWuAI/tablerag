@@ -1,3 +1,4 @@
+
 # **TableRAG**
 
 ## **Overview**
@@ -21,6 +22,8 @@ TableRAG is an advanced system designed for handling complex table-based questio
   - [Retrieval Process Enhancement](#retrieval-process-enhancement)
   - [Input Format Optimization](#input-format-optimization)
   - [Self-Consistency](#self-consistency)
+- [Installation](#installation)
+- [Usage](#usage)
 - [Pipeline Execution](#pipeline-execution)
   - [Table Processing Pipeline](#table-processing-pipeline)
   - [Retrieval Pipeline](#retrieval-pipeline)
@@ -28,8 +31,7 @@ TableRAG is an advanced system designed for handling complex table-based questio
 - [Evaluation Experiments](#evaluation-experiments)
   - [Control Experiments](#control-experiments)
   - [Ablation Experiments](#ablation-experiments)
-- [Installation](#installation)
-- [Usage](#usage)
+- [Acknowledgments](#acknowledgments)
 
 ## **Background**
 
@@ -120,31 +122,61 @@ To install and set up the TableRAG system, follow these steps:
 
 You can set up a virtual environment using either `conda` (Anaconda) or `venv` (Python's built-in tool).
 
-#### **Using Conda (Recommended):**
+#### **Linux and macOS:**
 
-1. **Create a Conda Environment**:
-   ```bash
-   conda create -n tablerag python=3.10.14
-   conda activate tablerag
-   ```
+1. **Using Conda (Recommended):**
 
-2. **Install Dependencies from `environment.yml`**:
-   ```bash
-   conda env update --file environment.yml
-   ```
+    1. **Create a Conda Environment**:
+       ```bash
+       conda create -n tablerag python=3.10.14
+       conda activate tablerag
+       ```
 
-#### **Using venv**:
+    2. **Install Dependencies from `environment.yml`**:
+       ```bash
+       conda env update --file environment.yml
+       ```
 
-1. **Create a Virtual Environment**:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
+2. **Using venv**:
 
-2. **Install Dependencies from `requirements.txt`**:
-   ```bash
-   pip install -r requirements.txt
-   ```
+    1. **Create a Virtual Environment**:
+       ```bash
+       python -m venv venv
+       source venv/bin/activate
+       ```
+
+    2. **Install Dependencies from `requirements.txt`**:
+       ```bash
+       pip install -r requirements.txt
+       ```
+
+#### **Windows:**
+
+1. **Using Conda (Recommended):**
+
+    1. **Create a Conda Environment**:
+       ```bash
+       conda create -n tablerag python=3.10.14
+       conda activate tablerag
+       ```
+
+    2. **Install Dependencies from `environment.yml`**:
+       ```bash
+       conda env update --file environment.yml
+       ```
+
+2. **Using venv**:
+
+    1. **Create a Virtual Environment**:
+       ```bash
+       python -m venv venv
+       venv\Scripts\activate
+       ```
+
+    2. **Install Dependencies from `requirements.txt`**:
+       ```bash
+       pip install -r requirements.txt
+       ```
 
 ### **2. Clone the Repository**
 
@@ -162,38 +194,20 @@ Configure any necessary API keys and environment variables as required. This may
 Ensure that your environment meets the following version requirements:
 
 - **Python**: 3.10.14
-- **LangChain**: 0.1.0
-- **OpenAI**: 1.14.0
-- **PyTorch**: 2.3.1 (with CUDA 12.1 support, if using GPU acceleration)
-- **CUDA**: 12.1 (if applicable)
+- **LangChain**: 0.1
+
+.118
 
 ## **Usage**
 
-To use the TableRAG system:
-
-1. **Prepare Your Dataset**:
-   - Ensure your tables are formatted and stored as per the input requirements.
-
-2. **Run the System**:
-   - Use the provided scripts to run the system on your dataset.
-   - Example:
-     ```bash
-     python run_tablerag.py --config config.yaml
-     ```
-
-3. **View Results**:
-   - The generated answers and relevant table fragments will be stored in the output directory.
+Once the system is installed, you can run the pipelines to process tables, retrieve relevant data, and generate answers to queries.
 
 ## **Pipeline Execution**
 
 ### **Table Processing Pipeline**
 
-To process tables, execute the following pipeline:
-
 ```bash
-python -m src.table_processor.table_processing
-
- \
+python -m src.processor.table_processor \
   --input_dir ./data/input \
   --output_dir ./data/output \
   --config ./config/table_processor.yaml
@@ -240,3 +254,9 @@ python -m src.evaluation.evaluate \
   --input_dir ./data/final_output \
   --config ./config/evaluation.yaml
 ```
+
+## **Acknowledgments**
+
+I would like to express my sincere gratitude to the authors of the paper [“Tap4llm: Table provider on sampling, augmenting, and packing semi-structured data for large language model reasoning”](https://arxiv.org/abs/2312.09039) for providing valuable insights that influenced some of the ideas presented in this article. I have also borrowed some of the code from this paper for data loading and other tasks, as noted at the beginning of the relevant scripts.
+
+Additionally, I would like to thank PeiMa from the University of Leeds for her significant contributions to this project. Her expertise and support were instrumental in shaping the outcome of this work.

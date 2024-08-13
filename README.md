@@ -115,6 +115,48 @@ To further enhance the robustness and reliability of the generated outputs, we i
 - **Multiple Code Generations**: For each filtering and clarifying task, the system generates multiple code snippets or outputs.
 - **Majority Voting**: The most frequently generated output is selected as the final result. This approach helps mitigate errors and inconsistencies that might arise from a single model run.
 
+## **Installation**
+
+To install and set up the TableRAG system:
+
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/yourusername/TableRAG.git
+   cd TableRAG
+   ```
+
+2. **Create a Virtual Environment**:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate
+   ```
+
+3. **Install Dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Set Up Environment Variables**:
+   - Configure any necessary API keys and environment variables as required.
+
+## **Usage**
+
+To use the TableRAG system:
+
+1. **Prepare Your Dataset**:
+   - Ensure your tables are formatted and stored as per the input requirements.
+
+2. **Run the System**:
+   - Use the provided scripts to run the system on your dataset.
+   - Example:
+     ```bash
+     python run_tablerag.py --config config.yaml
+     ```
+
+3. **View Results**:
+   - The generated answers and relevant table fragments will be stored in the output directory.
+
+
 ## **Pipeline Execution**
 
 ### **Table Processing Pipeline**
@@ -196,45 +238,4 @@ We conducted control experiments to evaluate the impact of each enhancement modu
 ### **Ablation Experiments**
 
 Ablation experiments were performed to assess the contribution of each module by selectively removing them from the system and observing the impact on performance.
-
-## **Installation**
-
-To install and set up the TableRAG system:
-
-1. **Clone the Repository**:
-   ```bash
-   git clone https://github.com/yourusername/TableRAG.git
-   cd TableRAG
-   ```
-
-2. **Create a Virtual Environment**:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate
-   ```
-
-3. **Install Dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Set Up Environment Variables**:
-   - Configure any necessary API keys and environment variables as required.
-
-## **Usage**
-
-To use the TableRAG system:
-
-1. **Prepare Your Dataset**:
-   - Ensure your tables are formatted and stored as per the input requirements.
-
-2. **Run the System**:
-   - Use the provided scripts to run the system on your dataset.
-   - Example:
-     ```bash
-     python run_tablerag.py --config config.yaml
-     ```
-
-3. **View Results**:
-   - The generated answers and relevant table fragments will be stored in the output directory.
 

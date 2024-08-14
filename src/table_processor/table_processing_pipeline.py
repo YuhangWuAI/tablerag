@@ -370,7 +370,7 @@ def main():
     Main function to start the table processing pipeline with predefined parameters.
     """
     table_processing_pipeline(
-        task_name="sqa",
+        task_name="hybridqa",
         split="validation",
         table_filter_name="llm_based_filter", # llm_based_filter
         table_clarifier_name="None", # None, term_explanations_and_table_summary

@@ -27,7 +27,7 @@ torch.cuda.empty_cache()
 
 # Default configuration settings
 config = {
-    "dataset_path": "/home/yuhangwu/Desktop/Projects/TableProcess/data/processed/table_outputs/sqa_llm_based_filter_None_string.jsonl",
+    "dataset_path": "/home/yuhangwu/Desktop/Projects/TableProcess/data/processed/table_outputs/hybridqa_llm_based_filter_None_string.jsonl",
     "index_name": "my_index",
     "colbert_model_name": "colbert-ir/colbertv2.0",
     "base_output_dir": "/home/yuhangwu/Desktop/Projects/TableProcess/data/processed/retrieval_results",
@@ -35,7 +35,7 @@ config = {
     "top_k": 1,
     "rerank_top_k": 1,
     "num_queries": 1000,
-    "query_grd_path": "/home/yuhangwu/Desktop/Projects/TableProcess/data/raw/small_dataset/sqa.jsonl"
+    "query_grd_path": "/home/yuhangwu/Desktop/Projects/TableProcess/data/raw/small_dataset/hybridqa.jsonl"
 }
 
 def generate_retrieval_results(

@@ -233,25 +233,25 @@ The retrieval pipeline is configured using a dictionary of parameters that can b
 
 ```python
 config = {
-    "dataset_path": "/home/yuhangwu/Desktop/Projects/TableProcess/data/processed/table_outputs/hybridqa_llm_based_filter_None_string.jsonl",
+    "dataset_path": "data/processed/table_outputs/hybridqa_llm_based_filter_None_string.jsonl",
     "index_name": "my_index",
     "colbert_model_name": "colbert-ir/colbertv2.0",
-    "base_output_dir": "/home/yuhangwu/Desktop/Projects/TableProcess/data/processed/retrieval_results",
+    "base_output_dir": "data/processed/retrieval_results",
     "use_rerank": False,
     "top_k": 1,
     "rerank_top_k": 1,
     "num_queries": 1000,
-    "query_grd_path": "/home/yuhangwu/Desktop/Projects/TableProcess/data/raw/small_dataset/hybridqa.jsonl"
+    "query_grd_path": "data/raw/small_dataset/hybridqa.jsonl"
 }
 ```
 
-- **dataset_path**: This specifies the path to the processed table file that will be used for retrieval. In this example, the path points to a JSONL file that contains the processed tables: `"/home/yuhangwu/Desktop/Projects/TableProcess/data/processed/table_outputs/hybridqa_llm_based_filter_None_string.jsonl"`. This file should be the output of the table processing pipeline.
+- **dataset_path**: This specifies the path to the processed table file that will be used for retrieval. In this example, the path points to a JSONL file that contains the processed tables: `"data/processed/table_outputs/hybridqa_llm_based_filter_None_string.jsonl"`. This file should be the output of the table processing pipeline.
   
 - **index_name**: The name of the index to be created or used for retrieval. This index is used to store the embeddings of the processed tables for efficient querying.
   
 - **colbert_model_name**: Indicates the ColBERT model to be used for retrieval. In this case, `colbert-ir/colbertv2.0` is specified, which refers to a pre-trained ColBERT model suitable for information retrieval tasks.
   
-- **base_output_dir**: The base directory where the retrieval results will be stored. The final results, along with any intermediate outputs, will be saved in this directory: `"/home/yuhangwu/Desktop/Projects/TableProcess/data/processed/retrieval_results"`.
+- **base_output_dir**: The base directory where the retrieval results will be stored. The final results, along with any intermediate outputs, will be saved in this directory: `"data/processed/retrieval_results"`.
   
 - **use_rerank**: A boolean flag that determines whether reranking should be applied to the retrieved results. If set to `True`, an additional reranking step will be performed on the top results.
   
@@ -261,7 +261,7 @@ config = {
   
 - **num_queries**: Indicates the number of queries to be processed during retrieval. For example, `num_queries=1000` means that up to 1000 queries will be executed.
   
-- **query_grd_path**: Specifies the path to the query ground truth dataset, which is necessary for evaluating retrieval performance. The path provided, `"/home/yuhangwu/Desktop/Projects/TableProcess/data/raw/small_dataset/hybridqa.jsonl"`, should point to the raw dataset in the `data/raw` directory.
+- **query_grd_path**: Specifies the path to the query ground truth dataset, which is necessary for evaluating retrieval performance. The path provided, `"data/raw/small_dataset/hybridqa.jsonl"`, should point to the raw dataset in the `data/raw` directory.
 
 ### **Post-Retrieval Processing**
 
@@ -285,7 +285,7 @@ python -m src.colbert_pipeline.generator
 In this pipeline, you configure and execute the generation and evaluation process based on the retrieval results. Here's a simplified explanation of the key parameters:
 
 ```python
-retrieval_results_save_path = "/home/yuhangwu/Desktop/Projects/TableProcess/data/processed/retrieval_results/sqa_llm_based_filter_term_explanations_and_table_summary_markdown_retrieval_results.jsonl"
+retrieval_results_save_path = "data/processed/retrieval_results/sqa_llm_based_filter_term_explanations_and_table_summary_markdown_retrieval_results.jsonl"
 dataset_name = "sqa"
 
 # Execute with specific parameters
@@ -324,12 +324,6 @@ Ablation experiments were performed to assess the contribution of each component
 1. **Without Table Filtering**: Evaluates the system's performance without the table filtering module.
 2. **Without LLM-Based Clarifier**: Measures the impact of removing the LLM-based clarifier.
 3. **Without Retrieval Enhancement**: Tests the system's efficiency without the ColBERT integration.
-
-```bash
-python -m src.evaluation.evaluate \
-  --input_dir ./data/final_output \
-  --config ./config/evaluation.yaml
-```
 
 ## **Acknowledgments**
 

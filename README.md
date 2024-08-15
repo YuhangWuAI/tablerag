@@ -184,11 +184,59 @@ Ensure that your environment meets the following version requirements:
 - **CUDA**: 12.1
 
 ## **Dataflow Diagram**
-![Data Flow Diagram](./images/dataflow.png)  <!-- Data Flow Diagram -->
+<div style="overflow-x: auto;">
+  <img src="./images/dataflow.png" alt="Data Flow Diagram" style="max-width: 100%;"/>
+</div>
 
 ## **Class Diagram**
-![Class Diagram](./images/class.png)  <!-- Class Diagram -->
-
+<div style="overflow-x: auto;">
+  <img src="./images/class.png" alt="Class Diagram" style="max-width: 100%;"/>
+</div>
+## Folder
+```plaintext
+TABLEPROCESS  
+├── data  
+│   ├── processed  
+│   │   ├── prediction  
+│   │   ├── retrieval_results  
+│   │   ├── table_outputs  
+│   │   ├── processing  
+│   ├── raw  
+│       ├── all_dataset  
+│       ├── small_dataset  
+├── src  
+│   ├── colbert_pipeline  
+│   │   ├── colbert_main.py  
+│   │   ├── generator.py  
+│   │   ├── retriever.py  
+│   ├── data_processing  
+│   │   ├── request_serializer.py  
+│   │   ├── save_jsonl.py  
+│   ├── evaluator  
+│   │   ├── evaluation.py  
+│   ├── llm  
+│   │   ├── llm_embedding.py  
+│   │   ├── llm_generating.py  
+│   ├── table_loader  
+│   │   ├── data_downloader  
+│   ├── table_parser  
+│   │   ├── table_linearizer.py  
+│   │   ├── table_parsing.py  
+│   │   ├── type_sets.py  
+│   ├── table_master  
+│   │   ├── table_clarifier.py  
+│   │   ├── table_filter.py  
+│   │   ├── table_main.py  
+│   ├── table_processor  
+│   │   ├── table_processing_pipeline.py  
+│   ├── utils  
+│       ├── cos_similarity.py  
+├── config.json  
+├── environment.yml  
+├── LICENSE  
+├── README.md  
+├── requirements.txt  
+```
 ## **Usage**
 
 Once the system is installed, you can run the pipelines to process tables, retrieve relevant data, and generate answers to queries.

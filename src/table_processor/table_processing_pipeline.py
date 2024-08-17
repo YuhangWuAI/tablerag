@@ -373,7 +373,7 @@ def main():
         task_name="hybridqa",
         split="validation",
         table_filter_name="llm_based_filter", # llm_based_filter
-        table_clarifier_name="None", # None, term_explanations_and_table_summary
+        table_clarifier_name="term_explanations_and_table_summary", # None, term_explanations_and_table_summary
         embedding_type="text-embedding-3-large",
         top_k=5,
         save_jsonl=True,
@@ -383,7 +383,7 @@ def main():
         sample_size=1000,
         overwrite_existing=False,
         table_format="string",
-        use_table_filter=True
+        use_table_filter=False
     )
 
 if __name__ == "__main__":

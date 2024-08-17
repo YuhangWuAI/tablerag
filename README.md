@@ -189,8 +189,9 @@ Ensure that your environment meets the following version requirements:
 </div>
 
 ## **Class Diagram**
+
 <div style="overflow-x: auto;">
-  <img src="./images/class.png" alt="Class Diagram" style="max-width: 100%;"/>
+  <img src="./images/class.png" alt="Class Diagram" style="max-width: none; width: 100%;"/>
 </div>
 
 # Project Structure

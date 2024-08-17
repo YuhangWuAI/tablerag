@@ -126,8 +126,8 @@ def generate_and_evaluate(
         return numbers
 
 if __name__ == "__main__":
-    retrieval_results_save_path = "/home/yuhangwu/Desktop/Projects/TableProcess/data/processed/retrieval_results/hybridqa_llm_based_filter_term_explanations_and_table_summary_markdown_retrieval_results.jsonl"
+    retrieval_results_save_path = "/home/yuhangwu/Desktop/Projects/TableProcess/data/processed/retrieval_results/hybridqa_llm_based_filter_None_string_retrieval_results.jsonl"
     dataset_name = "hybridqa"
     
     # Call the function with specific parameters
-    generate_and_evaluate(dataset_name, retrieval_results_save_path, remove_terms_explanation=False, remove_table_summary=True)
+    generate_and_evaluate(dataset_name, retrieval_results_save_path, remove_terms_explanation=True, remove_table_summary=True)

@@ -27,7 +27,7 @@ torch.cuda.empty_cache()
 
 # Default configuration settings
 config = {
-    "dataset_path": "/home/yuhangwu/Desktop/Projects/TableProcess/data/processed/table_outputs/hybridqa_llm_based_filter_term_explanations_and_table_summary_markdown.jsonl",
+    "dataset_path": "/home/yuhangwu/Desktop/Projects/TableProcess/data/processed/table_outputs/hybridqa_llm_based_filter_None_string.jsonl",
     "index_name": "my_index",
     "colbert_model_name": "colbert-ir/colbertv2.0",
     "base_output_dir": "/home/yuhangwu/Desktop/Projects/TableProcess/data/processed/retrieval_results",

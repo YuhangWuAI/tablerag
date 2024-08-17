@@ -192,9 +192,10 @@ Ensure that your environment meets the following version requirements:
 <div style="overflow-x: auto;">
   <img src="./images/class.png" alt="Class Diagram" style="max-width: 100%;"/>
 </div>
-## Folder
-```plaintext
-TABLEPROCESS  
+
+# Project Structure
+
+```bash
 ├── data  
 │   ├── processed  
 │   │   ├── prediction  
@@ -235,8 +236,9 @@ TABLEPROCESS
 ├── environment.yml  
 ├── LICENSE  
 ├── README.md  
-├── requirements.txt  
+├── requirements.txt
 ```
+
 ## **Usage**
 
 Once the system is installed, you can run the pipelines to process tables, retrieve relevant data, and generate answers to queries.

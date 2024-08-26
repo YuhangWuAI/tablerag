@@ -381,5 +381,3 @@ Ablation experiments were performed to assess the contribution of each component
 I would like to express my sincere gratitude to the authors of the paper [“Tap4llm: Table provider on sampling, augmenting, and packing semi-structured data for large language model reasoning”](https://arxiv.org/abs/2312.09039) for providing valuable insights that influenced some of the ideas presented in this article. I have also borrowed some of the code from this paper for data loading and other tasks, as noted at the beginning of the relevant scripts.
 
 I would also like to thank the developers of [RAGatouille](https://github.com/AnswerDotAI/RAGatouille), as the ColBERT implementation used in this project was built upon their work.
-
-Additionally, I would like to thank PeiMa from the University of Leeds for her significant contributions to this project. Her expertise and support were instrumental in shaping the outcome of this work.

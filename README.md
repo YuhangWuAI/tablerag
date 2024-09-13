@@ -9,7 +9,7 @@ TableRAG is an advanced system designed for handling complex table-based questio
 - [Background](#background)
 - [System Architecture](#system-architecture)
   - [RAG-based Multi-Table QA System](#rag-based-multi-table-qa-system)
-  - [Enhancement Mechanisms](#enhancement-mechanisms)
+  - [Enhancement Mechanisms](#enhancement-mechanisms) 
 - [Datasets](#datasets)
 - [Implementation Details](#implementation-details)
 - [Installation](#installation)

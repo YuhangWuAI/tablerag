@@ -68,7 +68,7 @@ def colbert_pipeline(output_path: str, jsonl_query_path: str, jsonl_index_path: 
         queries_data = [json.loads(line) for line in file]
     
     queries = [item['query'] for item in queries_data]
-    correct_ids = [item['passage_id'] for item in queries_data]
+    correct_ids = list(range(len(queries)))  # Create a list of correct passage_ids based on query index
 
     # Open the output file and write each result as it's processed
     hits_at_k = 0
@@ -77,10 +77,16 @@ def colbert_pipeline(output_path: str, jsonl_query_path: str, jsonl_index_path: 
     with open(output_path, 'w') as file:
         for i, query in enumerate(queries):
             retrieved_docs = pipeline.retrieve(query, top_k, force_fast, rerank, rerank_top_k)
-            retrieved_ids = [doc.get('passage_id') for doc in retrieved_docs]
             
+            retrieved_ids = []
+            for doc in retrieved_docs:
+                # Update this line based on the actual structure of `doc`
+                passage_id = doc.get('passage_id')  # Adjust if necessary
+                if passage_id:
+                    retrieved_ids.append(passage_id)
+                
             # Check if the correct passage_id is in the retrieved results
-            if any(correct_ids[i] == doc.get('passage_id') for doc in retrieved_docs[:top_k]):
+            if correct_ids[i] in retrieved_ids:
                 hits_at_k += 1
 
             # Save each result immediately after retrieval
@@ -101,7 +107,7 @@ def main():
     jsonl_index_path = "/home/yuhangwu/Desktop/Projects/tablerag/data/processed/clarified_data/packed_e2ewq.jsonl"  # Data to be indexed and queried
     model_name = "colbert-ir/colbertv2.0"
     index_name = "my_index"
-    output_path = "/home/yuhangwu/Desktop/Projects/tablerag/data/processed/results_output.jsonl"  # Save output to this file
+    output_path = "/home/yuhangwu/Desktop/Projects/tablerag/data/processed/retrieval_results/e2etwq.jsonl"  # Save output to this file
 
     # Retrieve documents and save results immediately
     colbert_pipeline(
@@ -110,10 +116,10 @@ def main():
         jsonl_index_path=jsonl_index_path, 
         model_name=model_name, 
         index_name=index_name, 
-        top_k=3, 
+        top_k=1, 
         force_fast=False, 
         rerank=False, 
-        rerank_top_k=1
+        rerank_top_k=5
     )
 
 if __name__ == "__main__":

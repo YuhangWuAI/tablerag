@@ -37,15 +37,15 @@ def process_single_data(data, table_format):
     
     # 生成表格摘要
     print("Calling e2ewtq_generate_table_summary...")
-    table_summary = llm_generator.generate_table_summary_2(table_formatted, context, caption)
+    table_summary = llm_generator.generate_table_summary_2(caption, table_formatted, context)
     
     # 生成术语解释
-    print("Calling generate_terms_explanation...")
-    terms_explanation = llm_generator.generate_terms_explanation(table_summary, table_formatted, caption)
+    print("Calling generate_terminology_explanation...")
+    terms_explanation = llm_generator.generate_terminology_explanation(caption, table_summary, table_formatted, context)
 
     # 生成查询建议
     print("Calling generate_query_suggestions...")
-    query_suggestions = llm_generator.generate_query_suggestions(table_summary, table_formatted, context, caption)
+    query_suggestions = llm_generator.generate_query_suggestions(caption, table_summary, table_formatted, context)
 
     # 生成新的数据结构，只保留需要的字段
     new_data = {

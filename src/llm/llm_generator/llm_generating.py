@@ -200,42 +200,154 @@ class LLM_Generator:
         return generated_text  
     
 
-    @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
-    def e2ewtq_generate_terms_explanation(self, table: dict, statement: str, caption: str) -> str:
-        """
-        Generate explanations for terms found in a table, focusing on those related to a given statement.
+    def generate_terminology_explanation(self, caption, summary, table: str, context: list) -> str:
 
-        :param table: Dictionary representing the table's data.
-        :param statement: Statement related to the table.
-        :param caption: Caption of the table for context.
-        :return: JSON string containing the terms and their explanations.
-        """
         prompt = f"""
-        Example: You will be given a table, a statement, and the table's caption. Your task is to identify difficult to understand column names, terms, or abbreviations in the table and provide simple explanations for each. Only explain terms related to the statement.
+        You might receive tables in various formats, including Markdown, HTML, or plain text strings. Along with the table data, you might also receive a table summary, additional context, and a table caption, if available.
 
-        Now, explain the terms in the following table.
+        Your task is to generate detailed explanations for the terms used in the table. The explanations should include definitions, synonyms, and query suggestions to aid in understanding and retrieving relevant information from the table. 
 
-        Table caption:
-        {caption}
+        Please provide the following for each term identified in the table:
 
-        Statement:
-        {statement}
+        1. **Term**: Identify and list all possible terms and abbreviations found in the table.
+        
+        2. **Definition**: Provide a concise definition or explanation for each term. Ensure the definition is clear and directly relevant to the context of the table.
 
+        3. **Synonyms and Related Concepts**: List several synonyms or similar concepts for each term. This helps in understanding the term’s usage in different contexts.
+
+        4. **Query Suggestions**: Generate 3 example queries that someone might use to search for information about the term in this table. Ensure the queries are diverse, using different sentence structures, and cover a range of potential user needs or scenarios. Each query should address a unique aspect of the term within the context of the table.
+
+        **Example 1: Swimming Competition Results Table**
+        
+        User 1:
         Table:
-        {json.dumps(table, indent=2)}
+        | Rank   |   Lane | Name                   | Nationality   | Time    | Notes   |
+        |:-------|-------:|:-----------------------|:--------------|:--------|:--------|
+        |        |      4 | Sophie Pascoe          | New Zealand   | 2:25.65 | WR      |
+        |        |      5 | Summer Ashley Mortimer | Canada        | 2:32.08 |         |
+        |        |      3 | Zhang Meng             | China         | 2:33.95 | AS      |
+        | 4      |      6 | Katherine Downie       | Australia     | 2:34.64 |         |
+        | 5      |      2 | Nina Ryabova           | Russia        | 2:35.65 |         |
+        | 6      |      8 | Aurelie Rivard         | Canada        | 2:37.70 |         |
+        | 7      |      7 | Harriet Lee            | Great Britain | 2:39.42 |         |
+        | 8      |      1 | Gemma Almond           | Great Britain | 2:42.16 |         |
+        
+        User 2:
+        **Term Explanations**:
 
-        Please return the result in the following format:
-        {{
-            "explanations": {{
-                "term1": "explanation1",
-                "term2": "explanation2",
-                ...
-            }}
-        }}
+        **1. WR (World Record)**
+        - **Definition**: A world record, denoting the highest achievement in a specific event or discipline recognized globally.
+        - **Synonyms and Related Concepts**: Best record, global record, all-time record.
+        - **Query Suggestions**:
+        1. "Who holds the world record for this swimming event according to the table?"
+        2. "What is the time listed for the world record swimmer?"
+        3. "How does the world record time compare to the other times in the table?"
+
+        **2. AS (Asian Record)**
+        - **Definition**: An Asian record, marking the highest achievement in a specific event or discipline within the Asian continent.
+        - **Synonyms and Related Concepts**: Best Asian performance, continental record, Asian best.
+        - **Query Suggestions**:
+        1. "Which swimmer set the Asian record in this competition?"
+        2. "What time is recorded for the Asian record in this table?"
+        3. "How does the Asian record time compare with the world record?"
+
+        **3. Lane**
+        - **Definition**: The designated track or path that a swimmer or competitor is assigned during the race.
+        - **Synonyms and Related Concepts**: Track, position, route.
+        - **Query Suggestions**:
+        1. "Which lane had the swimmer with the fastest time?"
+        2. "How are the lanes assigned in this table's competition?"
+        3. "What is the lane assignment for the swimmer with the Asian record?"
+
+        **Example 2: Fight Record Table**
+        User 1:
+        Table:
+        | Date       | Result   | Opponent             | Event                                                                                 | Location                     | Method                       | Round   | Time   |
+        |:-----------|:---------|:---------------------|:--------------------------------------------------------------------------------------|:-----------------------------|:-----------------------------|:--------|:-------|
+        | 2013-12-14 | Loss     | Mohamed Diaby        | Victory, Semi Finals                                                                  | Paris, France                | Decision                     | 3       | 3:00   |
+        | 2013-03-09 |          | Juanma Chacon        | Enfusion Live: Barcelona                                                              | Barcelona, Spain             |                              |         |        |
+        | 2012-05-27 | Loss     | Murthel Groenhart    | K-1 World MAX 2012 World Championship Tournament Final 16                             | Madrid, Spain                | KO (punches)                 | 3       | 3:00   |
+        | 2012-02-11 | Win      | Francesco Tadiello   | Sporthal De Zandbergen                                                                | Sint-Job-in-'t-Goor, Belgium | KO                           | 1       |        |
+        | 2012-01-28 | Win      | Chris Ngimbi         | It's Showtime 2012 in Leeuwarden                                                      | Leeuwarden, Netherlands      | TKO (cut)                    | 2       | 1:22   |
+        | 2011-09-24 | Loss     | Andy Souwer          | BFN Group & Music Hall presents: It's Showtime "Fast & Furious 70MAX", Quarter Finals | Brussels, Belgium            | Extra round decision (split) | 4       | 3:00   |
+        | 2011-04-09 | Win      | Lahcen Ait Oussakour | Le Grande KO XI                                                                       | Liege, Belgium               | KO                           | 1       |        |
+        | 2011-03-19 | Loss     | Gino Bourne          | Fight Night Turnhout                                                                  | Turnhout, Belgium            | DQ                           |         |        |
+        | 2011-02-12 | Win      | Henri van Opstal     | War of the Ring                                                                       | Amsterdam, Netherlands       | Decision (unanimous)         | 3       | 3:00   |
+        | 2010-12-04 | Win      | Alessandro Campagna  | Janus Fight Night 2010                                                                | Padua, Italy                 | Decision                     | 3       | 3:00   |
+        | 2010-09-10 | Win      | Edson Fortes         | Ring Sensation Gala                                                                   | Utrecht, Netherlands         | Decision                     | 3       | 3:00   |
+        | 2010-03-21 | Loss     | Mohamed Khamal       | K-1 World MAX 2010 West Europe Tournament, Final                                      | Utrecht, Netherlands         | KO (punch)                   | 2       |        |
+        | 2010-03-21 | Win      | Anthony Kane         | K-1 World MAX 2010 West Europe Tournament, Semi Finals                                | Utrecht, Netherlands         | Decision                     | 3       | 3:00   |
+        | 2010-03-21 | Win      | Bruno Carvalho       | K-1 World MAX 2010 West Europe Tournament, Quarter Finals                             | Utrecht, Netherlands         | Decision                     | 3       | 3:00   |
+        | 2009-11-28 | Win      | Davy Deraedt         | Battle of the Kings 2009                                                              | Brussels, Belgium            | KO (punches)                 | 1       |        |
+        | 2009-09-27 | Win      | Freddy Kemayo        | Almelo Fight for Delight                                                              | Almelo, Netherlands          | TKO                          |         |        |
+        | 2009-03-14 | Win      | Viktor Sarezki       | War of the Ring                                                                       | Belgium                      | KO (punch to the body)       | 1       |        |
+        | 2009-02-21 | Win      | Pedro Sedarous       | Turnhout Gala                                                                         | Turnhout, Belgium            | Decision                     | 5       | 3:00   |
+        | 2009-01-31 | Win      | Dahou Naim           | Tielrode Gala                                                                         | Tielrode, Belgium            | 2nd extra round decision     | 5       | 3:00   |
+        | 2008-09-20 | Win      | Abdallah Mabel       | S-Cup Europe 2008, Reserve Bout                                                       | Gorinchem, Netherlands       | Decision                     | 3       | 3:00   |
+        | 2008-09-14 | Win      | Jordy Sloof          | The Outland Rumble                                                                    | Rotterdam, Netherlands       | KO (Right cross)             | 1       |        |
+        | 2008-03-08 | Win      | Naraim Ruben         | Lommel Gala                                                                           | Lommel, Belgium              | TKO (retirement)             | 3       |        |
+        | 2008-02-23 | Win      | Pierre Petit         | St. Job Gala                                                                          | St. Job, Belgium             | KO (Right punch)             | 2       |        |
+        | 2008-01-26 | Win      | Yildiz Bullut        | Tielrode Gala                                                                         | Tielrode, Belgium            | TKO                          | 2       |        |
+        | 2007-11-28 | Win      | Ibrahim Benazza      | Lint Gala                                                                             | Lint, Belgium                | Decision                     | 5       | 2:00   |
+        | 2007-10-27 | Win      | Anthony Kane         | One Night in Bangkok                                                                  | Antwerp, Belgium             | Decision                     | 5       |        |
+
+        User 2:
+        **Term Explanations**:
+
+        **1. KO (Knockout)**
+        - **Definition**: A victory where the opponent is rendered unconscious or unable to continue the fight.
+        - **Synonyms and Related Concepts**: Knockout, KO, knockout victory.
+        - **Query Suggestions**:
+        1. "Which fights ended in a knockout according to this table?"
+        2. "How many knockout victories did each fighter achieve?"
+        3. "What was the method used in the KO victories listed?"
+
+        **2. TKO (Technical Knockout)**
+        - **Definition**: A victory awarded when the referee stops the fight due to one fighter's inability to continue, but the opponent is not necessarily knocked out.
+        - **Synonyms and Related Concepts**: Technical knockout, referee stoppage, TKO.
+        - **Query Suggestions**:
+        1. "Which bouts were concluded by TKO?"
+        2. "How does a TKO affect the fight’s result compared to a KO?"
+        3. "What are the circumstances leading to TKO victories in this data?"
+
+        **3. DQ (Disqualification)**
+        - **Definition**: A loss awarded when a fighter is disqualified for breaking the rules of the competition.
+        - **Synonyms and Related Concepts**: Disqualification, disallowed, no contest.
+        - **Query Suggestions**:
+        1. "Which fight resulted in a disqualification?"
+        2. "What were the reasons for disqualification in this table?"
+        3. "How often does disqualification occur in the fights listed?"
+
+        **4. Method**
+        - **Definition**: The technique or reason by which a fighter won or lost the match, such as KO, TKO, or decision.
+        - **Synonyms and Related Concepts**: Victory method, fight outcome, result.
+        - **Query Suggestions**:
+        1. "What methods were most common in the fights recorded in this table?"
+        2. "Which method resulted in the most victories?"
+        3. "How does the method of victory affect overall fighter performance?"
+
+        **5. Round**
+        - **Definition**: The segments or phases in a fight, where each round represents a period of competition followed by a break.
+        - **Synonyms and Related Concepts**: Fight round, period, round number.
+        - **Query Suggestions**:
+        1. "In which round did the majority of fights end?"
+        2. "How many rounds were fought in the longest match listed?"
+        3. "What was the round distribution for fights ending in KO?"
+
+        Now, generate terminology explanations for the following table:
+        Table caption (if available): {caption}
+        Table summary: {summary}
+        Table data (in its original format): {table}
+        Context (if provided): {context}
         """
 
         generated_text = self.generate_text(prompt)
-        return generated_text  
+        
+        print("Generated terminology explanations: ")
+        print(generated_text)
+
+        return generated_text
+
 
     @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
     def generate_table_summary(self, metadata_list: list, context: list, table: dict, query: str, caption: str) -> str:
@@ -286,7 +398,7 @@ class LLM_Generator:
 
 
 
-    def generate_table_summary_2(self, table: str, context: list, caption: str) -> str:
+    def generate_table_summary_2(self, caption: str, table: str, context: list) -> str:
         """
         Generate a summary for a table that directly addresses a given query, using metadata and context.
 
@@ -408,7 +520,7 @@ class LLM_Generator:
             traceback.print_exc()  
             return ""
 
-    def generate_query_suggestions(self, summary: str, table: str, context: list, caption: str) -> str:
+    def generate_query_suggestions(self,caption: str,  summary: str, table: str, context: list) -> str:
 
         try:
             prompt = f"""
@@ -499,17 +611,19 @@ class LLM_Generator:
             Now, Please generate 5 example queries that someone might use to search for information in this table. 
             Ensure the queries are diverse, using different sentence structures, and cover a range of potential user needs or scenarios. Avoid repetition and ensure each query addresses a unique aspect of the table.
             
+            Table caption (if available):
+            {caption}
+
             Table data (in its original format):
             {table}
 
             Table summary:
             {summary}
-            
-            Table caption (if available):
-            {caption}
 
             Context (if available):
             {context}
+
+            return the query suggestions directly, without any other information. 
             """
 
             generated_text = self.generate_text(prompt)

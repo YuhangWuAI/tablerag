@@ -5,6 +5,10 @@ GitHub: https://github.com/YuhangWuAI/
 Copyright (C) 2024 Wu Yuhang. All rights reserved.
 For any questions or further information, please feel free to reach out via the email address above.
 """
+from tenacity import retry, wait_random_exponential, stop_after_attempt
+import json
+import traceback
+
 
 import ast  # For converting embeddings saved as strings back to arrays
 from collections import Counter
@@ -159,7 +163,45 @@ class LLM_Generator:
             return self.generate_text(prompt)
 
     @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
-    def generate_terms_explanation(self, table: dict, statement: str, caption: str) -> str:
+    def generate_terms_explanation(self, summary, table, caption):
+        """
+        Generate explanations for terms found in a table, focusing on those related to a given statement.
+
+        :param table: Dictionary representing the table's data.
+        :param statement: Statement related to the table.
+        :param caption: Caption of the table for context.
+        :return: JSON string containing the terms and their explanations.
+        """
+        prompt = f"""
+        Example: You will be given a table, a statement, and the table's caption. Your task is to identify difficult to understand column names, terms, or abbreviations in the table and provide simple explanations for each. Only explain terms related to the statement.
+
+        Now, explain the terms in the following table.
+
+        Table caption:
+        {caption}
+
+        Table Summary:
+        {summary}
+
+        Table:
+        {table}
+
+        Please return the result in the following format:
+        {{
+            "explanations": {{
+                "term1": "explanation1",
+                "term2": "explanation2",
+                ...
+            }}
+        }}
+        """
+
+        generated_text = self.generate_text(prompt)
+        return generated_text  
+    
+
+    @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
+    def e2ewtq_generate_terms_explanation(self, table: dict, statement: str, caption: str) -> str:
         """
         Generate explanations for terms found in a table, focusing on those related to a given statement.
 
@@ -242,6 +284,245 @@ class LLM_Generator:
         generated_text = self.generate_text(prompt)
         return generated_text
 
+
+
+    def generate_table_summary_2(self, table: str, context: list, caption: str) -> str:
+        """
+        Generate a summary for a table that directly addresses a given query, using metadata and context.
+
+        :param table: String representing the table's data in various formats (Markdown, HTML, or plain text).
+        :param context: Additional context about the table.
+        :param caption: Caption of the table for context.
+        :return: JSON string containing the generated summary.
+        """
+
+        try:
+
+            prompt = f"""
+
+            You might receive tables in various formats, including Markdown, HTML, or plain text strings. Along with the table data, you might also receive additional context and a table caption, if available.
+
+            Your task is generating a detailed summary for the table based on the provided content. The summary should include:
+
+            1. **Table Title and Keywords**: Create a descriptive title for the table and extract relevant keywords. The title and keywords should be detailed enough to capture the essence of the table and its primary data.
+
+            2. **Table Content Overview**: Provide a clear and concise summary of the table's contents. Include key information such as data fields, structure, and the overall purpose or focus of the table. The overview should offer enough detail to understand the table's main data without requiring specific domain knowledge.
+
+            3. **Data Patterns and Common Trends**: Summarize any observable patterns, trends, or key data points in the table. Highlight significant statistics, recurring themes, or other notable insights present in the data.
+
+            **Example 1: Swimming Competition Results Table**
+            User 1:
+            Table:
+            | Rank   |   Lane | Name                   | Nationality   | Time    | Notes   |
+            |:-------|-------:|:-----------------------|:--------------|:--------|:--------|
+            |        |      4 | Sophie Pascoe          | New Zealand   | 2:25.65 | WR      |
+            |        |      5 | Summer Ashley Mortimer | Canada        | 2:32.08 |         |
+            |        |      3 | Zhang Meng             | China         | 2:33.95 | AS      |
+            | 4      |      6 | Katherine Downie       | Australia     | 2:34.64 |         |
+            | 5      |      2 | Nina Ryabova           | Russia        | 2:35.65 |         |
+            | 6      |      8 | Aurelie Rivard         | Canada        | 2:37.70 |         |
+            | 7      |      7 | Harriet Lee            | Great Britain | 2:39.42 |         |
+            | 8      |      1 | Gemma Almond           | Great Britain | 2:42.16 |         |
+
+            User 2:
+            **Title**: International Swimming Competition Results with World and Asian Record Highlights
+            **Keywords**: Swimmer name, nationality, time, ranking, world record, Asian record, lane number
+            **Content Overview**: This table contains the final results of an international swimming competition, showing the rank, name, nationality, lane, and final time for each swimmer. It also highlights world records (WR) and Asian records (AS) set during the event. The data allows comparison of swimmer performances across different nations.
+            **Data Patterns and Trends**: Swimmers with the fastest times tend to occupy the top ranks, with two notable record-breaking performances. New Zealand’s Sophie Pascoe set a world record, and China’s Zhang Meng set an Asian record.
+            **Query Suggestions**:
+                1. "Which swimmer set a world record in this competition?"
+                2. "How did swimmers from China perform in this event?"
+                3. "Can you list the top 3 swimmers along with their final times?"
+                4. "Which swimmer was in lane 4, and what was their result?"
+                5. "What is the rank and time of the swimmer from Russia?"
+
+            **Example 2: Fight Record Table**
+            User 1:
+            Table:
+            | Date       | Result   | Opponent             | Event                                                                                 | Location                     | Method                       | Round   | Time   |
+            |:-----------|:---------|:---------------------|:--------------------------------------------------------------------------------------|:-----------------------------|:-----------------------------|:--------|:-------|
+            | 2013-12-14 | Loss     | Mohamed Diaby        | Victory, Semi Finals                                                                  | Paris, France                | Decision                     | 3       | 3:00   |
+            | 2013-03-09 |          | Juanma Chacon        | Enfusion Live: Barcelona                                                              | Barcelona, Spain             |                              |         |        |
+            | 2012-05-27 | Loss     | Murthel Groenhart    | K-1 World MAX 2012 World Championship Tournament Final 16                             | Madrid, Spain                | KO (punches)                 | 3       | 3:00   |
+            | 2012-02-11 | Win      | Francesco Tadiello   | Sporthal De Zandbergen                                                                | Sint-Job-in-'t-Goor, Belgium | KO                           | 1       |        |
+            | 2012-01-28 | Win      | Chris Ngimbi         | It's Showtime 2012 in Leeuwarden                                                      | Leeuwarden, Netherlands      | TKO (cut)                    | 2       | 1:22   |
+            | 2011-09-24 | Loss     | Andy Souwer          | BFN Group & Music Hall presents: It's Showtime "Fast & Furious 70MAX", Quarter Finals | Brussels, Belgium            | Extra round decision (split) | 4       | 3:00   |
+            | 2011-04-09 | Win      | Lahcen Ait Oussakour | Le Grande KO XI                                                                       | Liege, Belgium               | KO                           | 1       |        |
+            | 2011-03-19 | Loss     | Gino Bourne          | Fight Night Turnhout                                                                  | Turnhout, Belgium            | DQ                           |         |        |
+            | 2011-02-12 | Win      | Henri van Opstal     | War of the Ring                                                                       | Amsterdam, Netherlands       | Decision (unanimous)         | 3       | 3:00   |
+            | 2010-12-04 | Win      | Alessandro Campagna  | Janus Fight Night 2010                                                                | Padua, Italy                 | Decision                     | 3       | 3:00   |
+            | 2010-09-10 | Win      | Edson Fortes         | Ring Sensation Gala                                                                   | Utrecht, Netherlands         | Decision                     | 3       | 3:00   |
+            | 2010-03-21 | Loss     | Mohamed Khamal       | K-1 World MAX 2010 West Europe Tournament, Final                                      | Utrecht, Netherlands         | KO (punch)                   | 2       |        |
+            | 2010-03-21 | Win      | Anthony Kane         | K-1 World MAX 2010 West Europe Tournament, Semi Finals                                | Utrecht, Netherlands         | Decision                     | 3       | 3:00   |
+            | 2010-03-21 | Win      | Bruno Carvalho       | K-1 World MAX 2010 West Europe Tournament, Quarter Finals                             | Utrecht, Netherlands         | Decision                     | 3       | 3:00   |
+            | 2009-11-21 | Win      | Seo Doo Won          | It's Showtime 2009 Barneveld                                                          | Barneveld, Netherlands       | TKO (referee stoppage)       | 1       |        |
+            | 2009-09-24 | Win      | Chris Ngimbi         | It's Showtime 2009 Lommel                                                             | Lommel, Belgium              | Extra round decision         | 4       | 4:00   |
+            | 2009-04-11 | Win      | Farid Riffi          | Almelo Fight for Delight                                                              | Almelo, Netherlands          | TKO                          |         |        |
+            | 2009-03-14 | Win      | Viktor Sarezki       | War of the Ring                                                                       | Belgium                      | KO (punch to the body)       | 1       |        |
+            | 2009-02-21 | Win      | Pedro Sedarous       | Turnhout Gala                                                                         | Turnhout, Belgium            | Decision                     | 5       | 3:00   |
+            | 2009-01-31 | Win      | Dahou Naim           | Tielrode Gala                                                                         | Tielrode, Belgium            | 2nd extra round decision     | 5       | 3:00   |
+            | 2008-09-20 | Win      | Abdallah Mabel       | S-Cup Europe 2008, Reserve Bout                                                       | Gorinchem, Netherlands       | Decision                     | 3       | 3:00   |
+            | 2008-09-14 | Win      | Jordy Sloof          | The Outland Rumble                                                                    | Rotterdam, Netherlands       | KO (Right cross)             | 1       |        |
+            | 2008-03-08 | Win      | Naraim Ruben         | Lommel Gala                                                                           | Lommel, Belgium              | TKO (retirement)             | 3       |        |
+            | 2008-02-23 | Win      | Pierre Petit         | St. Job Gala                                                                          | St. Job, Belgium             | KO (Right punch)             | 2       |        |
+            | 2008-01-26 | Win      | Yildiz Bullut        | Tielrode Gala                                                                         | Tielrode, Belgium            | TKO                          | 2       |        |
+            | 2007-11-28 | Win      | Ibrahim Benazza      | Lint Gala                                                                             | Lint, Belgium                | Decision                     | 5       | 2:00   |
+            | 2007-10-27 | Win      | Anthony Kane         | One Night in Bangkok                                                                  | Antwerp, Belgium             | Decision                     | 5       |        |
+
+            User 2:
+            **Title**: Detailed Fighter Records and Outcomes from 2007 to 2013
+            **Keywords**: Fight date, opponent, result, method (KO, decision), event location, fight rounds
+            **Content Overview**: This table provides an extensive record of fights from 2007 to 2013, showing the date, result (win or loss), opponent, event location, method of victory/defeat (KO, TKO, decision), and the number of rounds. The table helps track fighter performance over time, as well as notable fight outcomes.
+            **Data Patterns and Trends**: The table shows a mix of wins and losses for different fighters, with a notable trend of knockouts (KO) in several matches. Some fighters appear multiple times, indicating repeat matchups. The table also indicates consistent performance from specific fighters in certain locations.
+
+            The final output should be structured in the following format, without using any extra wrapping or JSON-like syntax:
+
+            **Title**: [Generated title]
+            **Keywords**: [Generated keywords]
+            **Content Overview**: [Generated content overview]
+            **Data Patterns and Trends**: [Generated patterns and trends]
+
+            Now, please generate summary for the following table as requirements:
+
+            Table caption (if available):
+            {caption}
+
+            Table data (in its original format):
+            {table}
+
+            Context (if provided):
+            {context}
+
+            """
+            
+
+            generated_text = self.generate_text(prompt)
+            
+            print("Generated summary: ")
+            print(generated_text)
+
+            return generated_text
+        
+        except Exception as e:
+            print(f"Error occurred in e2ewtq_generate_table_summary: {e}")
+            traceback.print_exc()  
+            return ""
+
+    def generate_query_suggestions(self, summary: str, table: str, context: list, caption: str) -> str:
+
+        try:
+            prompt = f"""
+
+            You might receive tables in various formats, including Markdown, HTML, or plain text strings. Along with the table data, you might also receive table summary, additional context and a table caption, if available.
+            Your task is generating 5 example queries that someone might use to search for information in this table.
+            Ensure the queries are diverse, using different sentence structures, and cover a range of potential user needs or scenarios. Avoid repetition and ensure each query addresses a unique aspect of the table.
+
+            Example 1 (Swimming Competition Results):
+            User 1:
+            Table data:
+            | Rank   |   Lane | Name                   | Nationality   | Time    | Notes   |
+            |:-------|-------:|:-----------------------|:--------------|:--------|:--------|
+            |        |      4 | Sophie Pascoe          | New Zealand   | 2:25.65 | WR      |
+            |        |      5 | Summer Ashley Mortimer | Canada        | 2:32.08 |         |
+            |        |      3 | Zhang Meng             | China         | 2:33.95 | AS      |
+            | 4      |      6 | Katherine Downie       | Australia     | 2:34.64 |         |
+            | 5      |      2 | Nina Ryabova           | Russia        | 2:35.65 |         |
+            | 6      |      8 | Aurelie Rivard         | Canada        | 2:37.70 |         |
+            | 7      |      7 | Harriet Lee            | Great Britain | 2:39.42 |         |
+            | 8      |      1 | Gemma Almond           | Great Britain | 2:42.16 |         |
+            
+            Table Summary:
+            **Title**: International Swimming Competition Results with World and Asian Record Highlights
+            **Keywords**: Swimmer name, nationality, time, ranking, world record, Asian record, lane number
+            **Content Overview**: This table contains the final results of an international swimming competition, showing the rank, name, nationality, lane, and final time for each swimmer. It also highlights world records (WR) and Asian records (AS) set during the event. The data allows comparison of swimmer performances across different nations.
+            **Data Patterns and Trends**: Swimmers with the fastest times tend to occupy the top ranks, with two notable record-breaking performances. New Zealand’s Sophie Pascoe set a world record, and China’s Zhang Meng set an Asian record.
+            
+            User 2:
+            Query Suggestions:
+            1. "Who set the World Record in this swimming competition?"
+            2. "Which swimmer finished in the top three positions in this event?"
+            3. "What was the finishing time of the swimmer from China?"
+            4. "How did swimmers from Great Britain perform in this competition?"
+            5. "how long did it take aurelie rivard to finish?"
+
+            Example 2 (Filmography Table):
+            User 1:
+
+            Table data:
+            |   Year | Title                                    | Role                          | Notes           |
+            |-------:|:-----------------------------------------|:------------------------------|:----------------|
+            |   1995 | Polio Water                              | Diane                         | Short film      |
+            |   1996 | New York Crossing                        | Drummond                      | Television film |
+            |   1997 | Lawn Dogs                                | Devon Stockard                |                 |
+            |   1999 | Pups                                     | Rocky                         |                 |
+            |   1999 | Notting Hill                             | 12-Year-Old Actress           |                 |
+            |   1999 | The Sixth Sense                          | Kyra Collins                  |                 |
+            |   2000 | Paranoid                                 | Theresa                       |                 |
+            |   2000 | Skipped Parts                            | Maurey Pierce                 |                 |
+            |   2000 | Frankie & Hazel                          | Francesca 'Frankie' Humphries | Television film |
+            |   2001 | Lost and Delirious                       | Mary 'Mouse' Bedford          |                 |
+            |   2001 | Julie Johnson                            | Lisa Johnson                  |                 |
+            |   2001 | Tart                                     | Grace Bailey                  |                 |
+            |   2002 | A Ring of Endless Light                  | Vicky Austin                  | Television film |
+            |   2003 | Octane                                   | Natasha 'Nat' Wilson          |                 |
+            |   2006 | The Oh in Ohio                           | Kristen Taylor                |                 |
+            |   2007 | Closing the Ring                         | Young Ethel Ann               |                 |
+            |   2007 | St Trinian's                             | JJ French                     |                 |
+            |   2007 | Virgin Territory                         | Pampinea                      |                 |
+            |   2008 | Assassination of a High School President | Francesca Fachini             |                 |
+            |   2009 | Walled In                                | Sam Walczak                   |                 |
+            |   2009 | Homecoming                               | Shelby Mercer                 |                 |
+            |   2010 | Don't Fade Away                          | Kat                           |                 |
+            |   2011 | You and I                                | Lana                          |                 |
+            |   2012 | Into the Dark                            | Sophia Monet                  |                 |
+            |   2012 | Ben Banks                                | Amy                           |                 |
+            |   2012 | Apartment 1303 3D                        | Lara Slate                    |                 |
+            |   2012 | Cyberstalker                             | Aiden Ashley                  | Television film |
+            |   2013 | Bhopal: A Prayer for Rain                | Eva Gascon                    |                 |
+            |   2013 | A Resurrection                           | Jessie                        | Also producer   |
+            |   2013 | L.A. Slasher                             | The Actress                   |                 |
+            |   2013 | Gutsy Frog                               | Ms. Monica                    | Television film |
+
+            Table summary:
+            **Title**: Filmography of Notable Roles from 1995 to 2013  
+            **Keywords**: Year, Title, Role, Notes, Film, Television, Short film, Producer  
+            **Content Overview**: This table presents a chronological filmography detailing various roles played by an actress from 1995 to 2013. It includes columns for the year of release, title of the film or television project, the role played by the actress, and any additional notes, such as whether the project was a short film or a television film. The table serves as a comprehensive overview of the actress's career, showcasing her diverse roles across different genres and formats.  
+            **Data Patterns and Trends**: The actress has participated in a wide range of projects, including short films, television films, and feature films. Notably, the late 1990s and early 2000s show a concentration of roles, indicating a peak in her career during that time. Additionally, the table reveals her involvement in several television films, highlighting a trend towards this format in her later years. The presence of producer credits in some entries indicates her expanding role in the industry beyond acting.  
+            
+            Query Suggestions:
+            1. "What roles did the actress play in films released in 2001?"
+            2. "Can you list all the television films that the actress was involved in?"
+            3. "Which film marked the actress's debut in 1995?"
+            4. "What are the notable projects the actress produced during her career?"
+            5. "In which year did the actress appear in the film 'Notting Hill'?"
+
+            Now, Please generate 5 example queries that someone might use to search for information in this table. 
+            Ensure the queries are diverse, using different sentence structures, and cover a range of potential user needs or scenarios. Avoid repetition and ensure each query addresses a unique aspect of the table.
+            
+            Table data (in its original format):
+            {table}
+
+            Table summary:
+            {summary}
+            
+            Table caption (if available):
+            {caption}
+
+            Context (if available):
+            {context}
+            """
+
+            generated_text = self.generate_text(prompt)
+            
+            print("Generated queries: ")
+            print(generated_text)
+
+            return generated_text
+        
+        except Exception as e:
+            print(f"Error occurred in generate_query_suggestions: {e}")
+            traceback.print_exc()  
+            return ""
 
 
     @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
@@ -636,6 +917,9 @@ class LLM_Generator:
                 return generated_texts[0]
         else:
             return self.generate_text(prompt).strip()  # Ensure any whitespace is removed, returning only the answer
+
+
+
 
 
 

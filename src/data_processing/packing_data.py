@@ -35,7 +35,7 @@ def process_jsonl(input_file, output_file):
 
 
 # 使用示例
-input_file = '/home/yuhangwu/Desktop/Projects/tablerag/data/processed/clarified_data/e2ewq.jsonl'   # 输入的jsonl文件名
-output_file = '/home/yuhangwu/Desktop/Projects/tablerag/data/processed/clarified_data/packed_e2ewq.jsonl' # 输出的jsonl文件名
+input_file = '/home/yuhangwu/Desktop/Projects/tablerag/data/processed/clarified_data/nqtables.jsonl'   # 输入的jsonl文件名
+output_file = '/home/yuhangwu/Desktop/Projects/tablerag/data/processed/packed_data/packed_nqtables.jsonl' # 输出的jsonl文件名
 
 process_jsonl(input_file, output_file)

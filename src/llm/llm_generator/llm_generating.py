@@ -671,7 +671,7 @@ class LLM_Generator:
             Return only one of these two numbers without any additional text or formatting.
 
             """
-            print(prompt)
+
             generated_text = self.generate_text(prompt)
 
             return generated_text

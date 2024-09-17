@@ -20,7 +20,7 @@ def group_data_by_query(data):
     """将数据按 query 分组，每 5 行属于同一个 query"""
     grouped_data = []
     for i in range(0, len(data), 5):
-        grouped_data.append(data[i:i+5])
+        grouped_data.append(data[i:i+5])  # 每5行分组一次
     return grouped_data
 
 def extract_table_data(group):
@@ -65,7 +65,6 @@ def iterative_table_selection(select_best_table, query, tables):
         # 打印读取的 next_table 的 passage_id 及其类型
         print('next_table["passage_id"] (from data):', next_table['passage_id'], type(next_table['passage_id']))
 
-
         # 根据返回的 better_table_passage_id，更新 current_best 为更优的表格
         if str(better_table_passage_id) == str(next_table['passage_id']):
             current_best = next_table
@@ -74,12 +73,28 @@ def iterative_table_selection(select_best_table, query, tables):
     return current_best
 
 # ------------------------
+# Step 3: 保存最优表格到 JSONL 文件
+# ------------------------
+
+def save_best_table_to_jsonl(best_table, original_group, output_file):
+    """保存最佳表格的原始状态到新的 JSONL 文件"""
+    # 在原始组中找到最佳表格的原始数据
+    for entry in original_group:
+        if entry['result']['passage_id'] == best_table['passage_id']:
+            with open(output_file, 'a') as f:  # 追加写入
+                f.write(json.dumps(entry) + '\n')  # 将原始数据写入文件
+            break
+
+# ------------------------
 # 主程序逻辑
 # ------------------------
 
 if __name__ == "__main__":
+    input_file = '/home/yuhangwu/Desktop/Projects/tablerag/data/processed/retrieval_results/e2ewtq_test.jsonl'
+    output_file = '/home/yuhangwu/Desktop/Projects/tablerag/data/processed/llm_filtered_data/e2ewtq_test.jsonl'  # 保存最优表格的输出文件
+    
     # 加载数据
-    data = load_data('/home/yuhangwu/Desktop/Projects/tablerag/data/processed/retrieval_results/e2ewtq_test.jsonl')
+    data = load_data(input_file)
     
     # 将数据按 query 分组，每组包含 5 个候选表格
     grouped_data = group_data_by_query(data)
@@ -89,7 +104,7 @@ if __name__ == "__main__":
     correct_final_selection_in_top5 = 0  # 在 hits@5 包含正确答案的情况下，我们筛选正确的次数
     correct_final_selection = 0  # 总的最终正确选择次数
 
-    for group in grouped_data:
+    for group in grouped_data:  # 确保遍历所有查询组
         query, tables, correct_id = extract_table_data(group)
         
         # 判断 ColBERT 的 top 5 是否包含正确答案
@@ -103,17 +118,23 @@ if __name__ == "__main__":
             # 判断最终选择的表格是否正确
             if best_table['passage_id'] == correct_id:
                 correct_final_selection_in_top5 += 1
+            
+            # 保存该组中最优表格的原始状态
+            save_best_table_to_jsonl(best_table, group, output_file)
+    
+    # 确保代码遍历所有组，计算每组的结果
+    if total_queries > 0:
+        # 计算命中前5包含正确表格时的准确率
+        if queries_with_correct_in_top5 > 0:
+            accuracy_given_in_top5 = correct_final_selection_in_top5 / queries_with_correct_in_top5
+        else:
+            accuracy_given_in_top5 = 0
         
-
-    # 计算命中前5包含正确表格时的准确率
-    if queries_with_correct_in_top5 > 0:
-        accuracy_given_in_top5 = correct_final_selection_in_top5 / queries_with_correct_in_top5
+        # 计算总体准确率
+        overall_accuracy = correct_final_selection_in_top5 / total_queries
+        
+        # 输出结果
+        print(f"在 ColBERT 返回的 top 5 中包含正确表格的情况下，最终筛选出正确表格的准确率：{accuracy_given_in_top5:.2%}")
+        print(f"总体最终准确率：{overall_accuracy:.2%}")
     else:
-        accuracy_given_in_top5 = 0
-    
-    # 计算总体准确率
-    overall_accuracy = correct_final_selection / total_queries
-    
-    # 输出结果
-    print(f"在 ColBERT 返回的 top 5 中包含正确表格的情况下，最终筛选出正确表格的准确率：{accuracy_given_in_top5:.2%}")
-    print(f"总体最终准确率：{overall_accuracy:.2%}")
+        print("没有数据可供处理。")

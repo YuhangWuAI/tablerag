@@ -3,7 +3,9 @@ import json
 # 定义文件路径
 input_file_1 = '/home/yuhangwu/Desktop/Projects/tablerag/data/processed/llm_filtered_data/e2ewtq_test.jsonl'
 input_file_2 = '/home/yuhangwu/Desktop/Projects/tablerag/data/processed/clarified_data/e2ewtq.jsonl'
+input_file_3 = '/home/yuhangwu/Desktop/Projects/tablerag/data/raw/small_dataset/e2ewtq.jsonl'
 output_file = '/home/yuhangwu/Desktop/Projects/tablerag/data/processed/row_col_filtered_data/e2ewtq.jsonl'
+
 
 # 读取第一个文件 e2ewtq_test.jsonl
 with open(input_file_1, 'r') as file1:
@@ -33,6 +35,27 @@ for line_num, line in enumerate(lines1):
                 table_context = clarified_data.get('table_context', [])
                 table_summary = clarified_data.get('table_summary', '')
                 terms_explanation = clarified_data.get('terms_explanation', '')
+                
+                # 从第三个文件 e2ewtq.jsonl 中读取 formatted_table 和 label 字段
+                with open(input_file_3, 'r') as file3:
+                    raw_lines = file3.readlines()
+
+                    if current_id < len(raw_lines):  # 确保不会超出文件行数
+                        raw_data = json.loads(raw_lines[current_id])
+                        
+                        # 提取 formatted_table 字段
+                        formatted_table = raw_data.get('table', '')
+
+                        # 提取 label 字段，结合 label 和 alternativeLabel
+                        label = []
+                        if 'label' in raw_data:
+                            label.append(raw_data['label'])
+                        if 'alternativeLabel' in raw_data:
+                            label.append(raw_data['alternativeLabel'])
+                        
+                        # 如果 label 列表为空则赋予空值
+                        if not label:
+                            label = None
 
                 # 打包数据
                 result = {
@@ -41,7 +64,9 @@ for line_num, line in enumerate(lines1):
                     'table_title': table_title,
                     'table_context': table_context,
                     'table_summary': table_summary,
-                    'terms_explanation': terms_explanation
+                    'formatted_table': formatted_table,  # 新增字段
+                    'terms_explanation': terms_explanation,
+                    'label': label  # 新增字段
                 }
 
                 # 将结果添加到列表中

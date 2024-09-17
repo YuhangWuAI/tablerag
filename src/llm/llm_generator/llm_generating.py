@@ -77,7 +77,7 @@ class LLM_Generator:
         encoding = tiktoken.encoding_for_model(self.GPT_MODEL)
         return len(encoding.encode("".join([str(item) for item in text])))
 
-    @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
+
     def call_llm_code_generation(self, context: str) -> str:
         """Synthesize code snippet from the table context."""
         prompt = f"""
@@ -144,6 +144,70 @@ class LLM_Generator:
         Only filter out rows and columns that are definitely not needed to verify the statement.
         Only return the code. 
         {context}
+        \n\n:
+        """
+
+        if self.USE_SELF_CONSISTENCY:
+            generated_codes = [self.generate_text(prompt) for _ in range(5)]
+            print("Generated codes:", generated_codes)
+            
+            # Find the most common code
+            code_counter = Counter(generated_codes)
+            most_common_code, count = code_counter.most_common(1)[0]
+            
+            if count > 1:
+                return most_common_code
+            else:
+                return generated_codes[0]
+        else:
+            return self.generate_text(prompt)
+
+
+    def new_call_llm_code_generation(self, query, enhanced_info, column_names, table) -> str:
+
+        prompt = f"""
+        You will receive a query, a table, and the column names of the table. Additionally, you may receive information such as the table title, table summary, or terms explanation to provide more context.
+
+        Your task:
+        Generate a code snippet from the table context that selects the necessary rows and columns to answer the query. Specifically, you need to filter out rows and columns that are not relevant to the query.
+
+        Instructions:
+        1. Use the exact column names provided, including spaces, capitalization, and punctuation.
+        2. Treat all data as strings, even if they appear to be numbers.
+        3. Only remove rows and columns that are clearly unnecessary for answering the query or verifying the statement.
+
+        Example 1:
+        User's Statement: "The scheduled date for the farm with 17 turbines is 2012."
+        Columns: ['wind farm', 'scheduled', 'capacity (mw)', 'turbines', 'type', 'location']
+        Filtered code:
+        filtered_table = df[['wind farm', 'scheduled', 'turbines']].query("turbines == '17'")
+
+        Example 2:
+        User's Statement: "All 12 clubs played a total of 22 games for the WRU division one east."
+        Columns: ['club', 'played', 'drawn', 'lost', 'points for', 'points against', 'tries for', 'tries against', 'try bonus', 'losing bonus', 'points']
+        Filtered code:
+        filtered_table = df[['club', 'played']].query("played == '22'")
+        
+        Now, based on the table context provided, generate the appropriate code snippet to filter and select the rows and columns needed to answer the query.
+        
+        Query:
+        {query}
+        
+        Enhanced Info:
+        {enhanced_info}
+
+        Column Names:
+        {column_names}
+
+        Table:
+        {table}
+
+        
+        Use the existing column names from the provided DataFrame.
+        The column names in the generated code must match the provided column names exactly, including spaces, capitalization, and punctuation.
+        Only filter out rows and columns that are definitely not needed to verify the statement.
+        Only return the code. 
+
         \n\n:
         """
 
@@ -984,6 +1048,54 @@ class LLM_Generator:
         else:
             return self.generate_text(prompt).strip()  # Ensure any whitespace is removed, returning only the answer
 
+
+
+    def e2ewtq_generate_final_answer(self, query, enhanced_info, formatted_filtered_table) -> str:
+        print("\nCalling OpenAI API for generating the final answer for HybridQA dataset!!!\n")
+
+        # Check if terms explanation, table summary, or table context are empty, and use a placeholder if they are
+
+        prompt = f"""
+        You will receive a query, a table. Additionally, you may receive information such as the table title, table summary, or terms explanation to provide more context.
+        The table content may be provided in string format, Markdown format, or HTML format.
+
+        Your task is to determine the answer to the query based on the table, provided information, and any additional enhanced context.
+        Pay close attention to the specific details and conditions mentioned in the query.
+        Make sure to match all the given conditions in the query to ensure the answer is accurate.
+        Return the answer as a single string without any additional text.
+
+
+        Now, answer the following query based on the provided information.
+
+        Query: 
+        {query}
+        
+        Enhanced Info:
+        {enhanced_info}
+
+        Table: 
+        {formatted_filtered_table}
+
+
+        Carefully match all specific conditions mentioned in the query.
+        Provide only the answer as a single string without any additional text.
+        """
+
+        if self.USE_SELF_CONSISTENCY:
+            generated_texts = [self.generate_text(prompt) for _ in range(5)]
+            print("Generated texts:", generated_texts)
+            
+            # Find the most common generated text
+            text_counter = Counter(generated_texts)
+            most_common_text, count = text_counter.most_common(1)[0]
+            
+            if count > 1:
+                return most_common_text
+            else:
+                return generated_texts[0]
+        else:
+            return self.generate_text(prompt).strip()  # Ensure any whitespace is removed, returning only the answer
+        
 
     @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
     def sqa_generate_final_answer(self, query_need_to_answer: str, table_formatted: str, terms_explanation: str, table_summary: str, table_context: str) -> str:

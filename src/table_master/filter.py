@@ -103,11 +103,11 @@ def colbert_pipeline(output_path: str, jsonl_query_path: str, jsonl_index_path: 
 
 def main():
     # Configuration parameters
-    jsonl_query_path = "/home/yuhangwu/Desktop/Projects/tablerag/data/raw/small_dataset/nqtables.jsonl"  # Queries
-    jsonl_index_path = "/home/yuhangwu/Desktop/Projects/tablerag/data/processed/packed_data/packed_nqtables.jsonl"  # Data to be indexed and queried
+    jsonl_query_path = "/home/yuhangwu/Desktop/Projects/tablerag/data/raw/small_dataset/e2ewtq.jsonl"  # Queries
+    jsonl_index_path = "/home/yuhangwu/Desktop/Projects/tablerag/data/processed/packed_data/packed_e2ewtq.jsonl"  # Data to be indexed and queried
     model_name = "colbert-ir/colbertv2.0"
     index_name = "my_index"
-    output_path = "/home/yuhangwu/Desktop/Projects/tablerag/data/processed/retrieval_results/nqtables.jsonl"  # Save output to this file
+    output_path = "/home/yuhangwu/Desktop/Projects/tablerag/data/processed/retrieval_results/e2ewtq.jsonl"  # Save output to this file
 
     # Retrieve documents and save results immediately
     colbert_pipeline(
@@ -116,7 +116,7 @@ def main():
         jsonl_index_path=jsonl_index_path, 
         model_name=model_name, 
         index_name=index_name, 
-        top_k=1, 
+        top_k=5, 
         force_fast=False, 
         rerank=False, 
         rerank_top_k=5

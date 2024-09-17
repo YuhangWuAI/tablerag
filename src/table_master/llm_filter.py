@@ -56,12 +56,18 @@ def iterative_table_selection(select_best_table, query, tables):
         # 在传递给 LLM 时，将表格内容和 passage_id 组合传递给 LLM 进行比较
         better_table_passage_id = select_best_table(
             query, 
-            f"Table Content: {current_best['table']}\nPassage ID: {current_best['passage_id']}",
-            f"Table Content: {next_table['table']}\nPassage ID: {next_table['passage_id']}"
+            f"Table1 Content: {current_best['table']}\ntable1['passage_id']: {current_best['passage_id']}",
+            f"Table2 Content: {next_table['table']}\ntable2['passage_id']: {next_table['passage_id']}"
         )
-        print('better_table_passage_id is: ', better_table_passage_id)
+
+        print('better_table_passage_id (from LLM):', better_table_passage_id, type(better_table_passage_id))
+        
+        # 打印读取的 next_table 的 passage_id 及其类型
+        print('next_table["passage_id"] (from data):', next_table['passage_id'], type(next_table['passage_id']))
+
+
         # 根据返回的 better_table_passage_id，更新 current_best 为更优的表格
-        if better_table_passage_id == next_table['passage_id']:
+        if str(better_table_passage_id) == str(next_table['passage_id']):
             current_best = next_table
     
     # 返回最终选出的最优表格

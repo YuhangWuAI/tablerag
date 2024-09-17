@@ -644,7 +644,7 @@ class LLM_Generator:
 
             You will receive a query along with two tables provided in various formats, such as Markdown, HTML, or plain text. These tables may include elements like titles, summaries, query suggestions, terminology, and abbreviation explanations.
 
-            Your task is to determine, based on the provided query, which table is most likely to answer the question and return **only the passage_id** from the most appropriate table.
+            Your task is to determine, based on the provided query, which table is most likely to answer the question and return **only the passage_id** from the most appropriate table. You MUST choose between the two given passage_ids and return ONLY the passage_id.
 
             To make the best judgment, consider the following:
 
@@ -665,7 +665,11 @@ class LLM_Generator:
             Table 2:
             {table2}
 
-            Return only the **numeric value** of the passage_id from the table you determine to be the most suitable, without any extra text or formatting.
+            You must return **only the numeric value** of the passage_id from the table you determine to be the most suitable. 
+            Choose between the two passage_ids: table1['passage_id'] or table2['passage_id'].
+
+            Return only one of these two numbers without any additional text or formatting.
+
             """
             print(prompt)
             generated_text = self.generate_text(prompt)

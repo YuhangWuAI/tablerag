@@ -520,7 +520,7 @@ class LLM_Generator:
             traceback.print_exc()  
             return ""
 
-    def generate_query_suggestions(self,caption: str,  summary: str, table: str, context: list) -> str:
+    def generate_query_suggestions(self, caption: str,  summary: str, table: str, context: list) -> str:
 
         try:
             prompt = f"""
@@ -636,6 +636,45 @@ class LLM_Generator:
         except Exception as e:
             print(f"Error occurred in generate_query_suggestions: {e}")
             traceback.print_exc()  
+            return ""
+
+    def select_best_table(self, query: str, table1: str, table2: str) -> str:
+        try:
+            prompt = f"""
+
+            You will receive a query along with two tables provided in various formats, such as Markdown, HTML, or plain text. These tables may include elements like titles, summaries, query suggestions, terminology, and abbreviation explanations.
+
+            Your task is to determine, based on the provided query, which table is most likely to answer the question and return **only the passage_id** from the most appropriate table.
+
+            To make the best judgment, consider the following:
+
+            1. **Matching of key terms, entities, and time**  
+            Does the table contain the key terms from the query (such as people names, place names, organization names, or specific terms) and the specified time or date? These matches are often crucial in determining whether the table can answer the question.
+
+            2. **Completeness of information matching**  
+            Evaluate how well the information in the table matches the query. Does the table contain all or the most relevant content needed to answer the question?
+
+            3. **Overall judgment**  
+            If neither table is a perfect match, use the above two points as guidance, along with your own judgment, to choose the table most likely to answer the question.
+
+            Query: {query}
+
+            Table 1:
+            {table1}
+
+            Table 2:
+            {table2}
+
+            Return only the **numeric value** of the passage_id from the table you determine to be the most suitable, without any extra text or formatting.
+            """
+            print(prompt)
+            generated_text = self.generate_text(prompt)
+
+            return generated_text
+
+        except Exception as e:
+            print(f"Error occurred in select_best_table: {e}")
+            traceback.print_exc()
             return ""
 
 

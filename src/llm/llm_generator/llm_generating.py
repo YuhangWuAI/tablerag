@@ -1062,8 +1062,11 @@ class LLM_Generator:
         Your task is to determine the answer to the query based on the table, provided information, and any additional enhanced context.
         Pay close attention to the specific details and conditions mentioned in the query.
         Make sure to match all the given conditions in the query to ensure the answer is accurate.
-        Return the answer as a single string without any additional text.
 
+        When answering the query:
+        1. **For questions involving "or" (e.g., "Was it X or Y?"),** make sure to **strictly choose between the provided options (X or Y)** without adding any extra words or creating your own response. Provide only one of the options as the answer unless the query explicitly requires otherwise.
+        2. **For time-related questions (e.g., "How long did it take?"),** ensure you **strictly follow the format provided in the table** (e.g., hours, minutes, seconds). Avoid reformatting or interpreting the time differently.
+        3. **Do not add any additional explanation, justification, or extra information.** Return the answer as a single string with no surrounding text.
 
         Now, answer the following query based on the provided information.
 
@@ -1075,7 +1078,6 @@ class LLM_Generator:
 
         Table: 
         {formatted_filtered_table}
-
 
         Carefully match all specific conditions mentioned in the query.
         Provide only the answer as a single string without any additional text.
@@ -1095,6 +1097,7 @@ class LLM_Generator:
                 return generated_texts[0]
         else:
             return self.generate_text(prompt).strip()  # Ensure any whitespace is removed, returning only the answer
+
         
 
     @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))

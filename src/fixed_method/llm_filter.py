@@ -56,8 +56,8 @@ def iterative_table_selection(select_best_table, query, tables):
         # 在传递给 LLM 时，将表格内容和 passage_id 组合传递给 LLM 进行比较
         better_table_passage_id = select_best_table(
             query, 
-            f"Table1 Content: {current_best['table']}\ntable1['passage_id']: {current_best['passage_id']}",
-            f"Table2 Content: {next_table['table']}\ntable2['passage_id']: {next_table['passage_id']}"
+            f"table1['passage_id']: {current_best['passage_id']}\nTable1 Content: {current_best['table']}",
+            f"table2['passage_id']: {next_table['passage_id']}\nTable2 Content: {next_table['table']}"
         )
 
         print('better_table_passage_id (from LLM):', better_table_passage_id, type(better_table_passage_id))
@@ -90,8 +90,8 @@ def save_best_table_to_jsonl(best_table, original_group, output_file):
 # ------------------------
 
 if __name__ == "__main__":
-    input_file = '/home/yuhangwu/Desktop/Projects/tablerag/data/processed/retrieval_results/e2ewtq.jsonl'
-    output_file = '/home/yuhangwu/Desktop/Projects/tablerag/data/processed/llm_filtered_data/e2ewtq.jsonl'  # 保存最优表格的输出文件
+    input_file = '/home/yuhangwu/Desktop/Projects/tablerag/data/processed/retrieval_results/nqtables.jsonl'
+    output_file = '/home/yuhangwu/Desktop/Projects/tablerag/data/processed/llm_filtered_data/nqtables.jsonl'  # 保存最优表格的输出文件
     
     # 加载数据
     data = load_data(input_file)

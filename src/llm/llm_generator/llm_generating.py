@@ -10,6 +10,8 @@ import json
 import traceback
 
 
+
+from datetime import datetime
 import ast  # For converting embeddings saved as strings back to arrays
 from collections import Counter
 import json
@@ -721,6 +723,11 @@ class LLM_Generator:
             3. **Overall judgment**  
             If neither table is a perfect match, use the above two points as guidance, along with your own judgment, to choose the table most likely to answer the question.
 
+            You must return **only the numeric value** of the passage_id from the table you determine to be the most suitable. 
+            Choose between the two passage_ids: table1['passage_id'] or table2['passage_id'].
+
+            Return only one of these two numbers without any additional text or formatting.
+
             Query: {query}
 
             Table 1:
@@ -1048,10 +1055,57 @@ class LLM_Generator:
         else:
             return self.generate_text(prompt).strip()  # Ensure any whitespace is removed, returning only the answer
 
+    def nqtables_generate_final_answer(self, query, enhanced_info, formatted_filtered_table) -> str:
+
+        # Check if terms explanation, table summary, or table context are empty, and use a placeholder if they are
+
+        prompt = f"""
+        You will receive a query and a table. Additionally, you may receive information such as the table title, table summary, or terms explanation to provide more context.
+        The table content may be provided in string format, Markdown format, or HTML format.
+
+        Your task is to determine the answer to the query based on the table, provided information, and any additional enhanced context.
+        Pay close attention to the specific details and conditions mentioned in the query.
+        Make sure to match all the given conditions in the query to ensure the answer is accurate.
+
+        When answering the query, **strictly follow these rules**:
+        1. **For formatting**: Always use the exact format of the information provided in the table. For example, if the table shows a date as "21 March 2022", do not reformat it to "March 21, 2022". Provide the answer **exactly** as it appears in the table.
+        2. **For questions with multiple possible answers**: If the query requires a single answer (e.g., "Who was the champion in 2019?"), only return the **most relevant or first answer**. Even if the table contains multiple related answers, return only the most prominent one unless the query explicitly asks for multiple.
+        3. **For specific entity queries**: When the query asks for a single entity (e.g., "Which company was the top performer in 2020?"), provide **only one entity** even if the table contains multiple associated entries (e.g., company and CEO). Give the most direct or relevant answer.
+        4. **Avoid unnecessary expansions or inferences**: Do not expand abbreviations, provide full names, or make assumptions. For example, if the table lists "Mr. Smith", do not infer his first name unless explicitly required by the query.
+        5. **Do not include any additional references or notes from the table**: If the table contains references or footnotes (e.g., a number in parentheses or a star symbol), exclude these from your final answer. Return only the core information.
+        6. **Follow the exact conditions of the query**: If the query asks for a specific number of items (e.g., "List the top two performers"), provide only the exact number of items requested.
+
+        Now, based on the provided information, answer the following query. Ensure that your answer strictly follows the table format and the query requirements:
+
+        Query: 
+        {query}
+        
+        Enhanced Info:
+        {enhanced_info}
+
+        Table: 
+        {formatted_filtered_table}
+
+        Provide only the answer as a single string without any additional text or formatting changes.
+        """
+
+        if self.USE_SELF_CONSISTENCY:
+            generated_texts = [self.generate_text(prompt) for _ in range(5)]
+            print("Generated texts:", generated_texts)
+            
+            # Find the most common generated text
+            text_counter = Counter(generated_texts)
+            most_common_text, count = text_counter.most_common(1)[0]
+            
+            if count > 1:
+                return most_common_text
+            else:
+                return generated_texts[0]
+        else:
+            return self.generate_text(prompt).strip()  
 
 
     def e2ewtq_generate_final_answer(self, query, enhanced_info, formatted_filtered_table) -> str:
-        print("\nCalling OpenAI API for generating the final answer for HybridQA dataset!!!\n")
 
         # Check if terms explanation, table summary, or table context are empty, and use a placeholder if they are
 
@@ -1097,7 +1151,6 @@ class LLM_Generator:
                 return generated_texts[0]
         else:
             return self.generate_text(prompt).strip()  # Ensure any whitespace is removed, returning only the answer
-
         
 
     @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
@@ -1195,15 +1248,38 @@ class LLM_Generator:
 
 
 
+
+
     @retry(wait=wait_random_exponential(min=30, max=60), stop=stop_after_attempt(1000))
     def generate_text(self, prompt: str) -> str:
         """
-        Generate text based on the prompt and instruction.
+        Generate text based on the prompt and instruction. If the prompt exceeds the maximum allowed length, it will be truncated,
+        and the original (untruncated) prompt will be saved to a JSONL file for further analysis.
 
         :param prompt: The prompt to guide the text generation.
         :return: Generated text as a string.
         """
+        MAX_PROMPT_LENGTH = 1048500  # 设置最大允许的prompt长度（略小于API最大字符限制）
+        JSONL_FILE_PATH = "/home/yuhangwu/Desktop/Projects/tablerag/data/processed/truncated_data/truncated_prompts.jsonl"  # 保存截断内容的jsonl文件
+
         try:
+            # 如果 prompt 长度超过最大限制，进行截断并保存原始内容
+            if len(prompt) > MAX_PROMPT_LENGTH:
+                print(f"Prompt is too long ({len(prompt)} characters). Truncating to {MAX_PROMPT_LENGTH} characters.")
+                
+                # 保存原始 prompt 到 jsonl 文件
+                original_prompt_data = {
+                    "timestamp": datetime.now().isoformat(),
+                    "original_prompt": prompt,
+                    "original_length": len(prompt)
+                }
+                
+                with open(JSONL_FILE_PATH, 'a') as f:
+                    f.write(json.dumps(original_prompt_data) + '\n')
+                
+                # 截断 prompt
+                prompt = prompt[:MAX_PROMPT_LENGTH]
+
             print("Calling OpenAI API for text generation")
             response = self.client.chat.completions.create(
                 model=self.GPT_MODEL,
@@ -1221,3 +1297,5 @@ class LLM_Generator:
         except Exception as e:
             print("Error in generate_text:", e)
             raise
+
+

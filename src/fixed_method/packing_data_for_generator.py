@@ -1,10 +1,10 @@
 import json
 
 # 定义文件路径
-input_file_1 = '/home/yuhangwu/Desktop/Projects/tablerag/data/processed/llm_filtered_data/e2ewtq.jsonl'
-input_file_2 = '/home/yuhangwu/Desktop/Projects/tablerag/data/processed/clarified_data/e2ewtq.jsonl'
-input_file_3 = '/home/yuhangwu/Desktop/Projects/tablerag/data/raw/small_dataset/e2ewtq.jsonl'
-output_file = '/home/yuhangwu/Desktop/Projects/tablerag/data/processed/row_col_filtered_data/e2ewtq.jsonl'
+input_file_1 = '/home/yuhangwu/Desktop/Projects/tablerag/data/processed/llm_filtered_data/nqtables.jsonl'
+input_file_2 = '/home/yuhangwu/Desktop/Projects/tablerag/data/processed/clarified_data/nqtables.jsonl'
+input_file_3 = '/home/yuhangwu/Desktop/Projects/tablerag/data/raw/small_dataset/nqtables.jsonl'
+output_file = '/home/yuhangwu/Desktop/Projects/tablerag/data/processed/row_col_filtered_data/nqtables.jsonl'
 
 
 # 读取第一个文件 e2ewtq_test.jsonl

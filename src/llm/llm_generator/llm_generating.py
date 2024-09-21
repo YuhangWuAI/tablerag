@@ -507,12 +507,6 @@ class LLM_Generator:
             **Keywords**: Swimmer name, nationality, time, ranking, world record, Asian record, lane number
             **Content Overview**: This table contains the final results of an international swimming competition, showing the rank, name, nationality, lane, and final time for each swimmer. It also highlights world records (WR) and Asian records (AS) set during the event. The data allows comparison of swimmer performances across different nations.
             **Data Patterns and Trends**: Swimmers with the fastest times tend to occupy the top ranks, with two notable record-breaking performances. New Zealand’s Sophie Pascoe set a world record, and China’s Zhang Meng set an Asian record.
-            **Query Suggestions**:
-                1. "Which swimmer set a world record in this competition?"
-                2. "How did swimmers from China perform in this event?"
-                3. "Can you list the top 3 swimmers along with their final times?"
-                4. "Which swimmer was in lane 4, and what was their result?"
-                5. "What is the rank and time of the swimmer from Russia?"
 
             **Example 2: Fight Record Table**
             User 1:
@@ -1068,14 +1062,16 @@ class LLM_Generator:
         Make sure to match all the given conditions in the query to ensure the answer is accurate.
 
         When answering the query, **strictly follow these rules**:
-        1. **For formatting**: Always use the exact format of the information provided in the table. For example, if the table shows a date as "21 March 2022", do not reformat it to "March 21, 2022". Provide the answer **exactly** as it appears in the table.
-        2. **For questions with multiple possible answers**: If the query requires a single answer (e.g., "Who was the champion in 2019?"), only return the **most relevant or first answer**. Even if the table contains multiple related answers, return only the most prominent one unless the query explicitly asks for multiple.
-        3. **For specific entity queries**: When the query asks for a single entity (e.g., "Which company was the top performer in 2020?"), provide **only one entity** even if the table contains multiple associated entries (e.g., company and CEO). Give the most direct or relevant answer.
-        4. **Avoid unnecessary expansions or inferences**: Do not expand abbreviations, provide full names, or make assumptions. For example, if the table lists "Mr. Smith", do not infer his first name unless explicitly required by the query.
-        5. **Do not include any additional references or notes from the table**: If the table contains references or footnotes (e.g., a number in parentheses or a star symbol), exclude these from your final answer. Return only the core information.
-        6. **Follow the exact conditions of the query**: If the query asks for a specific number of items (e.g., "List the top two performers"), provide only the exact number of items requested.
+        
+        1. **Always return only one answer**: Regardless of whether the query starts with "who", "which", or another question word, you should always return only one, most likely answer. Even if there are multiple possible answers, return just one unless the query explicitly asks for multiple answers.
 
-        Now, based on the provided information, answer the following query. Ensure that your answer strictly follows the table format and the query requirements:
+        2. **For special formats (e.g., time, date)**: Always extract the exact format from the table. Do not attempt to reformat or interpret time, date, or other specific values differently. Simply provide the value exactly as it appears in the table.
+
+        3. **Remove references and footnotes**: If a cell contains references, footnotes, or additional notations (e.g., "(1)", "(*)"), make sure to remove them in your final answer. Provide only the core information.
+
+        4. **Do not add any additional explanation, justification, or extra information**: The answer should be as concise as possible, containing only the necessary details to answer the query.
+
+        Now, based on the provided information, answer the following query. Ensure that your answer is concise, relevant, and avoids including unnecessary details.
 
         Query: 
         {query}
@@ -1102,7 +1098,7 @@ class LLM_Generator:
             else:
                 return generated_texts[0]
         else:
-            return self.generate_text(prompt).strip()  
+            return self.generate_text(prompt).strip()  # Ensure any whitespace is removed, returning only the answer
 
 
     def e2ewtq_generate_final_answer(self, query, enhanced_info, formatted_filtered_table) -> str:

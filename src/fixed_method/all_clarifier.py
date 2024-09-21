@@ -94,8 +94,8 @@ def process_jsonl(input_file, output_file, progress_file, table_format):
                 print(f"Warning: Data on line {line_num} could not be processed.")
 
 # 调用处理函数
-input_file = '/home/yuhangwu/Desktop/Projects/tablerag/data/raw/small_dataset/nqtables.jsonl'  # 替换为你的输入文件路径
-output_file = '/home/yuhangwu/Desktop/Projects/tablerag/data/processed/clarified_data/nqtables.jsonl'  # 替换为你的输出文件路径
+input_file = '/home/yuhangwu/Desktop/Projects/tablerag/data/raw/small_dataset/e2ewtq.jsonl'  # 替换为你的输入文件路径
+output_file = '/home/yuhangwu/Desktop/Projects/tablerag/data/processed/clarified_data/e2ewtq.jsonl'  # 替换为你的输出文件路径
 progress_file = '/home/yuhangwu/Desktop/Projects/tablerag/data/processed/clarified_data/progress.json'  # 进度文件路径
 table_format = 'markdown'  # 选择表格格式: 'html', 'markdown', 或 'string'
 

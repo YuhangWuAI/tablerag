@@ -168,8 +168,8 @@ def read_jsonl_file(filepath):
 
 # 主函数，用于读取文件并调用 LLM 函数处理所有行
 def main(output_format="string", eval_method="Acc"):
-    filepath = "/home/yuhangwu/Desktop/Projects/tablerag/data/processed/row_col_filtered_data/nqtables_test.jsonl"
-    output_filepath = "/home/yuhangwu/Desktop/Projects/tablerag/data/processed/prediction/nqtables.jsonl"
+    filepath = "/home/yuhangwu/Desktop/Projects/tablerag/data/processed/row_col_filtered_data/nqtables.jsonl"
+    output_filepath = "/home/yuhangwu/Desktop/Projects/tablerag/data/processed/prediction/nqtables_markdown.jsonl"
 
     queries, enhanced_infos, labels, dfs = read_jsonl_file(filepath)
     
@@ -190,7 +190,7 @@ def main(output_format="string", eval_method="Acc"):
         filtered_df = execute_filter_code(code_snippet, df)
         print('filtered table is :')
         print(filtered_df)
-        
+
         formatted_filtered_table = format_filtered_table(filtered_df, output_format)
         
         print(f"Final Filtered DataFrame (in {output_format} format) for entry", i + 1)

@@ -2,30 +2,30 @@ import json
 
 def process_jsonl(input_file, output_file, pack_summary=False, pack_explanations=False, pack_suggestions=False):
     """
-    处理jsonl文件，将特定字段打包为request字段，并可选择性地将summary, explanations, suggestions字段置为空。
+    Process a JSONL file, pack specific fields into the 'request' field, and optionally set the fields summary, explanations, and suggestions to empty.
 
-    参数:
-    - input_file: 输入jsonl文件路径
-    - output_file: 输出jsonl文件路径
-    - pack_summary: 是否将table_summary打包为空
-    - pack_explanations: 是否将terms_explanation打包为空
-    - pack_suggestions: 是否将query_suggestions打包为空
+    Parameters:
+    - input_file: Path to the input JSONL file
+    - output_file: Path to the output JSONL file
+    - pack_summary: Whether to pack table_summary as empty
+    - pack_explanations: Whether to pack terms_explanation as empty
+    - pack_suggestions: Whether to pack query_suggestions as empty
     """
-    # 初始化id计数器
+    # Initialize ID counter
     id_counter = 1
-    # 打开输入的jsonl文件
+    # Open the input JSONL file
     with open(input_file, 'r', encoding='utf-8') as infile, open(output_file, 'w', encoding='utf-8') as outfile:
-        # 逐行读取jsonl文件
+        # Read the JSONL file line by line
         for line in infile:
-            # 加载每条json数据
+            # Load each JSON entry
             data = json.loads(line)
             
-            # 根据参数选择是否将字段打包为空
+            # Choose whether to pack fields as empty based on parameters
             table_summary = '' if pack_summary else data.get('table_summary', '')
             terms_explanation = '' if pack_explanations else data.get('terms_explanation', '')
             query_suggestions = '' if pack_suggestions else data.get('query_suggestions', '')
 
-            # 将所有字段内容拼接成字符串，并赋值给request字段
+            # Concatenate all field contents into a string and assign to the 'request' field
             data['request'] = (
                 f"table_title: {data.get('table_title', '')}\n"
                 f"table_context: {data.get('table_context', [])}\n"
@@ -35,22 +35,22 @@ def process_jsonl(input_file, output_file, pack_summary=False, pack_explanations
                 f"query_suggestions: {query_suggestions}\n"
             )
             
-            # 添加id字段
+            # Add an ID field
             data['id'] = str(id_counter)
             
-            # 移除原有字段
+            # Remove the original fields
             for key in ["table_title", "table_context", "table_formatted", "table_summary", "terms_explanation", "query_suggestions"]:
                 data.pop(key, None)
             
-            # 将处理后的数据写入输出jsonl文件
+            # Write the processed data to the output JSONL file
             outfile.write(json.dumps(data, ensure_ascii=False) + '\n')
             
-            # 更新id计数器
+            # Update the ID counter
             id_counter += 1
 
-# 使用示例
-input_file = '/home/yuhangwu/Desktop/Projects/tablerag/data/processed/clarified_data/nqtables.jsonl'   # 输入的jsonl文件名
-output_file = '/home/yuhangwu/Desktop/Projects/tablerag/data/processed/packed_data/packed_nqtables_test.jsonl' # 输出的jsonl文件名
+# Usage example
+input_file = '/home/yuhangwu/Desktop/Projects/tablerag/data/processed/clarified_data/nqtables.jsonl'   # Name of the input JSONL file
+output_file = '/home/yuhangwu/Desktop/Projects/tablerag/data/processed/packed_data/packed_nqtables_test.jsonl' # Name of the output JSONL file
 
-# 调用函数，pack_summary=True表示将summary打包为空，pack_explanations=False表示保留explanations
+# Call the function, where pack_summary=True means packing summary as empty, and pack_explanations=False means keeping explanations
 process_jsonl(input_file, output_file, pack_summary=True, pack_explanations=True, pack_suggestions=True)

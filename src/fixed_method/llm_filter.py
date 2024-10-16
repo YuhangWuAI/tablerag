@@ -2,58 +2,58 @@ import traceback
 import json
 from src.llm.llm_generator.llm_generating import LLM_Generator
 
-# 创建一个 LLM_Generator 实例
+# Create an instance of LLM_Generator
 llm_generator = LLM_Generator()
 
 # ------------------------
-# Step 1: 数据加载和预处理
+# Step 1: Data Loading and Preprocessing
 # ------------------------
 
 def load_data(json_file):
-    """加载 JSON 数据文件，返回所有数据"""
+    """Load JSON data file and return all data"""
     with open(json_file, 'r') as f:
         data = [json.loads(line) for line in f.readlines()]
     
     return data
 
 def group_data_by_query(data):
-    """将数据按 query 分组，每 5 行属于同一个 query"""
+    """Group data by query, where every 5 lines belong to the same query"""
     grouped_data = []
     for i in range(0, len(data), 5):
-        grouped_data.append(data[i:i+5])  # 每5行分组一次
+        grouped_data.append(data[i:i+5])  # Group every 5 lines
     return grouped_data
 
 def extract_table_data(group):
-    """从每个组中提取有用的表格信息、ColBERT 分数、表格 ID、正确的表格 id"""
-    query = group[0]['query']  # 同一个 query 对应5个不同的候选结果
-    correct_id = group[0]['id']  # 正确表格的唯一 ID
+    """Extract useful table information, ColBERT score, table ID, and correct table ID from each group"""
+    query = group[0]['query']  # A single query corresponds to 5 different candidate results
+    correct_id = group[0]['id']  # Unique ID of the correct table
 
     results = []
     for entry in group:
         result = entry['result']
         results.append({
             'table': result['content'],
-            'passage_id': result['passage_id']  # 用于判断是否匹配正确的表格
+            'passage_id': result['passage_id']  # Used to check if it matches the correct table
         })
     
     return query, results, correct_id
 
 # ------------------------
-# Step 2: 逐步淘汰表格
+# Step 2: Iterative Table Elimination
 # ------------------------
 
 def iterative_table_selection(select_best_table, query, tables):
-    """两两比较淘汰表格，直到选出最优表格"""
+    """Eliminate tables pairwise until the best table is selected"""
     
-    # 初始将第一张表设为当前最优表
+    # Set the first table as the initial best table
     current_best = tables[0]
     
-    # 从第二张表开始逐一进行两两比较
+    # Perform pairwise comparison from the second table onward
     for i in range(1, len(tables)):
         next_table = tables[i]
         
-        # 调用 select_best_table 比较当前最优表格与下一张表格
-        # 在传递给 LLM 时，将表格内容和 passage_id 组合传递给 LLM 进行比较
+        # Call select_best_table to compare the current best table with the next table
+        # Pass table content and passage_id together to the LLM for comparison
         better_table_passage_id = select_best_table(
             query, 
             f"table1['passage_id']: {current_best['passage_id']}\nTable1 Content: {current_best['table']}",
@@ -62,79 +62,79 @@ def iterative_table_selection(select_best_table, query, tables):
 
         print('better_table_passage_id (from LLM):', better_table_passage_id, type(better_table_passage_id))
         
-        # 打印读取的 next_table 的 passage_id 及其类型
+        # Print the next_table's passage_id and its type from data
         print('next_table["passage_id"] (from data):', next_table['passage_id'], type(next_table['passage_id']))
 
-        # 根据返回的 better_table_passage_id，更新 current_best 为更优的表格
+        # Update current_best as the better table based on returned better_table_passage_id
         if str(better_table_passage_id) == str(next_table['passage_id']):
             current_best = next_table
     
-    # 返回最终选出的最优表格
+    # Return the final selected best table
     return current_best
 
 # ------------------------
-# Step 3: 保存最优表格到 JSONL 文件
+# Step 3: Save the Best Table to JSONL File
 # ------------------------
 
 def save_best_table_to_jsonl(best_table, original_group, output_file):
-    """保存最佳表格的原始状态到新的 JSONL 文件"""
-    # 在原始组中找到最佳表格的原始数据
+    """Save the original state of the best table to a new JSONL file"""
+    # Find the original data of the best table within the original group
     for entry in original_group:
         if entry['result']['passage_id'] == best_table['passage_id']:
-            with open(output_file, 'a') as f:  # 追加写入
-                f.write(json.dumps(entry) + '\n')  # 将原始数据写入文件
+            with open(output_file, 'a') as f:  # Append mode
+                f.write(json.dumps(entry) + '\n')  # Write the original data to file
             break
 
 # ------------------------
-# 主程序逻辑
+# Main Program Logic
 # ------------------------
 
 if __name__ == "__main__":
     input_file = '/home/yuhangwu/Desktop/Projects/tablerag/data/processed/retrieval_results/e2ewtq.jsonl'
-    output_file = '/home/yuhangwu/Desktop/Projects/tablerag/data/processed/llm_filtered_data/e2ewtq.jsonl'  # 保存最优表格的输出文件
+    output_file = '/home/yuhangwu/Desktop/Projects/tablerag/data/processed/llm_filtered_data/e2ewtq.jsonl'  # Output file for saving the best table
     
-    # 加载数据
+    # Load data
     data = load_data(input_file)
     
-    # 将数据按 query 分组，每组包含 5 个候选表格
+    # Group data by query, with each group containing 5 candidate tables
     grouped_data = group_data_by_query(data)
     
-    total_queries = len(grouped_data)  # 总查询数量
-    queries_with_correct_in_top5 = 0  # ColBERT hits@5 包含正确答案的 query 数
-    correct_final_selection_in_top5 = 0  # 在 hits@5 包含正确答案的情况下，我们筛选正确的次数
-    correct_final_selection = 0  # 总的最终正确选择次数
+    total_queries = len(grouped_data)  # Total number of queries
+    queries_with_correct_in_top5 = 0  # Number of queries where ColBERT hits@5 contains the correct answer
+    correct_final_selection_in_top5 = 0  # Number of correct selections in hits@5 where correct answer is present
+    correct_final_selection = 0  # Total number of correct final selections
 
-    for group in grouped_data:  # 确保遍历所有查询组
+    for group in grouped_data:  # Ensure all query groups are processed
         query, tables, correct_id = extract_table_data(group)
         
-        # 判断 ColBERT 的 top 5 是否包含正确答案
+        # Check if ColBERT's top 5 contains the correct answer
         in_top5 = any(table['passage_id'] == correct_id for table in tables)
         if in_top5:
             queries_with_correct_in_top5 += 1
             
-            # 逐步淘汰得到最优表格
+            # Perform iterative elimination to select the best table
             best_table = iterative_table_selection(llm_generator.select_best_table, query, tables)
             
-            # 判断最终选择的表格是否正确
+            # Check if the final selected table is correct
             if best_table['passage_id'] == correct_id:
                 correct_final_selection_in_top5 += 1
             
-            # 保存该组中最优表格的原始状态
+            # Save the original state of the best table in the group
             save_best_table_to_jsonl(best_table, group, output_file)
     
-    # 确保代码遍历所有组，计算每组的结果
+    # Ensure all groups are processed and results for each group are calculated
     if total_queries > 0:
-        # 计算命中前5包含正确表格时的准确率
+        # Calculate accuracy when the correct table is included in the top 5
         if queries_with_correct_in_top5 > 0:
             accuracy_given_in_top5 = correct_final_selection_in_top5 / queries_with_correct_in_top5
         else:
             accuracy_given_in_top5 = 0
         
-        # 计算总体准确率
+        # Calculate overall accuracy
         overall_accuracy = correct_final_selection_in_top5 / total_queries
         
-        # 输出结果
-        print(f"在 ColBERT 返回的 top 5 中包含正确表格的情况下，最终筛选出正确表格的准确率：{accuracy_given_in_top5:.2%}")
-        print(f"总体最终准确率：{overall_accuracy:.2%}")
+        # Output results
+        print(f"Accuracy of selecting the correct table when the correct table is present in ColBERT's top 5: {accuracy_given_in_top5:.2%}")
+        print(f"Overall final accuracy: {overall_accuracy:.2%}")
     else:
-        print("没有数据可供处理。")
+        print("No data to process.")

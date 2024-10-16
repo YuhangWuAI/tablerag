@@ -6,12 +6,10 @@ import string
 
 from src.llm.llm_generator.llm_generating import LLM_Generator
 
-# 创建一个 LLM_Generator 实例
 llm_generator = LLM_Generator()
 
-# 数据清洗的辅助函数（SQuAD Exact Match 评估逻辑）
 def normalize_answer(s):
-    """清洗答案字符串，移除标点、文章、额外空格等"""
+    """Clean the answer string by removing punctuation, articles, and extra spaces"""
     def remove_articles(text):
         return re.sub(r'\b(a|an|the)\b', ' ', text)
 
@@ -28,16 +26,16 @@ def normalize_answer(s):
     return white_space_fix(remove_articles(remove_punctuation(lower(s))))
 
 def get_tokens(s):
-    """将清洗后的字符串进行标记化处理"""
+    """Tokenize the cleaned string"""
     if not s: return []
     return normalize_answer(s).split()
 
 def compute_exact(a_gold, a_pred):
-    """计算两个字符串是否完全匹配"""
+    """Check if two strings match exactly"""
     return int(normalize_answer(a_gold) == normalize_answer(a_pred))
 
 def compute_f1(a_gold, a_pred):
-    """计算 F1 分数"""
+    """Calculate the F1 score"""
     gold_tokens = get_tokens(a_gold)
     pred_tokens = get_tokens(a_pred)
     common = collections.Counter(gold_tokens) & collections.Counter(pred_tokens)
@@ -53,34 +51,34 @@ def compute_f1(a_gold, a_pred):
     recall = 1.0 * num_same / len(gold_tokens)
     return (2 * precision * recall) / (precision + recall)
 
-# 用于 `Acc` 的清洗
+# Clean for `Acc`
 def str_normalize(user_input):
-    """对字符串进行标准化，处理特殊符号和日期格式"""
+    """Normalize the string, handling special symbols and date formats"""
     if isinstance(user_input, list):
-        user_input = " ".join(map(str, user_input))  # 将列表转换为字符串
+        user_input = " ".join(map(str, user_input))  # Convert list to string
     user_input = str(user_input).replace("\\n", "; ")
-    user_input = re.sub(r"(.*)-(.*)-(.*) 00:00:00", r"\1-\2-\3", user_input)  # 处理日期
+    user_input = re.sub(r"(.*)-(.*)-(.*) 00:00:00", r"\1-\2-\3", user_input)  # Handle date formatting
     return user_input
 
-# 选择评估方法的函数
+# Function to select evaluation method
 def evaluate_answer(predicted_answer, label, method="Acc"):
     """
-    根据选择的评估方法对预测答案和标签进行比对
+    Compare the predicted answer with the label based on the chosen evaluation method
     """
-    # 如果 label 是这种格式 ["主要答案", ["备选答案1", "备选答案2"]]
+    # If label is in format ["Primary Answer", ["Alternative Answer 1", "Alternative Answer 2"]]
     primary_answer = label[0]
     alternative_answers = label[1] if len(label) > 1 else []
 
     if method == "Acc":
         predicted_answer = str_normalize(predicted_answer)
-        # 将主要答案和备选答案都进行清洗
+        # Clean both the primary answer and alternative answers
         all_answers = [str_normalize(primary_answer)] + [str_normalize(ans) for ans in alternative_answers]
         exact_match = max(compute_exact(ans, predicted_answer) for ans in all_answers)
         return exact_match > 0
 
     elif method == "EM":
         predicted_answer = normalize_answer(predicted_answer)
-        # 将主要答案和备选答案都进行清洗
+        # Clean both the primary answer and alternative answers
         all_answers = [normalize_answer(primary_answer)] + [normalize_answer(ans) for ans in alternative_answers]
         exact_match = max(compute_exact(ans, predicted_answer) for ans in all_answers)
         return exact_match > 0
@@ -88,7 +86,7 @@ def evaluate_answer(predicted_answer, label, method="Acc"):
     else:
         raise ValueError(f"Unsupported evaluation method: {method}")
 
-# 执行过滤代码的函数
+# Function to execute filtering code
 def execute_filter_code(code_snippet, df):
     code_snippet = code_snippet.replace('```python', '').replace('```', '').strip()
     code_snippet = code_snippet.replace('>>> ', '')
@@ -110,7 +108,7 @@ def execute_filter_code(code_snippet, df):
         print(f"Error during filtering execution: {e}")
         return df
 
-# 将过滤后的表格转换为指定的格式
+# Convert filtered table to specified format
 def format_filtered_table(filtered_df, output_format):
     if output_format == "string":
         return filtered_df.to_string()
@@ -121,14 +119,14 @@ def format_filtered_table(filtered_df, output_format):
     else:
         raise ValueError(f"Unsupported format: {output_format}")
 
-# 保存错误的预测到文件
+# Save incorrect predictions to file
 def save_wrong_predictions(wrong_predictions, output_filepath):
     with open(output_filepath, 'w') as outfile:
         for entry in wrong_predictions:
             json.dump(entry, outfile)
-            outfile.write('\n')  # 写入每个 JSON 对象后换行
+            outfile.write('\n')  # Write a newline after each JSON object
 
-# 读取jsonl文件并提取query、增强信息和label
+# Read jsonl file and extract query, enhanced info, and label
 def read_jsonl_file(filepath):
     queries = []
     enhanced_infos = []
@@ -166,7 +164,7 @@ def read_jsonl_file(filepath):
     
     return queries, enhanced_infos, labels, dfs
 
-# 主函数，用于读取文件并调用 LLM 函数处理所有行
+# Main function to read file and call LLM function to process all entries
 def main(output_format="string", eval_method="Acc"):
     filepath = "/home/yuhangwu/Desktop/Projects/tablerag/data/processed/row_col_filtered_data/e2ewtq.jsonl"
     output_filepath = "/home/yuhangwu/Desktop/Projects/tablerag/data/processed/prediction/e2ewtq.jsonl"
@@ -222,5 +220,5 @@ def main(output_format="string", eval_method="Acc"):
         print(f"Saved wrong predictions to {output_filepath}")
 
 if __name__ == "__main__":
-    # 选择评估方法: 'Acc' or 'EM'
+    # Choose evaluation method: 'Acc' or 'EM'
     main(output_format="markdown", eval_method="Acc")

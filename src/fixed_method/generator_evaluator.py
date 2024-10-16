@@ -168,8 +168,8 @@ def read_jsonl_file(filepath):
 
 # 主函数，用于读取文件并调用 LLM 函数处理所有行
 def main(output_format="string", eval_method="Acc"):
-    filepath = "/home/yuhangwu/Desktop/Projects/tablerag/data/processed/row_col_filtered_data/nqtables.jsonl"
-    output_filepath = "/home/yuhangwu/Desktop/Projects/tablerag/data/processed/prediction/nqtables_markdown.jsonl"
+    filepath = "/home/yuhangwu/Desktop/Projects/tablerag/data/processed/row_col_filtered_data/e2ewtq.jsonl"
+    output_filepath = "/home/yuhangwu/Desktop/Projects/tablerag/data/processed/prediction/e2ewtq.jsonl"
 
     queries, enhanced_infos, labels, dfs = read_jsonl_file(filepath)
     
@@ -223,4 +223,4 @@ def main(output_format="string", eval_method="Acc"):
 
 if __name__ == "__main__":
     # 选择评估方法: 'Acc' or 'EM'
-    main(output_format="markdown", eval_method="EM")
+    main(output_format="markdown", eval_method="Acc")

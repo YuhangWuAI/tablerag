@@ -1,5 +1,3 @@
-# retriever2.py
-
 import json
 from ragatouille import RAGPretrainedModel
 import warnings
@@ -73,8 +71,11 @@ def colbert_pipeline(output_path: str, jsonl_query_path: str, jsonl_index_path: 
     # Open the output file and write each result as it's processed
     hits_at_k = 0
     total_queries = len(queries)
-
-    with open(output_path, 'w') as file:
+    
+    # New file to store the incorrect retrievals
+    error_output_path = "/home/yuhangwu/Desktop/Projects/tablerag/data/progressing/retriever_recording/e2ewtq.jsonl"
+    
+    with open(output_path, 'w') as file, open(error_output_path, 'w') as error_file:
         for i, query in enumerate(queries):
             retrieved_docs = pipeline.retrieve(query, top_k, force_fast, rerank, rerank_top_k)
             
@@ -88,6 +89,14 @@ def colbert_pipeline(output_path: str, jsonl_query_path: str, jsonl_index_path: 
             # Check if the correct passage_id is in the retrieved results
             if correct_ids[i] in retrieved_ids:
                 hits_at_k += 1
+            else:
+                # Save the incorrect retrievals
+                error_info = {
+                    "query": query,
+                    "retrieved_docs": [doc['content'] for doc in retrieved_docs],  # Store the content of the incorrect docs
+                    "correct_doc": queries_data[correct_ids[i]]['query']  # Correct doc content based on the correct ID
+                }
+                error_file.write(json.dumps(error_info) + '\n')
 
             # Save each result immediately after retrieval
             for result in retrieved_docs:
@@ -103,11 +112,11 @@ def colbert_pipeline(output_path: str, jsonl_query_path: str, jsonl_index_path: 
 
 def main():
     # Configuration parameters
-    jsonl_query_path = "/home/yuhangwu/Desktop/Projects/tablerag/data/raw/small_dataset/e2ewtq.jsonl"  # Queries
-    jsonl_index_path = "/home/yuhangwu/Desktop/Projects/tablerag/data/processed/packed_data/packed_e2ewtq.jsonl"  # Data to be indexed and queried
+    jsonl_query_path = "/home/yuhangwu/Desktop/Projects/tablerag/data/raw/small_dataset/nqtables.jsonl"  # Queries
+    jsonl_index_path = "/home/yuhangwu/Desktop/Projects/tablerag/data/processed/packed_data/packed_nqtables_test.jsonl"  # Data to be indexed and queried
     model_name = "colbert-ir/colbertv2.0"
     index_name = "my_index"
-    output_path = "/home/yuhangwu/Desktop/Projects/tablerag/data/processed/retrieval_results/e2ewtq.jsonl"  # Save output to this file
+    output_path = "/home/yuhangwu/Desktop/Projects/tablerag/data/processed/retrieval_results/nqtables.jsonl"  # Save output to this file
 
     # Retrieve documents and save results immediately
     colbert_pipeline(
@@ -124,3 +133,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    

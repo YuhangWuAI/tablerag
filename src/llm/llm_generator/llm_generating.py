@@ -713,7 +713,7 @@ class LLM_Generator:
 
             2. **Completeness of information matching**  
             Evaluate how well the information in the table matches the query. Does the table contain all or the most relevant content needed to answer the question?
-
+s
             3. **Overall judgment**  
             If neither table is a perfect match, use the above two points as guidance, along with your own judgment, to choose the table most likely to answer the question.
 

@@ -90,8 +90,8 @@ def save_best_table_to_jsonl(best_table, original_group, output_file):
 # ------------------------
 
 if __name__ == "__main__":
-    input_file = '/home/yuhangwu/Desktop/Projects/tablerag/data/processed/retrieval_results/nqtables.jsonl'
-    output_file = '/home/yuhangwu/Desktop/Projects/tablerag/data/processed/llm_filtered_data/nqtables.jsonl'  # 保存最优表格的输出文件
+    input_file = '/home/yuhangwu/Desktop/Projects/tablerag/data/processed/retrieval_results/e2ewtq.jsonl'
+    output_file = '/home/yuhangwu/Desktop/Projects/tablerag/data/processed/llm_filtered_data/e2ewtq.jsonl'  # 保存最优表格的输出文件
     
     # 加载数据
     data = load_data(input_file)

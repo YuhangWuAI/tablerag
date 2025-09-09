@@ -18,7 +18,7 @@ from src.data_processing.save_jsonl import load_processed_indices, save_jsonl_fi
 import warnings
 
 from src.table_master.table_main import TableClarifier
-
+from src.table_loader.data_loader.table_parser.table_linearizer import StructuredDataLinearizer, TableSerializationType
 warnings.filterwarnings("ignore")
 
 def table_processing_pipeline(
@@ -58,8 +58,8 @@ def table_processing_pipeline(
     print("Starting table processing pipeline\n")
     
     # Define paths for saving files and progress
-    file_save_path = f"/home/yuhangwu/Desktop/Projects/TableProcess/data/processed/table_outputs/{task_name}_{table_filter_name}_{table_clarifier_name}_{table_format}.jsonl"
-    progress_save_path = f"/home/yuhangwu/Desktop/Projects/TableProcess/data/progressing/{task_name}_{table_filter_name}_{table_clarifier_name}_{table_format}.json"
+    file_save_path = f"/home/jovyan/git/TableRAG/data/processed/{task_name}_{table_filter_name}_{table_clarifier_name}_{table_format}.jsonl"
+    progress_save_path = f"/home/jovyan/git/TableRAG/data/progressing/{task_name}_{table_filter_name}_{table_clarifier_name}_{table_format}.json"
 
     print("File save path: ", file_save_path, "\n")
 
@@ -227,7 +227,7 @@ def table_processing_pipeline(
 
                     request = serialize_request(
                         query=query,
-                        table_formatted=table_formatted,
+                        table_formatted = table_formatted,
                         clarification_text=clarification_text,
                         context=context  # Include the context in the request serialization
                     )
@@ -334,10 +334,10 @@ def table_processing_pipeline(
                 except AttributeError as e:
                     print(f"Error in converting table: {e}. Converting table to string instead.\n")
                     table_formatted = filter_table.to_string()
-
+                    
                 request = serialize_request(
                     query=query,
-                    table_formatted=table_formatted,
+                    table_formatted = table_formatted,
                     clarification_text=clarification_text,
                     context=context  # Include the context in the request serialization
                 )
